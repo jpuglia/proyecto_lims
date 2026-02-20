@@ -263,26 +263,32 @@ erDiagram
         int polvo_suplemento_id FK
         float cantidad
     }
-
+    %% Tabla que representa el stock de polvos, reactivos e insumos
+    %% para la preparación de medios de cultivo
+    %% y diluyentes
     STOCK_POLVO_SUPLEMENTO {
         int stock_polvo_suplemento_id PK
         int recepcion_polvo_suplemento_id FK
         float cantidad
     }
-
-    
-
     %% Listado de polvos, reactivos e insumos
     %% para la preparación de medios de cultivo
     %% y diluyentes
     POLVO_SUPLEMENTO {
         int polvo_suplemento_id PK
-        string codigo
+        string codigo UK
+        string nombre
         string lote
         date vence
         string unidad "Unidad en la que se mide el insumo"
         boolean activo
     }
+
+    POLVO_SUPLEMENTO ||--o{ RECEPCION_POLVO_SUPLEMENTO : recibe
+    RECEPCION_POLVO_SUPLEMENTO ||--o{ STOCK_POLVO_SUPLEMENTO : aumenta
+    STOCK_POLVO_SUPLEMENTO ||--o{ USO_POLVO_SUPLEMENTO : disminuye
+    ORDEN_PREPARACION_MEDIO ||--o{ USO_POLVO_SUPLEMENTO : usa
+
     %% Tabla que representa el uso de polvos, reactivos e insumos
     %% para la preparación de medios de cultivo
     %% y diluyentes
