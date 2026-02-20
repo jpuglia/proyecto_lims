@@ -1,0 +1,118 @@
+{
+  "data_dir": "./data",
+
+  "pipelines": [
+
+    {
+      "name": "sistemas",
+      "repo": "SistemaRepository",
+      "csv": "sistemas.csv"
+    },
+
+    {
+      "name": "plantas",
+      "repo": "PlantaRepository",
+      "csv": "plantas.csv",
+
+      "fks": {
+        "sistema_codigo": {
+          "table": "sistema",
+          "repo": "SistemaRepository",
+          "field": "codigo"
+        }
+      }
+    },
+
+    {
+      "name": "productos",
+      "repo": "ProductoRepository",
+      "csv": "productos.csv",
+
+      "fks": {
+        "planta_codigo": {
+          "table": "planta",
+          "repo": "PlantaRepository",
+          "field": "codigo"
+        }
+      }
+    },
+
+    {
+      "name": "cepa_ref",
+      "repo": "CepaRepository",
+      "csv": "cepa_ref.csv"
+    },
+
+    {
+      "name": "metodo_version",
+      "repo": "MetodoVersionRepository",
+      "csv": "metodo_version.csv"
+    },
+
+    {
+      "name": "area",
+      "repo": "AreaRepository",
+      "csv": "areas.csv",
+
+      "fks": {
+        "planta_codigo": {
+          "table": "planta",
+          "repo": "PlantaRepository",
+          "field": "codigo"
+        }
+      }
+    },
+
+    {
+      "name": "estado_qc",
+      "repo": "EstadoQCRepository",
+      "csv": "estado_qc.csv"
+    },
+
+    {
+      "name": "especificacion",
+      "repo": "EspecificacionRepository",
+      "csv": "especificacion.csv"
+    },
+
+    {
+      "name": "equipo",
+      "repo": "EquipoRepository",
+      "csv": "equipos.csv",
+
+      "fks":{
+        "area_codigo": {
+          "table": "area",
+          "repo": "AreaRepository",
+          "field": "codigo"
+        }
+      }
+    },
+
+    {
+      "name": "punto_muestreo",
+      "repo": "PuntoMuestreoRepository",
+      "csv": "punto_muestreo.csv",
+
+      "fks": {
+        "sistema_codigo": {
+          "table": "sistema",
+          "repo": "SistemaRepository",
+          "field": "codigo"
+        }
+      }
+    },
+
+    {
+      "name": "estado_equipo",
+      "repo": "EstadoEquipoRepository",
+      "csv": "estado_equipo.csv"
+    },
+
+    {
+      "name": "usuario",
+      "repo": "UsuarioRepository",
+      "csv": "usuarios.csv"
+    }
+  ]
+}

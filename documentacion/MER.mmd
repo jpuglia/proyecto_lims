@@ -1,0 +1,423 @@
+---
+config:
+  layout: elk
+id: 59c47856-d1e8-4a5d-ad0a-bd30e6387f6c
+---
+erDiagram
+    %% Tabla que representa el sistema
+    SISTEMA {
+        int sistema_id PK
+        string codigo UK
+        string nombre
+        boolean activo
+    }
+    %% Tabla que representa la planta
+    PLANTA {
+        int planta_id PK
+        string codigo UK
+        string nombre
+        int sistema_id FK
+        boolean activo
+    }
+    %% Tabla que representa el area
+    AREA {
+        int area_id PK
+        string nombre
+        int planta_id FK
+        boolean activo
+    }
+    %% Tabla que representa el equipo
+    EQUIPO {
+        int equipo_id PK
+        string codigo UK
+        int estado_equipo_id FK
+        int area_id FK
+    }
+    %% Tabla que representa la calibracion o calificacion del equipo
+    CALIBRACION_CALIFICACION_EQUIPO { 
+        int calibracion_calificacion_equipo_id PK
+        string tipo
+        int equipo_id FK
+        date fecha
+        date vence
+        int operario_id FK
+    } 
+
+    EQUIPO ||--o{ CALIBRACION_CALIFICACION_EQUIPO : tiene
+
+    %% Tabla que representa el estado del equipo
+    ESTADO_EQUIPO { 
+        int estado_equipo_id PK
+        string nombre UK "En uso, Fuera de uso, En calibración, Fuera de servicio, Mantenimiento, etc"
+    }
+    %% Registra los cambios de estado para un equipo en particular
+    HISTORICO_ESTADO_EQUIPO {
+        int historico_estado_equipo_id PK
+        int equipo_id FK
+        int estado_equipo_id FK
+        datetime fecha
+        int usuario_id FK
+    }
+
+    EQUIPO ||--o{ HISTORICO_ESTADO_EQUIPO : actualiza
+    ESTADO_EQUIPO ||--o{ HISTORICO_ESTADO_EQUIPO : refiere
+    USUARIO ||--o{ HISTORICO_ESTADO_EQUIPO : modifica
+    %% Tabla que representa el punto de muestreo
+    PUNTO_MUESTREO {
+        int punto_muestreo_id PK
+        string codigo UK
+        string nombre
+        int sistema_id FK
+        int area_id FK
+        boolean activo
+    }
+    %% Tabla que representa el listado de productos
+    PRODUCTO {
+        int producto_id PK
+        string codigo UK
+        string nombre UK
+        int planta_id FK
+        boolean activo
+    }
+
+    %% Tabla que representa el estado de la manufactura
+    ESTADO_MANUFACTURA {
+        int estado_manufactura_id PK
+        string nombre UK "Pendiente, En curso, Finalizado, Cancelado"
+    }
+
+    %% Registra los cambios en el estado del proceso de manufactura
+    HISTORICO_ESTADO_MANUFACTURA {
+        int historico_estado_manufactura_id PK
+        int manufactura_id FK
+        datetime fecha
+    }
+
+    MANUFACTURA ||--o{ HISTORICO_ESTADO_MANUFACTURA : actualiza
+    ESTADO_MANUFACTURA ||--o{ HISTORICO_ESTADO_MANUFACTURA : presenta
+
+    %% Tabla que representa los operarios
+    OPERARIO {
+        int operario_id PK
+        string nombre
+        string apellido
+        string codigo_empleado UK
+        boolean activo
+    }
+
+    %% Tabla que representa las especificaciones de los análisis
+    ESPECIFICACION {
+        int especificacion_id PK
+        int producto_id FK
+        string parametro
+        string tipo_limite
+        float valor_min
+        float valor_max
+        string unidad
+        boolean activo
+    }
+    %% Tabla que representa los métodos de análisis
+    METODO_VERSION {
+        int metodo_version_id PK
+        string codigo
+        string nombre
+        int version
+        date fecha_inicio
+        date fecha_fin
+    }
+    %% Tabla que representa las órdenes de manufactura
+    ORDEN_MANUFACTURA { 
+        int orden_manufactura_id PK
+        string codigo UK
+        string lote
+        date fecha
+        int producto_id FK
+        float cantidad
+        string unidad
+        int operario_id FK
+    }
+    %% Tabla que representa el proceso de manufactura
+    MANUFACTURA { 
+        int manufactura_id PK
+        int orden_manufactura_id FK
+        datetime fecha_inicio
+        datetime fecha_fin
+        int estado_manufactura_id FK
+        string observacion
+    }
+    %% Tabla que representa los operarios de la manufactura
+    MANUFACTURA_OPERARIO { 
+        int manufactura_operario_id PK
+        int manufactura_id FK
+        int operario_id FK
+        datetime entrada
+        datetime salida
+        string rol_operacion
+    }
+
+    ORDEN_MANUFACTURA ||--o{ MANUFACTURA : ejecuta
+    MANUFACTURA ||--o{ MANUFACTURA_OPERARIO : involucra
+    OPERARIO ||--o{ MANUFACTURA_OPERARIO : participa
+    
+    %% Tabla que representa el muestreo
+    MUESTREO {
+        int muestreo_id PK
+        int orden_manufactura_id FK
+        int punto_muestreo_id FK
+        datetime fecha_inicio
+        datetime fecha_fin
+        int operario_id FK
+    }
+
+    ORDEN_MANUFACTURA ||--o{ MUESTREO : genera
+    PUNTO_MUESTREO ||--o{ MUESTREO : genera
+    OPERARIO ||--o{ MUESTREO : muestrea
+    MUESTREO ||--o{ ENVIO_MUESTRA : genera
+    OPERARIO ||--o{ ENVIO_MUESTRA : envia
+    ENVIO_MUESTRA ||--o{ RECEPCION : genera
+    
+    %% Tabla que representa el envío de la muestra
+    ENVIO_MUESTRA {
+        int envio_muestra_id PK
+        int muestreo_id FK
+        datetime fecha
+        int operario_id FK
+        string destino
+    }
+    %% Tabla que representa la recepción de la muestra
+    RECEPCION {
+        int recepcion_id PK
+        string tipo "Servicio, Producto, Hisopo, etc."
+        datetime fecha
+        int operario_id FK
+        string recibido_en "Microbiología, Fisicoquímica, etc."
+        string decision "Aceptado, Rechazado"
+    }
+    %% Tabla que representa el análisis
+    ANALISIS {
+        int analisis_id PK
+        int recepcion_id FK
+        int metodo_version_id FK
+        int estado_analisis_id FK
+        date fecha_inicio
+        datetime ultimo_cambio
+        int operario_id FK
+    }
+    %% Tabla que representa el estado del análisis
+    ESTADO_ANALISIS {
+        int estado_analisis_id PK
+        string nombre UK "Programado, En proceso, Finalizado"
+    }
+    %% Tabla que representa el historial de estados del análisis
+    HISTORIAL_ESTADO_ANALISIS {
+        int historial_estado_analisis_id PK
+        int analisis_id FK
+        int estado_analisis_id FK
+        datetime fecha
+        int operario_id FK
+    }
+    %% Tabla que representa la incubación
+    INCUBACION {
+        int incubacion_id PK
+        int analisis_id FK
+        int equipo_id FK
+        datetime entrada
+        datetime salida
+        float temp_registrada
+        string unidad_temp
+    }
+    %% Tabla que representa el resultado
+    RESULTADO {
+        int resultado_id PK
+        int analisis_id FK
+        datetime fecha_reporte
+        int operario_id FK
+        int valor 
+        string unidad
+        string observacion
+    }
+
+    %% Listado de medios de cultivo y diluyentes
+    MEDIO_PREPARADO {
+        int medio_preparado_id PK
+        string codigo UK
+        string nombre
+        boolean activo
+    }
+    %% Orden de preparación de medios de cultivo y diluyentes
+    ORDEN_PREPARACION_MEDIO {
+        int orden_preparacion_medio_id PK
+        date fecha
+        int medio_preparado_id FK
+        string lote
+        float volumen_total
+        string unidad_volumen
+        int operario_id FK
+    }
+
+    %% Tabla que representa la recepción de polvos, reactivos e insumos
+    %% para la preparación de medios de cultivo
+    %% y diluyentes
+    RECEPCION_POLVO_SUPLEMENTO {
+        int recepcion_polvo_suplemento_id PK
+        int polvo_suplemento_id FK
+        float cantidad
+    }
+
+    STOCK_POLVO_SUPLEMENTO {
+        int stock_polvo_suplemento_id PK
+        int recepcion_polvo_suplemento_id FK
+        float cantidad
+    }
+
+    
+
+    %% Listado de polvos, reactivos e insumos
+    %% para la preparación de medios de cultivo
+    %% y diluyentes
+    POLVO_SUPLEMENTO {
+        int polvo_suplemento_id PK
+        string codigo
+        string lote
+        date vence
+        string unidad "Unidad en la que se mide el insumo"
+        boolean activo
+    }
+    %% Tabla que representa el uso de polvos, reactivos e insumos
+    %% para la preparación de medios de cultivo
+    %% y diluyentes
+    USO_POLVO_SUPLEMENTO {
+        int uso_polvo_suplemento_id PK
+        int polvo_suplemento_id FK
+        int orden_preparacion_medio_id FK
+        float cantidad
+        string unidad
+    }
+    %% Tabla que representa el estado de los medios
+    %% de cultivo y diluyentes preparados
+    ESTADO_QC {
+        int estado_qc_id PK
+        string nombre UK "Pendiente, Aprobado, Rechazado"
+    }
+    %% Tabla que representa el stock de medios
+    %% de cultivo y diluyentes preparados
+    STOCK_MEDIOS {
+        int stock_medios_id PK
+        int orden_preparacion_medio_id FK
+        string lote_interno
+        date vence
+        int estado_qc_id FK
+    }
+    %% Tabla que representa la aprobación de medios
+    %% de cultivo y diluyentes preparados
+    APROBACION_MEDIOS {
+        int aprobacion_medios_id PK
+        int stock_medios_id FK
+        date fecha
+        int operario_id FK
+        string observacion
+    }
+    %% Tabla que representa el uso de medios
+    %% de cultivo y diluyentes preparados
+    USO_MEDIOS {
+        int uso_medios_id PK
+        int analisis_id FK
+        int stock_medios_id FK
+    }
+    %% Listado de cepas de referencia
+    %% que pueden encontrarse en el cepario
+    CEPA_REFERENCIA {
+        int cepa_referencia_id PK
+        string codigo_atcc UK
+        string lote
+        int pase
+        date fecha_control
+        string estado_biologico
+    }
+    %% Tabla que representa el uso de cepas de referencia
+    USO_CEPA {
+        int uso_cepa_id PK
+        int cepa_referencia_id FK
+        int analisis_id FK
+    }
+    %% Tabla que representa el usuario
+    USUARIO {
+        int usuario_id PK
+        int operario_id FK
+        string nombre
+        string firma
+        boolean activo
+    }
+    %% Tabla que representa el rol
+    ROL {
+        int rol_id PK
+        string nombre UK
+    }
+    %% Tabla que representa la relación entre usuario y rol
+    USUARIO_ROL {
+        int usuario_rol_id PK
+        int usuario_id FK
+        int rol_id FK
+    }
+    %% Tabla que representa el rastro de auditoría
+    AUDIT_TRAIL {
+        bigint audit_trail_id PK
+        string tabla
+        bigint registro_id
+        string columna
+        string old_val
+        string new_val
+        string accion
+        datetime timestamp
+        int usuario_id FK
+    }
+    %% Tabla que representa la revisión
+    REVISION {
+        int revision_id PK
+        string tabla
+        bigint registro_id
+        int operario_id FK
+        datetime fecha
+        string conclusion "Aprobado, Rechazado"
+    }
+
+    SISTEMA ||--o{ PLANTA : posee
+    PLANTA ||--o{ AREA : divide
+    AREA ||--o{ EQUIPO : aloja
+
+    AREA ||--o{ PRODUCTO : elabora
+    PRODUCTO ||--o{ ESPECIFICACION : define
+
+    OPERARIO ||--o{ RECEPCION : recibe
+
+    METODO_VERSION ||--o{ ANALISIS : aplica
+    ESTADO_ANALISIS ||--o{ ANALISIS : estado
+    OPERARIO ||--o{ ANALISIS : ejecuta
+
+    ANALISIS ||--o{ HISTORIAL_ESTADO_ANALISIS : tiene
+
+    ANALISIS ||--o{ INCUBACION : requiere
+    EQUIPO ||--o{ INCUBACION : usa
+
+    ANALISIS ||--o{ RESULTADO : produce
+    OPERARIO ||--o{ RESULTADO : reporta
+
+    MEDIO_PREPARADO ||--o{ ORDEN_PREPARACION_MEDIO : prepara
+
+    ORDEN_PREPARACION_MEDIO ||--o{ STOCK_MEDIOS : genera
+    ESTADO_QC ||--o{ STOCK_MEDIOS : controla
+
+    STOCK_MEDIOS ||--o{ APROBACION_MEDIOS : valida
+    OPERARIO ||--o{ APROBACION_MEDIOS : libera
+
+    STOCK_MEDIOS ||--o{ USO_MEDIOS : consume
+    ANALISIS ||--o{ USO_MEDIOS : usa
+
+    CEPA_REFERENCIA ||--o{ USO_CEPA : provee
+    ANALISIS ||--o{ USO_CEPA : controla
+
+    USUARIO ||--o{ USUARIO_ROL : tiene
+    ROL ||--o{ USUARIO_ROL : asigna
+
+    USUARIO ||--o{ AUDIT_TRAIL : genera
+    OPERARIO ||--o{ REVISION : supervisa

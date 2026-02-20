@@ -1,0 +1,66 @@
+---
+id: 0a828cbf-5569-4c75-bfd7-f05c82714fdc
+---
+graph TB
+    subgraph Frontend["Frontend - React"]
+        UI["React Components<br/>(Responsive UI)"]
+    end
+
+    subgraph API["API Layer - FastAPI"]
+        Endpoints["REST Endpoints<br/>(JSON)"]
+        RBAC["Role-Based Access Control"]
+    end
+
+    subgraph Backend["Backend - Python 3.10+"]
+        subgraph Services["Service Layer"]
+            LogicBiz["Business Logic<br/>(Validations)"]
+            Orchestration["Orchestration<br/>(Multi-repo calls)"]
+            Events["Event Management<br/>(Audit Trail)"]
+        end
+
+        subgraph Repositories["Repository Layer<br/>(DAL)"]
+            BaseRepo["BaseRepository<br/>(CRUD)"]
+            SpecificRepos["Specific Repositories<br/>(Custom Queries)"]
+        end
+
+        subgraph Models["Model Layer"]
+            DimTables["dim_tables<br/>(Plant, Area, Equipment)"]
+            Master["master<br/>(Product, Spec, Method)"]
+            Fact["fact<br/>(Reception, Analysis, Result)"]
+            Auth["auth<br/>(Users, Roles)"]
+            Inventory["inventory<br/>(Culture Media, Reagents)"]
+        end
+    end
+
+    subgraph Persistence["Persistence Layer"]
+        SQLAlchemy["SQLAlchemy ORM"]
+        Dev[("SQLite<br/>(Dev)")]
+        Prod[("PostgreSQL<br/>(Prod)")]
+    end
+
+    UI -->|Request| Endpoints
+    Endpoints -->|Validate| RBAC
+    RBAC -->|Call| LogicBiz
+    LogicBiz --> Orchestration
+    Orchestration --> Events
+    Orchestration --> BaseRepo
+    Orchestration --> SpecificRepos
+    BaseRepo --> DimTables
+    BaseRepo --> Master
+    BaseRepo --> Fact
+    BaseRepo --> Auth
+    BaseRepo --> Inventory
+    SpecificRepos --> DimTables
+    SpecificRepos --> Master
+    SpecificRepos --> Fact
+    SpecificRepos --> Auth
+    SpecificRepos --> Inventory
+    DimTables --> SQLAlchemy
+    Master --> SQLAlchemy
+    Fact --> SQLAlchemy
+    Auth --> SQLAlchemy
+    Inventory --> SQLAlchemy
+    SQLAlchemy --> Dev
+    SQLAlchemy --> Prod
+    Events -->|Response| Endpoints
+    Endpoints -->|Response| UI

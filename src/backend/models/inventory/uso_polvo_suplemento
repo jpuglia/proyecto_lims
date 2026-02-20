@@ -1,0 +1,17 @@
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy.orm import relationship
+
+from models.base import Base
+
+# ./src/backend/models/inventory/uso_polvo_suplemento.py
+class UsoPolvoSuplemento(Base):
+    __tablename__ = "uso_polvo_suplemento"
+
+    id = Column(Integer, primary_key=True)
+    polvo_id = Column(Integer, ForeignKey("polvo_suplemento.id"), nullable=False)
+    orden_id = Column(Integer, ForeignKey("orden_preparacion_medio.id"), nullable=False)
+    cantidad = Column(Float, nullable=True)
+    unidad = Column(String, nullable=True)
+
+    polvo = relationship("PolvoSuplemento", back_populates="usos")
+    orden = relationship("OrdenPreparacionMedio", back_populates="usos_polvo")
