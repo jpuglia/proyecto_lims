@@ -27,23 +27,40 @@ erDiagram
         boolean activo
     }
     %% Tabla que representa el equipo
-    EQUIPO {
-        int equipo_id PK
+    EQUIPO_INSTRUMENTO {
+        int equipo_instrumento_id PK
         string codigo UK
+        string nombre
+        int tipo_equipo_id FK
         int estado_equipo_id FK
         int area_id FK
     }
+    %% Tabla que representa las zonas de muestreo de un equipo
+    ZONA_EQUIPO {
+        int zona_equipo_id PK
+        int equipo_instrumento_id FK
+        string nombre
+        boolean activo
+    }
+    %% Clasificación de los equipos
+    TIPO_EQUIPO {
+        int tipo_equipo_id PK
+        string nombre UK "Autoclave, Heladera, Congelador, Granulador, etc."
+    }
+
+    TIPO_EQUIPO ||--o{ EQUIPO_INSTRUMENTO : clasifica
+
     %% Tabla que representa la calibracion o calificacion del equipo
     CALIBRACION_CALIFICACION_EQUIPO { 
         int calibracion_calificacion_equipo_id PK
         string tipo
-        int equipo_id FK
+        int equipo_instrumento_id FK
         date fecha
         date vence
         int operario_id FK
     } 
 
-    EQUIPO ||--o{ CALIBRACION_CALIFICACION_EQUIPO : tiene
+    EQUIPO_INSTRUMENTO ||--o{ CALIBRACION_CALIFICACION_EQUIPO : tiene
 
     %% Tabla que representa el estado del equipo
     ESTADO_EQUIPO { 
@@ -53,13 +70,13 @@ erDiagram
     %% Registra los cambios de estado para un equipo en particular
     HISTORICO_ESTADO_EQUIPO {
         int historico_estado_equipo_id PK
-        int equipo_id FK
+        int equipo_instrumento_id FK
         int estado_equipo_id FK
         datetime fecha
         int usuario_id FK
     }
 
-    EQUIPO ||--o{ HISTORICO_ESTADO_EQUIPO : actualiza
+    EQUIPO_INSTRUMENTO  ||--o{ HISTORICO_ESTADO_EQUIPO : actualiza
     ESTADO_EQUIPO ||--o{ HISTORICO_ESTADO_EQUIPO : refiere
     USUARIO ||--o{ HISTORICO_ESTADO_EQUIPO : modifica
     %% Tabla que representa el punto de muestreo
@@ -90,6 +107,8 @@ erDiagram
     HISTORICO_ESTADO_MANUFACTURA {
         int historico_estado_manufactura_id PK
         int manufactura_id FK
+        int estado_manufactura_id FK
+        int usuario_id FK
         datetime fecha
     }
 
@@ -102,6 +121,7 @@ erDiagram
         string nombre
         string apellido
         string codigo_empleado UK
+        int usuario_id FK "Vínculo al login en sistema (Trazabilidad)"
         boolean activo
     }
 
@@ -158,28 +178,77 @@ erDiagram
     ORDEN_MANUFACTURA ||--o{ MANUFACTURA : ejecuta
     MANUFACTURA ||--o{ MANUFACTURA_OPERARIO : involucra
     OPERARIO ||--o{ MANUFACTURA_OPERARIO : participa
+
+    %% Tabla que representa el estado de la solicitud
+    ESTADO_SOLICITUD {
+        int estado_solicitud_id PK
+        string nombre UK "Pendiente, En curso, Finalizado, Cancelado"
+    }
     
-    %% Tabla que representa el muestreo
-    MUESTREO {
-        int muestreo_id PK
-        int orden_manufactura_id FK
-        int punto_muestreo_id FK
-        datetime fecha_inicio
-        datetime fecha_fin
-        int operario_id FK
+    %% Solicitud de muestreo
+    SOLICITUD_MUESTREO {
+        int solicitud_muestreo_id PK
+        int usuario_id FK "Solicitante"
+        datetime fecha "Fecha/Hora Solicitud"
+        string tipo "Producto, Servicio, Hisopo, etc."
+        int orden_manufactura_id FK "Si producto"
+        int equipo_instrumento_id FK "hisopado equipos"
+        int punto_muestreo_id FK "Si servicio"
+        int operario_id FK "Hisopado personal"
+        int estado_solicitud_id FK "Estado de la solicitud"
+        string observacion
     }
 
-    ORDEN_MANUFACTURA ||--o{ MUESTREO : genera
-    PUNTO_MUESTREO ||--o{ MUESTREO : genera
-    OPERARIO ||--o{ MUESTREO : muestrea
-    MUESTREO ||--o{ ENVIO_MUESTRA : genera
+    HISTORICO_SOLICITUD_MUESTREO {
+        int historico_solicitud_muestreo_id PK
+        int solicitud_muestreo_id FK
+        int estado_solicitud_id FK
+        datetime fecha
+        int usuario_id FK
+        string observacion
+    }
+
+    SOLICITUD_MUESTREO ||--o{ HISTORICO_SOLICITUD_MUESTREO : registra
+    ESTADO_SOLICITUD ||--o{ HISTORICO_SOLICITUD_MUESTREO : registra
+    USUARIO ||--o{ HISTORICO_SOLICITUD_MUESTREO : registra
+
+    %% Tabla que representa el muestreo (Sesión)
+    MUESTREO {
+        int muestreo_id PK
+        int solicitud_muestreo_id FK
+        datetime fecha_inicio
+        datetime fecha_fin
+        int operario_id FK "Responsable del muestreo"
+    }
+
+    %% Tabla que representa cada unidad física tomada (Hisopo, frasco, etc.)
+    MUESTRA {
+        int muestra_id PK
+        int muestreo_id FK
+        int punto_muestreo_id FK "Opcional (Sistemas/Infraestructura)"
+        int zona_equipo_id FK "Opcional (Hisopado Equipos)"
+        int operario_muestreado_id FK "Opcional (Hisopado Personal)"
+        string tipo_muestra "Hisopo, Agua, Aire, etc."
+        string codigo_etiqueta UK
+        string observacion
+    }
+
+    SOLICITUD_MUESTREO ||--o{ MUESTREO : genera
+    OPERARIO ||--o{ MUESTREO : realiza
+
+    MUESTREO ||--o{ MUESTRA : contiene
+    PUNTO_MUESTREO ||--o{ MUESTRA : identifica
+    ZONA_EQUIPO ||--o{ MUESTRA : identifica
+    OPERARIO ||--o{ MUESTRA : es_muestreado
+
+    MUESTRA ||--o{ ENVIO_MUESTRA : se_envia
     OPERARIO ||--o{ ENVIO_MUESTRA : envia
     ENVIO_MUESTRA ||--o{ RECEPCION : genera
     
-    %% Tabla que representa el envío de la muestra
+    %% Tabla que representa el envío de una muestra individual
     ENVIO_MUESTRA {
         int envio_muestra_id PK
-        int muestreo_id FK
+        int muestra_id FK
         datetime fecha
         int operario_id FK
         string destino
@@ -187,19 +256,22 @@ erDiagram
     %% Tabla que representa la recepción de la muestra
     RECEPCION {
         int recepcion_id PK
-        string tipo "Servicio, Producto, Hisopo, etc."
+        int envio_muestra_id FK
         datetime fecha
-        int operario_id FK
+        int operario_id FK "Operario que recibe"
         string recibido_en "Microbiología, Fisicoquímica, etc."
         string decision "Aceptado, Rechazado"
+        string observacion
     }
     %% Tabla que representa el análisis
     ANALISIS {
         int analisis_id PK
+        int muestra_id FK "Conexión unívoca con la muestra"
         int recepcion_id FK
         int metodo_version_id FK
+        int especificacion_id FK "Límite asociado"
         int estado_analisis_id FK
-        date fecha_inicio
+        datetime fecha_inicio
         datetime ultimo_cambio
         int operario_id FK
     }
@@ -220,7 +292,7 @@ erDiagram
     INCUBACION {
         int incubacion_id PK
         int analisis_id FK
-        int equipo_id FK
+        int equipo_instrumento_id FK
         datetime entrada
         datetime salida
         float temp_registrada
@@ -232,8 +304,10 @@ erDiagram
         int analisis_id FK
         datetime fecha_reporte
         int operario_id FK
-        int valor 
+        string valor "Admite Cuali/Cuantitativo"
+        float valor_numerico
         string unidad
+        boolean conforme
         string observacion
     }
 
@@ -247,7 +321,7 @@ erDiagram
     %% Orden de preparación de medios de cultivo y diluyentes
     ORDEN_PREPARACION_MEDIO {
         int orden_preparacion_medio_id PK
-        date fecha
+        datetime fecha
         int medio_preparado_id FK
         string lote
         float volumen_total
@@ -261,6 +335,8 @@ erDiagram
     RECEPCION_POLVO_SUPLEMENTO {
         int recepcion_polvo_suplemento_id PK
         int polvo_suplemento_id FK
+        string lote_proveedor
+        date vence
         float cantidad
     }
     %% Tabla que representa el stock de polvos, reactivos e insumos
@@ -278,8 +354,6 @@ erDiagram
         int polvo_suplemento_id PK
         string codigo UK
         string nombre
-        string lote
-        date vence
         string unidad "Unidad en la que se mide el insumo"
         boolean activo
     }
@@ -294,7 +368,7 @@ erDiagram
     %% y diluyentes
     USO_POLVO_SUPLEMENTO {
         int uso_polvo_suplemento_id PK
-        int polvo_suplemento_id FK
+        int stock_polvo_suplemento_id FK
         int orden_preparacion_medio_id FK
         float cantidad
         string unidad
@@ -319,7 +393,7 @@ erDiagram
     APROBACION_MEDIOS {
         int aprobacion_medios_id PK
         int stock_medios_id FK
-        date fecha
+        datetime fecha
         int operario_id FK
         string observacion
     }
@@ -349,7 +423,6 @@ erDiagram
     %% Tabla que representa el usuario
     USUARIO {
         int usuario_id PK
-        int operario_id FK
         string nombre
         string firma
         boolean activo
@@ -357,13 +430,16 @@ erDiagram
     %% Tabla que representa el rol
     ROL {
         int rol_id PK
-        string nombre UK
+        string nombre UK "Administrador, Operario, Supervisor, etc."
     }
-    %% Tabla que representa la relación entre usuario y rol
+    %% Tabla que asigna roles a usuarios
+    %% Permite que un usuario tenga múltiples roles
     USUARIO_ROL {
         int usuario_rol_id PK
         int usuario_id FK
         int rol_id FK
+        date fecha_inicio
+        date fecha_fin
     }
     %% Tabla que representa el rastro de auditoría
     AUDIT_TRAIL {
@@ -382,19 +458,20 @@ erDiagram
         int revision_id PK
         string tabla
         bigint registro_id
-        int operario_id FK
+        int usuario_id FK "Supervisor con credenciales"
         datetime fecha
         string conclusion "Aprobado, Rechazado"
     }
 
     SISTEMA ||--o{ PLANTA : posee
     PLANTA ||--o{ AREA : divide
-    AREA ||--o{ EQUIPO : aloja
+    AREA ||--o{ EQUIPO_INSTRUMENTO : aloja
+    EQUIPO_INSTRUMENTO ||--o{ ZONA_EQUIPO : posee
 
-    AREA ||--o{ PRODUCTO : elabora
+    PLANTA ||--o{ PRODUCTO : elabora
     PRODUCTO ||--o{ ESPECIFICACION : define
 
-    OPERARIO ||--o{ RECEPCION : recibe
+    OPERARIO ||--o{ RECEPCION : recibe_fisicamente
 
     METODO_VERSION ||--o{ ANALISIS : aplica
     ESTADO_ANALISIS ||--o{ ANALISIS : estado
@@ -403,7 +480,7 @@ erDiagram
     ANALISIS ||--o{ HISTORIAL_ESTADO_ANALISIS : tiene
 
     ANALISIS ||--o{ INCUBACION : requiere
-    EQUIPO ||--o{ INCUBACION : usa
+    EQUIPO_INSTRUMENTO ||--o{ INCUBACION : usa
 
     ANALISIS ||--o{ RESULTADO : produce
     OPERARIO ||--o{ RESULTADO : reporta
@@ -426,4 +503,8 @@ erDiagram
     ROL ||--o{ USUARIO_ROL : asigna
 
     USUARIO ||--o{ AUDIT_TRAIL : genera
-    OPERARIO ||--o{ REVISION : supervisa
+    USUARIO ||--o{ REVISION : supervisa
+    USUARIO ||--o{ OPERARIO : vincula
+    USUARIO ||--o{ HISTORICO_ESTADO_MANUFACTURA : reporta
+    MUESTRA ||--o{ ANALISIS : somete
+    ESPECIFICACION ||--o{ ANALISIS : evalua
