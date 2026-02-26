@@ -9,6 +9,7 @@ class Usuario(Base):
 
     usuario_id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
+    password_hash = Column(String, nullable=True)
     firma = Column(String, nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
 
@@ -40,7 +41,7 @@ class UsuarioRol(Base):
 class AuditTrail(Base):
     __tablename__ = "audit_trail"
 
-    audit_trail_id = Column(BigInteger, primary_key=True)
+    audit_trail_id = Column(Integer, primary_key=True)
     tabla = Column(String, nullable=False)
     registro_id = Column(BigInteger, nullable=False)
     columna = Column(String, nullable=True)

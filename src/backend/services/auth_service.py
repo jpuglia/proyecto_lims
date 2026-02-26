@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Session
+from typing import Optional
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from sqlalchemy.orm import Session
+
 
 from src.backend.repositories.auth import UsuarioRepository, AuditTrailRepository
 from src.backend.models.auth import Usuario
@@ -10,11 +11,13 @@ class AuthService:
         self.usuario_repo = usuario_repo
         self.audit_repo = audit_repo
 
-    def create_usuario(self, db: Session, user_data: dict, current_user_id: int) -> Usuario:
+    def create_usuario(self, db: Session, user_data: dict, current_user_id: Optional[int] = None) -> Usuario:
         # Business logic for user creation
         nuevo_usuario = self.usuario_repo.create(db, user_data)
         
-        # Audit trail
+        # Audit trail: if first user, use its own ID for auditing
+        audit_uid = current_user_id if current_user_id else nuevo_usuario.usuario_id
+
         self.audit_repo.create(db, {
             "tabla": "usuario",
             "registro_id": nuevo_usuario.usuario_id,
@@ -22,7 +25,7 @@ class AuthService:
             "old_val": None,
             "new_val": f"Created user {nuevo_usuario.nombre}",
             "accion": "CREATE",
-            "usuario_id": current_user_id,
+            "usuario_id": audit_uid,
             "timestamp": datetime.now(timezone.utc)
         })
         

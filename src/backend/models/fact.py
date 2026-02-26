@@ -49,6 +49,9 @@ class ManufacturaOperario(Base):
     salida = Column(DateTime, nullable=True)
     rol_operacion = Column(String, nullable=True)
 
+    manufactura = relationship("Manufactura", primaryjoin="ManufacturaOperario.manufactura_id==Manufactura.manufactura_id")
+    operario = relationship("Operario", primaryjoin="ManufacturaOperario.operario_id==Operario.operario_id")
+
 class HistoricoEstadoManufactura(Base):
     __tablename__ = "historico_estado_manufactura"
 
@@ -57,6 +60,10 @@ class HistoricoEstadoManufactura(Base):
     estado_manufactura_id = Column(Integer, ForeignKey("estado_manufactura.estado_manufactura_id"), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuario.usuario_id"), nullable=False)
     fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    manufactura = relationship("Manufactura", primaryjoin="HistoricoEstadoManufactura.manufactura_id==Manufactura.manufactura_id")
+    estado_manufactura = relationship("EstadoManufactura", primaryjoin="HistoricoEstadoManufactura.estado_manufactura_id==EstadoManufactura.estado_manufactura_id")
+    usuario = relationship("Usuario", primaryjoin="HistoricoEstadoManufactura.usuario_id==Usuario.usuario_id")
 
 class EstadoSolicitud(Base):
     __tablename__ = "estado_solicitud"
@@ -78,6 +85,13 @@ class SolicitudMuestreo(Base):
     estado_solicitud_id = Column(Integer, ForeignKey("estado_solicitud.estado_solicitud_id"), nullable=False)
     observacion = Column(Text, nullable=True)
 
+    usuario = relationship("Usuario", primaryjoin="SolicitudMuestreo.usuario_id==Usuario.usuario_id")
+    orden_manufactura = relationship("OrdenManufactura", primaryjoin="SolicitudMuestreo.orden_manufactura_id==OrdenManufactura.orden_manufactura_id")
+    equipo_instrumento = relationship("EquipoInstrumento", primaryjoin="SolicitudMuestreo.equipo_instrumento_id==EquipoInstrumento.equipo_instrumento_id")
+    punto_muestreo = relationship("PuntoMuestreo", primaryjoin="SolicitudMuestreo.punto_muestreo_id==PuntoMuestreo.punto_muestreo_id")
+    operario = relationship("Operario", primaryjoin="SolicitudMuestreo.operario_id==Operario.operario_id")
+    estado_solicitud = relationship("EstadoSolicitud", primaryjoin="SolicitudMuestreo.estado_solicitud_id==EstadoSolicitud.estado_solicitud_id")
+
 class HistoricoSolicitudMuestreo(Base):
     __tablename__ = "historico_solicitud_muestreo"
 
@@ -87,6 +101,10 @@ class HistoricoSolicitudMuestreo(Base):
     fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuario.usuario_id"), nullable=False)
     observacion = Column(Text, nullable=True)
+
+    solicitud_muestreo = relationship("SolicitudMuestreo", primaryjoin="HistoricoSolicitudMuestreo.solicitud_muestreo_id==SolicitudMuestreo.solicitud_muestreo_id")
+    estado_solicitud = relationship("EstadoSolicitud", primaryjoin="HistoricoSolicitudMuestreo.estado_solicitud_id==EstadoSolicitud.estado_solicitud_id")
+    usuario = relationship("Usuario", primaryjoin="HistoricoSolicitudMuestreo.usuario_id==Usuario.usuario_id")
 
 class Muestreo(Base):
     __tablename__ = "muestreo"
@@ -135,6 +153,9 @@ class Recepcion(Base):
     decision = Column(String, nullable=False)
     observacion = Column(Text, nullable=True)
 
+    envio_muestra = relationship("EnvioMuestra", primaryjoin="Recepcion.envio_muestra_id==EnvioMuestra.envio_muestra_id")
+    operario = relationship("Operario", primaryjoin="Recepcion.operario_id==Operario.operario_id")
+
 class EstadoAnalisis(Base):
     __tablename__ = "estado_analisis"
 
@@ -154,6 +175,13 @@ class Analisis(Base):
     ultimo_cambio = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
 
+    muestra = relationship("Muestra", primaryjoin="Analisis.muestra_id==Muestra.muestra_id")
+    recepcion = relationship("Recepcion", primaryjoin="Analisis.recepcion_id==Recepcion.recepcion_id")
+    metodo_version = relationship("MetodoVersion", primaryjoin="Analisis.metodo_version_id==MetodoVersion.metodo_version_id")
+    especificacion = relationship("Especificacion", primaryjoin="Analisis.especificacion_id==Especificacion.especificacion_id")
+    estado_analisis = relationship("EstadoAnalisis", primaryjoin="Analisis.estado_analisis_id==EstadoAnalisis.estado_analisis_id")
+    operario = relationship("Operario", primaryjoin="Analisis.operario_id==Operario.operario_id")
+
 class HistorialEstadoAnalisis(Base):
     __tablename__ = "historial_estado_analisis"
 
@@ -162,6 +190,10 @@ class HistorialEstadoAnalisis(Base):
     estado_analisis_id = Column(Integer, ForeignKey("estado_analisis.estado_analisis_id"), nullable=False)
     fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
+
+    analisis = relationship("Analisis", primaryjoin="HistorialEstadoAnalisis.analisis_id==Analisis.analisis_id")
+    estado_analisis = relationship("EstadoAnalisis", primaryjoin="HistorialEstadoAnalisis.estado_analisis_id==EstadoAnalisis.estado_analisis_id")
+    operario = relationship("Operario", primaryjoin="HistorialEstadoAnalisis.operario_id==Operario.operario_id")
 
 class Incubacion(Base):
     __tablename__ = "incubacion"
@@ -173,6 +205,9 @@ class Incubacion(Base):
     salida = Column(DateTime, nullable=True)
     temp_registrada = Column(Float, nullable=True)
     unidad_temp = Column(String, nullable=True)
+
+    analisis = relationship("Analisis", primaryjoin="Incubacion.analisis_id==Analisis.analisis_id")
+    equipo_instrumento = relationship("EquipoInstrumento", primaryjoin="Incubacion.equipo_instrumento_id==EquipoInstrumento.equipo_instrumento_id")
 
 class Resultado(Base):
     __tablename__ = "resultado"
@@ -186,3 +221,6 @@ class Resultado(Base):
     unidad = Column(String, nullable=True)
     conforme = Column(Boolean, nullable=True)
     observacion = Column(Text, nullable=True)
+
+    analisis = relationship("Analisis", primaryjoin="Resultado.analisis_id==Analisis.analisis_id")
+    operario = relationship("Operario", primaryjoin="Resultado.operario_id==Operario.operario_id")

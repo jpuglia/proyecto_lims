@@ -1,6 +1,5 @@
-from sqlalchemy.orm import Session
 from datetime import datetime, timezone
-
+from sqlalchemy.orm import Session
 from src.backend.repositories.fact import (OrdenManufacturaRepository, ManufacturaRepository, 
                                            HistoricoEstadoManufacturaRepository, EstadoManufacturaRepository)
 from src.backend.models.fact import Manufactura

@@ -22,12 +22,16 @@ class RecepcionPolvoSuplemento(Base):
     vence = Column(Date, nullable=False)
     cantidad = Column(Float, nullable=False)
 
+    polvo_suplemento = relationship("PolvoSuplemento", primaryjoin="RecepcionPolvoSuplemento.polvo_suplemento_id==PolvoSuplemento.polvo_suplemento_id")
+
 class StockPolvoSuplemento(Base):
     __tablename__ = "stock_polvo_suplemento"
 
     stock_polvo_suplemento_id = Column(Integer, primary_key=True)
     recepcion_polvo_suplemento_id = Column(Integer, ForeignKey("recepcion_polvo_suplemento.recepcion_polvo_suplemento_id"), nullable=False)
     cantidad = Column(Float, nullable=False)
+
+    recepcion = relationship("RecepcionPolvoSuplemento", primaryjoin="StockPolvoSuplemento.recepcion_polvo_suplemento_id==RecepcionPolvoSuplemento.recepcion_polvo_suplemento_id")
 
 class MedioPreparado(Base):
     __tablename__ = "medio_preparado"
@@ -48,6 +52,9 @@ class OrdenPreparacionMedio(Base):
     unidad_volumen = Column(String, nullable=False)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
 
+    medio_preparado = relationship("MedioPreparado", primaryjoin="OrdenPreparacionMedio.medio_preparado_id==MedioPreparado.medio_preparado_id")
+    operario = relationship("Operario", primaryjoin="OrdenPreparacionMedio.operario_id==Operario.operario_id")
+
 class UsoPolvoSuplemento(Base):
     __tablename__ = "uso_polvo_suplemento"
 
@@ -56,6 +63,9 @@ class UsoPolvoSuplemento(Base):
     orden_preparacion_medio_id = Column(Integer, ForeignKey("orden_preparacion_medio.orden_preparacion_medio_id"), nullable=False)
     cantidad = Column(Float, nullable=False)
     unidad = Column(String, nullable=False)
+
+    stock_polvo = relationship("StockPolvoSuplemento", primaryjoin="UsoPolvoSuplemento.stock_polvo_suplemento_id==StockPolvoSuplemento.stock_polvo_suplemento_id")
+    orden_preparacion_medio = relationship("OrdenPreparacionMedio", primaryjoin="UsoPolvoSuplemento.orden_preparacion_medio_id==OrdenPreparacionMedio.orden_preparacion_medio_id")
 
 class EstadoQC(Base):
     __tablename__ = "estado_qc"
@@ -72,6 +82,9 @@ class StockMedios(Base):
     vence = Column(Date, nullable=False)
     estado_qc_id = Column(Integer, ForeignKey("estado_qc.estado_qc_id"), nullable=False)
 
+    orden_preparacion_medio = relationship("OrdenPreparacionMedio", primaryjoin="StockMedios.orden_preparacion_medio_id==OrdenPreparacionMedio.orden_preparacion_medio_id")
+    estado_qc = relationship("EstadoQC", primaryjoin="StockMedios.estado_qc_id==EstadoQC.estado_qc_id")
+
 class AprobacionMedios(Base):
     __tablename__ = "aprobacion_medios"
 
@@ -81,6 +94,9 @@ class AprobacionMedios(Base):
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
     observacion = Column(Text, nullable=True)
 
+    stock_medios = relationship("StockMedios", primaryjoin="AprobacionMedios.stock_medios_id==StockMedios.stock_medios_id")
+    operario = relationship("Operario", primaryjoin="AprobacionMedios.operario_id==Operario.operario_id")
+
 class UsoMedios(Base):
     __tablename__ = "uso_medios"
 
@@ -88,9 +104,16 @@ class UsoMedios(Base):
     analisis_id = Column(Integer, ForeignKey("analisis.analisis_id"), nullable=False)
     stock_medios_id = Column(Integer, ForeignKey("stock_medios.stock_medios_id"), nullable=False)
 
+    analisis = relationship("Analisis", primaryjoin="UsoMedios.analisis_id==Analisis.analisis_id")
+    stock_medios = relationship("StockMedios", primaryjoin="UsoMedios.stock_medios_id==StockMedios.stock_medios_id")
+
 class UsoCepa(Base):
     __tablename__ = "uso_cepa"
 
     uso_cepa_id = Column(Integer, primary_key=True)
     cepa_referencia_id = Column(Integer, ForeignKey("cepa_referencia.cepa_referencia_id"), nullable=False)
     analisis_id = Column(Integer, ForeignKey("analisis.analisis_id"), nullable=False)
+
+    cepa_referencia = relationship("CepaReferencia", primaryjoin="UsoCepa.cepa_referencia_id==CepaReferencia.cepa_referencia_id")
+    analisis = relationship("Analisis", primaryjoin="UsoCepa.analisis_id==Analisis.analisis_id")
+
