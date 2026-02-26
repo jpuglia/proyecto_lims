@@ -52,7 +52,7 @@ def delete_polvo(polvo_id: int, db: Session = Depends(get_db)):
     obj = repo.get(db, polvo_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Polvo/Suplemento no encontrado")
-    repo.delete(db, obj)
+    repo.delete(db, polvo_id)
     return None
 
 

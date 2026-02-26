@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from src.backend.repositories.base import BaseRepository
 from src.backend.models.dim import (Sistema, Planta, Area, TipoEquipo, EstadoEquipo, 
@@ -34,7 +34,11 @@ class EquipoInstrumentoRepository(BaseRepository[EquipoInstrumento]):
         super().__init__(EquipoInstrumento)
 
     def get_by_area(self, db: Session, area_id: int) -> List[EquipoInstrumento]:
-        return db.query(self.model).filter(self.model.area_id == area_id).all()
+        return db.query(self.model).options(
+            joinedload(self.model.tipo_equipo),
+            joinedload(self.model.estado),
+            joinedload(self.model.area)
+        ).filter(self.model.area_id == area_id).all()
 
 class ZonaEquipoRepository(BaseRepository[ZonaEquipo]):
     def __init__(self):

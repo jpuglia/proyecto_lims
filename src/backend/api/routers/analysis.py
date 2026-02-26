@@ -64,7 +64,7 @@ def delete_analisis(analisis_id: int, db: Session = Depends(get_db)):
     analisis = repo.get(db, analisis_id)
     if not analisis:
         raise HTTPException(status_code=404, detail="Análisis no encontrado")
-    repo.delete(db, analisis)
+    repo.delete(db, analisis_id)
     return None
 
 

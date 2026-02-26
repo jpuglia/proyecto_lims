@@ -55,7 +55,7 @@ def delete_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
     obj = repo.get(db, solicitud_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
-    repo.delete(db, obj)
+    repo.delete(db, solicitud_id)
     return None
 
 

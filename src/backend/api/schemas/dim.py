@@ -7,9 +7,9 @@ from pydantic import BaseModel, ConfigDict, Field
 # ─── Sistema ──────────────────────────────────────────────────
 
 class SistemaBase(BaseModel):
-    codigo: str
-    nombre: str
-    activo: bool = True
+    codigo: str = Field(..., description="Código único del sistema", json_schema_extra={"example": "SIST-01"})
+    nombre: str = Field(..., description="Nombre descriptivo del sistema", json_schema_extra={"example": "Sistema de Agua Purificada"})
+    activo: bool = Field(True, description="Estado de activación del sistema")
 
 class SistemaCreate(SistemaBase):
     pass
@@ -27,10 +27,10 @@ class SistemaUpdate(BaseModel):
 # ─── Planta ───────────────────────────────────────────────────
 
 class PlantaBase(BaseModel):
-    codigo: str
-    nombre: str
-    sistema_id: int
-    activo: bool = True
+    codigo: str = Field(..., description="Código único de la planta", json_schema_extra={"example": "PLT-BOU"})
+    nombre: str = Field(..., description="Nombre de la planta física", json_schema_extra={"example": "Planta Camino Carrasco"})
+    sistema_id: int = Field(..., description="ID del sistema al que pertenece")
+    activo: bool = Field(True, description="Estado de activación de la planta")
 
 class PlantaCreate(PlantaBase):
     pass
@@ -49,9 +49,9 @@ class PlantaUpdate(BaseModel):
 # ─── Area ─────────────────────────────────────────────────────
 
 class AreaBase(BaseModel):
-    nombre: str
-    planta_id: int
-    activo: bool = True
+    nombre: str = Field(..., description="Nombre del área funcional", json_schema_extra={"example": "Laboratorio de Microbiología"})
+    planta_id: int = Field(..., description="ID de la planta donde se ubica el área")
+    activo: bool = Field(True, description="Estado de activación del área")
 
 class AreaCreate(AreaBase):
     pass
@@ -69,7 +69,7 @@ class AreaUpdate(BaseModel):
 # ─── TipoEquipo ──────────────────────────────────────────────
 
 class TipoEquipoBase(BaseModel):
-    nombre: str
+    nombre: str = Field(..., description="Nombre del tipo de equipo", json_schema_extra={"example": "HPLC"})
 
 class TipoEquipoCreate(TipoEquipoBase):
     pass
@@ -82,7 +82,7 @@ class TipoEquipoResponse(TipoEquipoBase):
 # ─── EstadoEquipo ─────────────────────────────────────────────
 
 class EstadoEquipoBase(BaseModel):
-    nombre: str
+    nombre: str = Field(..., description="Nombre del estado del equipo", json_schema_extra={"example": "Operativo"})
 
 class EstadoEquipoCreate(EstadoEquipoBase):
     pass
@@ -123,9 +123,9 @@ class CambioEstadoEquipoRequest(BaseModel):
 # ─── ZonaEquipo ───────────────────────────────────────────────
 
 class ZonaEquipoBase(BaseModel):
-    equipo_instrumento_id: int
-    nombre: str
-    activo: bool = True
+    equipo_instrumento_id: int = Field(..., description="ID del equipo al que pertenece la zona")
+    nombre: str = Field(..., description="Nombre de la zona de muestreo", json_schema_extra={"example": "Cámara Interna"})
+    activo: bool = Field(True, description="Estado de activación de la zona")
 
 class ZonaEquipoCreate(ZonaEquipoBase):
     pass
@@ -143,11 +143,11 @@ class ZonaEquipoUpdate(BaseModel):
 # ─── CalibracionCalificacionEquipo ───────────────────────────
 
 class CalibracionBase(BaseModel):
-    tipo: str
-    equipo_instrumento_id: int
-    fecha: date
-    vence: Optional[date] = None
-    operario_id: int
+    tipo: str = Field(..., description="Tipo de intervención (Calibración/Calificación)", json_schema_extra={"example": "Calibración"})
+    equipo_instrumento_id: int = Field(..., description="ID del equipo intervenido")
+    fecha: date = Field(..., description="Fecha de realización")
+    vence: Optional[date] = Field(None, description="Fecha de vencimiento (si aplica)")
+    operario_id: int = Field(..., description="ID del operario que realizó la tarea")
 
 class CalibracionCreate(CalibracionBase):
     pass
@@ -160,11 +160,11 @@ class CalibracionResponse(CalibracionBase):
 # ─── PuntoMuestreo ───────────────────────────────────────────
 
 class PuntoMuestreoBase(BaseModel):
-    codigo: str
-    nombre: str
-    sistema_id: Optional[int] = None
-    area_id: Optional[int] = None
-    activo: bool = True
+    codigo: str = Field(..., description="Código identificador del punto", json_schema_extra={"example": "PM-H-01"})
+    nombre: str = Field(..., description="Nombre descriptivo del punto de muestreo", json_schema_extra={"example": "Grifo de Retorno 1"})
+    sistema_id: Optional[int] = Field(None, description="ID del sistema asociado")
+    area_id: Optional[int] = Field(None, description="ID del área asociada")
+    activo: bool = Field(True, description="Estado de activación del punto")
 
 class PuntoMuestreoCreate(PuntoMuestreoBase):
     pass

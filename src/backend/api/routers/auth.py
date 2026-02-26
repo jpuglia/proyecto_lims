@@ -24,12 +24,14 @@ from src.backend.services.auth_service import AuthService
 router = APIRouter()
 
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 # ─── Login ────────────────────────────────────────────────────
 
 @router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest, db: Session = Depends(get_db)):
+def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     usuario_repo = UsuarioRepository()
-    usuario = usuario_repo.get_by_nombre(db, body.nombre)
+    usuario = usuario_repo.get_by_nombre(db, body.username)
 
     if not usuario or not usuario.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
@@ -37,7 +39,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(body.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
 
-    token = create_access_token(data={"sub": usuario.usuario_id})
+    token = create_access_token(data={"sub": str(usuario.usuario_id), "username": usuario.nombre})
     return TokenResponse(access_token=token)
 
 

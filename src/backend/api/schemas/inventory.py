@@ -29,10 +29,10 @@ class PolvoSuplementoUpdate(BaseModel):
 # ─── RecepcionPolvoSuplemento ────────────────────────────────
 
 class RecepcionPolvoBase(BaseModel):
-    polvo_suplemento_id: int
-    lote_proveedor: str
-    vence: date
-    cantidad: float
+    polvo_suplemento_id: int = Field(..., description="ID del reactivo/polvo recibido")
+    lote_proveedor: str = Field(..., description="Lote asignado por el fabricante", json_schema_extra={"example": "PROV-9988"})
+    vence: date = Field(..., description="Fecha de vencimiento del lote")
+    cantidad: float = Field(..., description="Cantidad recibida", ge=0, json_schema_extra={"example": 500.0})
 
 class RecepcionPolvoCreate(RecepcionPolvoBase):
     pass
@@ -42,18 +42,18 @@ class RecepcionPolvoResponse(RecepcionPolvoBase):
     model_config = ConfigDict(from_attributes=True)
 
 class RecepcionPolvoUpdate(BaseModel):
-    polvo_suplemento_id: Optional[int] = None
-    lote_proveedor: Optional[str] = None
-    vence: Optional[date] = None
-    cantidad: Optional[float] = None
+    polvo_suplemento_id: Optional[int] = Field(None, description="Nuevo ID del reactivo")
+    lote_proveedor: Optional[str] = Field(None, description="Nuevo lote del proveedor")
+    vence: Optional[date] = Field(None, description="Nueva fecha de vencimiento")
+    cantidad: Optional[float] = Field(None, description="Nueva cantidad", ge=0)
 
 
 # ─── MedioPreparado ──────────────────────────────────────────
 
 class MedioPreparadoBase(BaseModel):
-    codigo: str
-    nombre: str
-    activo: bool = True
+    codigo: str = Field(..., description="Código único del medio (ej. MP-001)", json_schema_extra={"example": "MP-AGAR-01"})
+    nombre: str = Field(..., description="Nombre descriptivo del medio preparado", json_schema_extra={"example": "Agar Nutritivo (Preparado)"})
+    activo: bool = Field(True, description="Estado del registro")
 
 class MedioPreparadoCreate(MedioPreparadoBase):
     pass
@@ -95,11 +95,11 @@ class OrdenPreparacionResponse(OrdenPreparacionBase):
 # ─── StockMedios ─────────────────────────────────────────────
 
 class StockMediosResponse(BaseModel):
-    stock_medios_id: int
-    orden_preparacion_medio_id: int
-    lote_interno: str
-    vence: date
-    estado_qc_id: int
+    stock_medios_id: int = Field(..., description="ID del registro de stock")
+    orden_preparacion_medio_id: int = Field(..., description="ID de la orden de preparación")
+    lote_interno: str = Field(..., description="Lote interno asignado", json_schema_extra={"example": "LAB-23-001"})
+    vence: date = Field(..., description="Fecha de vencimiento calculada")
+    estado_qc_id: int = Field(..., description="ID del estado de control de calidad")
     model_config = ConfigDict(from_attributes=True)
 
 

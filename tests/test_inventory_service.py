@@ -1,6 +1,7 @@
 import pytest
 from datetime import date
 from src.backend.services.inventory_service import InventoryService
+from src.backend.core.exceptions import InsufficientStockException
 from src.backend.repositories.inventory import (
     RecepcionPolvoSuplementoRepository, StockPolvoSuplementoRepository,
     UsoPolvoSuplementoRepository, OrdenPreparacionMedioRepository,
@@ -44,7 +45,7 @@ def test_prepare_media_insufficient_stock(db_session):
         "unidad": "g"
     }]
     
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InsufficientStockException) as excinfo:
         service.prepare_culture_media(db_session, orden_data, consumos)
     
-    assert "Not enough stock available" in str(excinfo.value)
+    assert "No hay suficiente stock disponible" in str(excinfo.value)

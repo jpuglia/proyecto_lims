@@ -30,7 +30,9 @@ def test_planta_repository_get_all(db_session):
     
     plantas = repo.get_all(db_session)
     assert len(plantas) >= 1
-    assert plantas[0].nombre == "Planta 1"
+    # Verificar que la planta recién creada existe en la lista
+    nombres = [p.nombre for p in plantas]
+    assert "Planta 1" in nombres
 
 def test_usuario_repository_update(db_session):
     repo = UsuarioRepository()

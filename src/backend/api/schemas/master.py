@@ -46,11 +46,11 @@ class EspecificacionResponse(EspecificacionBase):
 # ─── MetodoVersion ───────────────────────────────────────────
 
 class MetodoVersionBase(BaseModel):
-    codigo: Optional[str] = None
-    nombre: str
-    version: int = 1
-    fecha_inicio: Optional[date] = None
-    fecha_fin: Optional[date] = None
+    codigo: Optional[str] = Field(None, description="Código del método analítico")
+    nombre: str = Field(..., description="Nombre del método", json_schema_extra={"example": "Recuento en placa"})
+    version: int = Field(1, description="Versión del método")
+    fecha_inicio: Optional[date] = Field(None, description="Fecha de vigencia inicial")
+    fecha_fin: Optional[date] = Field(None, description="Fecha de vigencia final")
 
 class MetodoVersionCreate(MetodoVersionBase):
     pass
@@ -63,11 +63,11 @@ class MetodoVersionResponse(MetodoVersionBase):
 # ─── CepaReferencia ──────────────────────────────────────────
 
 class CepaReferenciaBase(BaseModel):
-    codigo_atcc: str
-    lote: Optional[str] = None
-    pase: Optional[int] = None
-    fecha_control: Optional[date] = None
-    estado_biologico: Optional[str] = None
+    codigo_atcc: str = Field(..., description="Código ATCC u otra identificación", json_schema_extra={"example": "ATCC 6633"})
+    lote: Optional[str] = Field(None, description="Lote de la cepa")
+    pase: Optional[int] = Field(None, description="Número de pase (generación)")
+    fecha_control: Optional[date] = Field(None, description="Fecha de control de viabilidad")
+    estado_biologico: Optional[str] = Field(None, description="Estado actual (Congelada, Refrigerada, etc.)")
 
 class CepaReferenciaCreate(CepaReferenciaBase):
     pass

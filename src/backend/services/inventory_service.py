@@ -5,6 +5,10 @@ from src.backend.repositories.inventory import (RecepcionPolvoSuplementoReposito
                                                 UsoPolvoSuplementoRepository, OrdenPreparacionMedioRepository,
                                                 StockMediosRepository, AprobacionMediosRepository, EstadoQCRepository)
 from src.backend.models.inventory import RecepcionPolvoSuplemento, OrdenPreparacionMedio, StockMedios
+from src.backend.core.exceptions import InsufficientStockException, EntityNotFoundException
+from src.backend.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 class InventoryService:
     def __init__(self,
@@ -24,6 +28,7 @@ class InventoryService:
         self.estado_qc_repo = estado_qc_repo
 
     def register_powder_reception(self, db: Session, recepcion_data: dict) -> RecepcionPolvoSuplemento:
+        logger.info(f"Registering powder reception: {recepcion_data.get('lote_proveedor')}")
         recepcion = self.recepcion_polvo_repo.create(db, recepcion_data)
         
         # Add to stock
@@ -35,22 +40,31 @@ class InventoryService:
         return recepcion
 
     def prepare_culture_media(self, db: Session, orden_data: dict, consumos: list) -> OrdenPreparacionMedio:
+        logger.info(f"Preparing culture media: {orden_data.get('lote')}")
         orden = self.orden_prep_repo.create(db, orden_data)
         
         # Consume logic
         for consumo in consumos:
-            stock_polvo = self.stock_polvo_repo.get(db, consumo["stock_polvo_suplemento_id"])
-            if stock_polvo and stock_polvo.cantidad >= consumo["cantidad"]:
-                self.uso_polvo_repo.create(db, {
-                    "stock_polvo_suplemento_id": consumo["stock_polvo_suplemento_id"],
-                    "orden_preparacion_medio_id": orden.orden_preparacion_medio_id,
-                    "cantidad": consumo["cantidad"],
-                    "unidad": consumo["unidad"]
-                })
-                # Decrease stock
-                self.stock_polvo_repo.update(db, stock_polvo, {"cantidad": stock_polvo.cantidad - consumo["cantidad"]})
-            else:
-                raise ValueError("Not enough stock available for production.")
+            try:
+                stock_polvo = self.stock_polvo_repo.get(db, consumo["stock_polvo_suplemento_id"])
+                if stock_polvo and stock_polvo.cantidad >= consumo["cantidad"]:
+                    self.uso_polvo_repo.create(db, {
+                        "stock_polvo_suplemento_id": consumo["stock_polvo_suplemento_id"],
+                        "orden_preparacion_medio_id": orden.orden_preparacion_medio_id,
+                        "cantidad": consumo["cantidad"],
+                        "unidad": consumo["unidad"]
+                    })
+                    # Decrease stock
+                    self.stock_polvo_repo.update(db, stock_polvo, {"cantidad": stock_polvo.cantidad - consumo["cantidad"]})
+                else:
+                    stock_name = "Polvo/Suplemento"
+                    if stock_polvo:
+                        # Try to get the name if possible, or just the ID
+                         stock_name = f"ID:{consumo['stock_polvo_suplemento_id']}"
+                    raise InsufficientStockException(stock_name)
+            except InsufficientStockException as e:
+                logger.warning(f"Stock failure: {str(e)}")
+                raise
         
         # Generate initial stock of the prepared media in QC "Pendiente" State
         estado_pendiente = self.estado_qc_repo.get_all(db) # In a real implementation we would fetch by name "Pendiente"

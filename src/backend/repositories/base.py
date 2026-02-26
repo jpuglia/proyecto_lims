@@ -8,12 +8,18 @@ class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T]):
         self.model = model
 
-    def get(self, db: Session, id: int) -> Optional[T]:
+    def get(self, db: Session, id: int, options: Optional[List] = None) -> Optional[T]:
         primary_key = self.model.__mapper__.primary_key[0].name
-        return db.query(self.model).filter(getattr(self.model, primary_key) == id).first()
+        query = db.query(self.model)
+        if options:
+            query = query.options(*options)
+        return query.filter(getattr(self.model, primary_key) == id).first()
 
-    def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> List[T]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+    def get_all(self, db: Session, skip: int = 0, limit: int = 100, options: Optional[List] = None) -> List[T]:
+        query = db.query(self.model)
+        if options:
+            query = query.options(*options)
+        return query.offset(skip).limit(limit).all()
 
     def create(self, db: Session, obj_in: dict) -> T:
         db_obj = self.model(**obj_in)

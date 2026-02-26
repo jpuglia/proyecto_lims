@@ -27,7 +27,7 @@ class UsuarioResponse(UsuarioBase):
 # ─── Rol ──────────────────────────────────────────────────────
 
 class RolBase(BaseModel):
-    nombre: str
+    nombre: str = Field(..., description="Nombre del rol (ej. Admin, Supervisor, Analista)", json_schema_extra={"example": "Supervisor"})
 
 class RolCreate(RolBase):
     pass
@@ -53,11 +53,11 @@ class UsuarioRolResponse(UsuarioRolCreate):
 # ─── Operario ─────────────────────────────────────────────────
 
 class OperarioBase(BaseModel):
-    nombre: str
-    apellido: str
-    codigo_empleado: str
-    usuario_id: Optional[int] = None
-    activo: bool = True
+    nombre: str = Field(..., description="Nombre del operario", json_schema_extra={"example": "Juan"})
+    apellido: str = Field(..., description="Apellido del operario", json_schema_extra={"example": "Pérez"})
+    codigo_empleado: str = Field(..., description="Código interno de empleado", json_schema_extra={"example": "EMP-001"})
+    usuario_id: Optional[int] = Field(None, description="ID del usuario asociado (si tiene acceso al sistema)")
+    activo: bool = Field(True, description="Estado de activación del operario")
 
 class OperarioCreate(OperarioBase):
     pass

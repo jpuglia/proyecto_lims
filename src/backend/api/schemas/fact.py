@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ─── EstadoManufactura ────────────────────────────────────────
 
 class EstadoManufacturaBase(BaseModel):
-    nombre: str
+    nombre: str = Field(..., description="Nombre del estado de manufactura (ej. Pesada, Mezclado)", json_schema_extra={"example": "Pesada"})
 
 class EstadoManufacturaCreate(EstadoManufacturaBase):
     pass
@@ -51,11 +51,11 @@ class OrdenManufacturaUpdate(BaseModel):
 # ─── Manufactura ─────────────────────────────────────────────
 
 class ManufacturaBase(BaseModel):
-    orden_manufactura_id: int
-    estado_manufactura_id: int
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin: Optional[datetime] = None
-    observacion: Optional[str] = None
+    orden_manufactura_id: int = Field(..., description="ID de la orden de manufactura")
+    estado_manufactura_id: int = Field(..., description="ID del estado actual del proceso")
+    fecha_inicio: Optional[datetime] = Field(None, description="Inicio real del proceso")
+    fecha_fin: Optional[datetime] = Field(None, description="Fin real del proceso")
+    observacion: Optional[str] = Field(None, description="Observaciones del proceso")
 
 class ManufacturaCreate(ManufacturaBase):
     pass
@@ -78,14 +78,14 @@ class CambioEstadoManufacturaRequest(BaseModel):
 # ─── SolicitudMuestreo ──────────────────────────────────────
 
 class SolicitudMuestreoBase(BaseModel):
-    usuario_id: int
-    tipo: str
-    orden_manufactura_id: Optional[int] = None
-    equipo_instrumento_id: Optional[int] = None
-    punto_muestreo_id: Optional[int] = None
-    operario_id: Optional[int] = None
-    estado_solicitud_id: int
-    observacion: Optional[str] = None
+    usuario_id: int = Field(..., description="ID del usuario que solicita")
+    tipo: str = Field(..., description="Tipo de solicitud (Ambiental, Producto, Proceso, etc.)", json_schema_extra={"example": "Ambiental"})
+    orden_manufactura_id: Optional[int] = Field(None, description="ID de orden asociada")
+    equipo_instrumento_id: Optional[int] = Field(None, description="ID de equipo asociado")
+    punto_muestreo_id: Optional[int] = Field(None, description="ID de punto de muestreo")
+    operario_id: Optional[int] = Field(None, description="ID de operario asociado")
+    estado_solicitud_id: int = Field(..., description="ID del estado de la solicitud")
+    observacion: Optional[str] = Field(None, description="Notas adicionales")
 
 class SolicitudMuestreoCreate(SolicitudMuestreoBase):
     pass
