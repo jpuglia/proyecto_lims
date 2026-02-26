@@ -1,7 +1,7 @@
 """Pydantic schemas for dim module (systems, plants, areas, equipment)."""
 from datetime import date, datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ─── Sistema ──────────────────────────────────────────────────
@@ -95,11 +95,11 @@ class EstadoEquipoResponse(EstadoEquipoBase):
 # ─── EquipoInstrumento ───────────────────────────────────────
 
 class EquipoInstrumentoBase(BaseModel):
-    codigo: str
-    nombre: str
-    tipo_equipo_id: int
-    estado_equipo_id: int
-    area_id: int
+    codigo: str = Field(..., description="Código de inventario/etiqueta", json_schema_extra={"example": "EQU-001"})
+    nombre: str = Field(..., description="Nombre del equipo", json_schema_extra={"example": "Incubadora Memmert"})
+    tipo_equipo_id: int = Field(..., description="ID del tipo de equipo")
+    estado_equipo_id: int = Field(..., description="ID del estado actual")
+    area_id: int = Field(..., description="ID del área de ubicación")
 
 class EquipoInstrumentoCreate(EquipoInstrumentoBase):
     pass

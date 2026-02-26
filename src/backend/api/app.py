@@ -30,6 +30,35 @@ def create_app() -> FastAPI:
     app.include_router(analysis.router, prefix="/api/analisis", tags=["Análisis"])
     app.include_router(inventory.router, prefix="/api/inventario", tags=["Inventario"])
 
+    # Global Exception Handlers
+    from fastapi import Request
+    from fastapi.responses import JSONResponse
+    from fastapi import HTTPException as FastAPIHTTPException
+
+    @app.exception_handler(ValueError)
+    async def value_error_handler(request: Request, exc: ValueError):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Petición Incorrecta", "detail": str(exc)},
+        )
+
+    @app.exception_handler(Exception)
+    async def generic_exception_handler(request: Request, exc: Exception):
+        # En producción deberíamos loguear esto adecuadamente
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Error Interno del Servidor", "detail": str(exc)},
+        )
+
+    # También manejamos la excepción base de Starlette para capturar 404s y otros errores de bajo nivel
+    from starlette.exceptions import HTTPException as StarletteHTTPException
+    @app.exception_handler(StarletteHTTPException)
+    async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": "Error de HTTP", "detail": exc.detail},
+        )
+
     @app.get("/", tags=["Root"])
     def root():
         return {"message": "LIMS URUFARMA API v0.1.0"}

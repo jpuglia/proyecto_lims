@@ -1,16 +1,16 @@
 """Pydantic schemas for inventory module (powders, media, stock)."""
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ─── PolvoSuplemento ──────────────────────────────────────────
 
 class PolvoSuplementoBase(BaseModel):
-    codigo: str
-    nombre: str
-    unidad: str
-    activo: bool = True
+    codigo: str = Field(..., description="Código del reactivo/polvo", json_schema_extra={"example": "REACT-001"})
+    nombre: str = Field(..., description="Nombre descriptivo", json_schema_extra={"example": "Agar Nutritivo"})
+    unidad: str = Field(..., description="Unidad de medida base", json_schema_extra={"example": "g"})
+    activo: bool = Field(True, description="Estado del registro")
 
 class PolvoSuplementoCreate(PolvoSuplementoBase):
     pass
@@ -76,11 +76,11 @@ class ConsumoPolvo(BaseModel):
     unidad: str
 
 class OrdenPreparacionBase(BaseModel):
-    medio_preparado_id: int
-    lote: str
-    volumen_total: float
-    unidad_volumen: str
-    operario_id: int
+    medio_preparado_id: int = Field(..., description="ID del medio a preparar")
+    lote: str = Field(..., description="Lote interno asignado", json_schema_extra={"example": "LAB-2023-001"})
+    volumen_total: float = Field(..., description="Volumen final preparado", ge=0)
+    unidad_volumen: str = Field(..., description="Unidad del volumen", json_schema_extra={"example": "mL"})
+    operario_id: int = Field(..., description="ID del operario que prepara")
 
 class OrdenPreparacionCreate(BaseModel):
     orden: OrdenPreparacionBase

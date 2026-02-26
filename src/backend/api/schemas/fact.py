@@ -1,7 +1,7 @@
 """Pydantic schemas for fact module (manufacturing, sampling, analysis)."""
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ─── EstadoManufactura ────────────────────────────────────────
@@ -23,13 +23,13 @@ class EstadoManufacturaUpdate(BaseModel):
 # ─── OrdenManufactura ────────────────────────────────────────
 
 class OrdenManufacturaBase(BaseModel):
-    codigo: str
-    lote: str
-    fecha: date
-    producto_id: int
-    cantidad: float
-    unidad: str
-    operario_id: int
+    codigo: str = Field(..., description="Código de la orden (SAP/ERP)", json_schema_extra={"example": "OM-2023-001"})
+    lote: str = Field(..., description="Lote del producto a fabricar", json_schema_extra={"example": "L23001"})
+    fecha: date = Field(..., description="Fecha de emisión")
+    producto_id: int = Field(..., description="ID del producto")
+    cantidad: float = Field(..., description="Cantidad a fabricar", ge=0)
+    unidad: str = Field(..., description="Unidad de medida", json_schema_extra={"example": "kg"})
+    operario_id: int = Field(..., description="ID del operario responsable")
 
 class OrdenManufacturaCreate(OrdenManufacturaBase):
     pass
@@ -250,13 +250,13 @@ class IncubacionResponse(IncubacionBase):
 # ─── Resultado ───────────────────────────────────────────────
 
 class ResultadoBase(BaseModel):
-    analisis_id: int
-    fecha_reporte: Optional[datetime] = None
-    operario_id: int
-    valor: Optional[str] = None
-    valor_numerico: Optional[float] = None
-    unidad: Optional[str] = None
-    observacion: Optional[str] = None
+    analisis_id: int = Field(..., description="ID del análisis asociado")
+    fecha_reporte: Optional[datetime] = Field(None, description="Fecha de reporte del resultado")
+    operario_id: int = Field(..., description="ID del operario que reporta")
+    valor: Optional[str] = Field(None, description="Valor textual (CUMPLE, NO CUMPLE, etc.)")
+    valor_numerico: Optional[float] = Field(None, description="Valor numérico obtenido")
+    unidad: Optional[str] = Field(None, description="Unidad de medida")
+    observacion: Optional[str] = Field(None, description="Observaciones adicionales")
 
 class ResultadoCreate(ResultadoBase):
     pass

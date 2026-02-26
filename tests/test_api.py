@@ -39,3 +39,12 @@ def test_create_user_endpoint(client):
     response = client.post("/api/auth/usuarios", json=usuario_data)
     assert response.status_code == 201
     assert response.json()["nombre"] == "API User"
+
+def test_error_handler_not_found(client):
+    """Verify that 404 errors return the standardized JSON format."""
+    response = client.get("/api/non-existent-route")
+    assert response.status_code == 404
+    data = response.json()
+    assert "error" in data
+    assert "detail" in data
+    assert data["error"] == "Error de HTTP"

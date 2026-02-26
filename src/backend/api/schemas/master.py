@@ -1,16 +1,16 @@
 """Pydantic schemas for master module (products, specs, methods, cepas)."""
 from datetime import date
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ─── Producto ─────────────────────────────────────────────────
 
 class ProductoBase(BaseModel):
-    codigo: str
-    nombre: str
-    planta_id: int
-    activo: bool = True
+    codigo: str = Field(..., description="Código interno del producto (SAP/ERP)", json_schema_extra={"example": "PROD-001"})
+    nombre: str = Field(..., description="Nombre comercial del producto", json_schema_extra={"example": "Ibuprofeno 400mg"})
+    planta_id: int = Field(..., description="ID de la planta de manufactura", json_schema_extra={"example": 1})
+    activo: bool = Field(True, description="Si el producto está vigente")
 
 class ProductoCreate(ProductoBase):
     pass
@@ -27,13 +27,13 @@ class ProductoResponse(ProductoBase):
 # ─── Especificacion ──────────────────────────────────────────
 
 class EspecificacionBase(BaseModel):
-    producto_id: int
-    parametro: str
-    tipo_limite: str
-    valor_min: Optional[float] = None
-    valor_max: Optional[float] = None
-    unidad: Optional[str] = None
-    activo: bool = True
+    producto_id: int = Field(..., description="ID del producto asociado")
+    parametro: str = Field(..., description="Nombre del parámetro (ej. Pureza, pH)", json_schema_extra={"example": "pH"})
+    tipo_limite: str = Field(..., description="Tipo de límite (Rango, Min, Max, Texto)", json_schema_extra={"example": "Rango"})
+    valor_min: Optional[float] = Field(None, description="Valor mínimo aceptable")
+    valor_max: Optional[float] = Field(None, description="Valor máximo aceptable")
+    unidad: Optional[str] = Field(None, description="Unidad de medida", json_schema_extra={"example": "mg"})
+    activo: bool = Field(True, description="Estado de la especificación")
 
 class EspecificacionCreate(EspecificacionBase):
     pass

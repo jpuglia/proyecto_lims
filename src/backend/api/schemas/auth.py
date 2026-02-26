@@ -1,18 +1,18 @@
 """Pydantic schemas for auth module."""
 from datetime import date, datetime
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ─── Usuario ──────────────────────────────────────────────────
 
 class UsuarioBase(BaseModel):
-    nombre: str
-    firma: Optional[str] = None
-    activo: bool = True
+    nombre: str = Field(..., description="Nombre de usuario único", json_schema_extra={"example": "admin"})
+    firma: Optional[str] = Field(None, description="Siglas o firma manuscrita digital", json_schema_extra={"example": "A.G."})
+    activo: bool = Field(True, description="Estado del usuario en el sistema")
 
 class UsuarioCreate(UsuarioBase):
-    password: str
+    password: str = Field(..., description="Contraseña en texto plano", min_length=8, json_schema_extra={"example": "P@ssw0rd123"})
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -90,9 +90,9 @@ class AuditTrailResponse(BaseModel):
 # ─── Auth (Login) ─────────────────────────────────────────────
 
 class LoginRequest(BaseModel):
-    nombre: str
-    password: str
+    nombre: str = Field(..., description="Nombre de usuario", json_schema_extra={"example": "admin"})
+    password: str = Field(..., description="Contraseña", json_schema_extra={"example": "P@ssw0rd123"})
 
 class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+    access_token: str = Field(..., description="JWT Bearer token")
+    token_type: str = Field("bearer", description="Tipo de token")
