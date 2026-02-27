@@ -1,8 +1,8 @@
 import api from './axios';
 
-const POLVOS = '/api/inventario/polvos';
-const MEDIOS = '/api/inventario/medios';
-const STOCK = '/api/inventario/stock';
+const POLVOS = '/inventario/polvos';
+const MEDIOS = '/inventario/medios';
+const STOCK = '/inventario/stock';
 
 export const inventoryService = {
     // Polvos / Suplementos

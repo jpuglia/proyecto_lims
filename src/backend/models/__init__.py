@@ -6,6 +6,7 @@ from src.backend.models.dim import Sistema, Planta, Area, TipoEquipo, EstadoEqui
 from src.backend.models.master import Producto, Especificacion, MetodoVersion, CepaReferencia
 from src.backend.models.fact import EstadoManufactura, OrdenManufactura, Manufactura, ManufacturaOperario, HistoricoEstadoManufactura, EstadoSolicitud, SolicitudMuestreo, HistoricoSolicitudMuestreo, Muestreo, Muestra, EnvioMuestra, Recepcion, EstadoAnalisis, Analisis, HistorialEstadoAnalisis, Incubacion, Resultado
 from src.backend.models.inventory import PolvoSuplemento, RecepcionPolvoSuplemento, StockPolvoSuplemento, UsoPolvoSuplemento, MedioPreparado, OrdenPreparacionMedio, EstadoQC, StockMedios, AprobacionMedios, UsoMedios, UsoCepa
+from src.backend.models.documents import Documento
 
 __all__ = [
     "Base",

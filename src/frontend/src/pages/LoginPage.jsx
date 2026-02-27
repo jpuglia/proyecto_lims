@@ -49,7 +49,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-error/10 border border-error/50 text-error text-xs p-3 rounded-xl animate-shake">
+            <div data-testid="login-error" className="bg-error/10 border border-error/50 text-error text-xs p-3 rounded-xl animate-shake">
               {error}
             </div>
           )}
@@ -57,6 +57,7 @@ const LoginPage = () => {
           <div className="relative group">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent-primary transition-colors" size={20} />
             <input
+              data-testid="login-username"
               type="text"
               placeholder="Nombre de Usuario"
               value={username}
@@ -69,6 +70,7 @@ const LoginPage = () => {
           <div className="relative group">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent-primary transition-colors" size={20} />
             <input
+              data-testid="login-password"
               type="password"
               placeholder="Contraseña"
               value={password}
@@ -79,6 +81,7 @@ const LoginPage = () => {
           </div>
 
           <button
+            data-testid="login-submit"
             type="submit"
             disabled={loading}
             className="w-full bg-grad-primary hover:brightness-110 active:scale-[0.98] text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70"

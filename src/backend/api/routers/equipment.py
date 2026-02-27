@@ -16,15 +16,19 @@ from src.backend.repositories.dim import (
     CalibracionCalificacionEquipoRepository,
 )
 from src.backend.services.equipment_service import EquipmentService
-from src.backend.api.security import get_current_user
+from src.backend.api.security import get_current_user, require_role
 from src.backend.models.auth import Usuario
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
+# Roles con permiso de escritura sobre equipos
+_ESCRITURA = ["administrador", "supervisor"]
+
 
 # ─── Equipos ──────────────────────────────────────────────────
 
-@router.post("/", response_model=EquipoInstrumentoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=EquipoInstrumentoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_equipo(
     body: EquipoInstrumentoCreate,
     db: Session = Depends(get_db),
@@ -48,7 +52,8 @@ def get_equipo(equipo_id: int, db: Session = Depends(get_db)):
     return equipo
 
 
-@router.put("/{equipo_id}", response_model=EquipoInstrumentoResponse)
+@router.put("/{equipo_id}", response_model=EquipoInstrumentoResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
 def update_equipo(equipo_id: int, body: EquipoInstrumentoUpdate, db: Session = Depends(get_db)):
     repo = EquipoInstrumentoRepository()
     obj = repo.get(db, equipo_id)
@@ -57,7 +62,8 @@ def update_equipo(equipo_id: int, body: EquipoInstrumentoUpdate, db: Session = D
     return repo.update(db, obj, body.model_dump(exclude_unset=True))
 
 
-@router.delete("/{equipo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{equipo_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("administrador"))])
 def delete_equipo(equipo_id: int, db: Session = Depends(get_db)):
     repo = EquipoInstrumentoRepository()
     obj = repo.get(db, equipo_id)
@@ -67,16 +73,16 @@ def delete_equipo(equipo_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.post("/{equipo_id}/estado", response_model=EquipoInstrumentoResponse)
+@router.post("/{equipo_id}/estado", response_model=EquipoInstrumentoResponse,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def change_equipo_state(
     equipo_id: int,
     body: CambioEstadoEquipoRequest,
     db: Session = Depends(get_db),
     service: EquipmentService = Depends(get_equipment_service),
-    current_user: Usuario = Depends(get_current_user), # Use authenticated user
+    current_user: Usuario = Depends(get_current_user),
 ):
     try:
-        # Use body.usuario_id if provided, else current_user
         uid = body.usuario_id or current_user.usuario_id
         return service.change_equipment_state(db, equipo_id, body.nuevo_estado_id, uid)
     except ValueError as e:
@@ -85,7 +91,8 @@ def change_equipo_state(
 
 # ─── Zonas ────────────────────────────────────────────────────
 
-@router.post("/zonas", response_model=ZonaEquipoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/zonas", response_model=ZonaEquipoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_zona(body: ZonaEquipoCreate, db: Session = Depends(get_db)):
     repo = ZonaEquipoRepository()
     return repo.create(db, body.model_dump())
@@ -93,7 +100,8 @@ def create_zona(body: ZonaEquipoCreate, db: Session = Depends(get_db)):
 
 # ─── Calibraciones ───────────────────────────────────────────
 
-@router.post("/calibraciones", response_model=CalibracionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/calibraciones", response_model=CalibracionResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_calibracion(body: CalibracionCreate, db: Session = Depends(get_db)):
     repo = CalibracionCalificacionEquipoRepository()
     return repo.create(db, body.model_dump())

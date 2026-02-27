@@ -3,6 +3,11 @@ import { Plus, Search, RefreshCcw, Microscope, X, Check, Edit2, Trash2, Loader2,
 import { analysisService } from '../api/analysisService';
 import { toast } from 'react-hot-toast';
 import AnimatedPage from '../components/AnimatedPage';
+import RoleGuard from '../components/RoleGuard';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { analisisSchema, analisisEditSchema } from '../validation/schemas';
+import FormField, { inputCls } from '../components/FormField';
 
 const TIPO_OPCIONES = ['microbiologico', 'fisicoquimico', 'ambiental', 'producto'];
 
@@ -28,23 +33,30 @@ const EMPTY_FORM = {
 };
 
 const AnalysisPage = () => {
-    const [analysisList, setAnalysisList] = useState([]);
+    const [analyses, setAnalyses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useState(EMPTY_FORM);
-    const [editFormData, setEditFormData] = useState({ descripcion: '' });
 
-    useEffect(() => { fetchData(); }, []);
+    const createForm = useForm({
+        resolver: zodResolver(analisisSchema),
+        defaultValues: { tipo_analisis: 'microbiologico', operario_id: '', descripcion: '' },
+    });
+    const editForm = useForm({
+        resolver: zodResolver(analisisEditSchema),
+        defaultValues: { descripcion: '' },
+    });
 
-    const fetchData = async () => {
+    useEffect(() => { fetchAnalyses(); }, []);
+
+    const fetchAnalyses = async () => {
         setLoading(true);
         try {
             const data = await analysisService.getAll();
-            setAnalysisList(data);
+            setAnalyses(data);
         } catch {
             toast.error('Error al cargar análisis');
         } finally {
@@ -52,21 +64,17 @@ const AnalysisPage = () => {
         }
     };
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
+    const handleCreateAnalysis = async (data) => {
         setSubmitting(true);
         try {
-            const payload = {
-                ...formData,
-                operario_id: formData.operario_id ? parseInt(formData.operario_id) : null,
-            };
+            const payload = { ...data, operario_id: data.operario_id ? Number(data.operario_id) : null };
             await analysisService.create(payload);
-            toast.success('Análisis creado exitosamente');
             setIsModalOpen(false);
-            setFormData(EMPTY_FORM);
-            fetchData();
-        } catch {
-            toast.error('Error al crear el análisis');
+            createForm.reset();
+            toast.success('Análisis creado');
+            fetchAnalyses();
+        } catch (error) {
+            toast.error('Error al crear análisis');
         } finally {
             setSubmitting(false);
         }
@@ -74,20 +82,19 @@ const AnalysisPage = () => {
 
     const handleEditClick = (item) => {
         setCurrentItem(item);
-        setEditFormData({ descripcion: item.descripcion || '' });
+        editForm.reset({ descripcion: item.descripcion || '' });
         setIsEditModalOpen(true);
     };
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
+    const handleUpdateAnalysis = async (data) => {
         setSubmitting(true);
         try {
-            await analysisService.update(currentItem.analisis_id, editFormData);
-            toast.success('Análisis actualizado');
+            await analysisService.update(currentItem.analisis_id, data);
             setIsEditModalOpen(false);
-            fetchData();
-        } catch {
-            toast.error('Error al actualizar el análisis');
+            toast.success('Análisis actualizado');
+            fetchAnalyses();
+        } catch (error) {
+            toast.error('Error al actualizar análisis');
         } finally {
             setSubmitting(false);
         }
@@ -98,13 +105,13 @@ const AnalysisPage = () => {
         try {
             await analysisService.delete(item.analisis_id);
             toast.success('Análisis eliminado');
-            fetchData();
+            fetchAnalyses();
         } catch {
             toast.error('Error al eliminar el análisis');
         }
     };
 
-    const filtered = analysisList.filter((a) =>
+    const filtered = analyses.filter((a) =>
         (a.tipo_analisis || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (a.descripcion || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -117,14 +124,16 @@ const AnalysisPage = () => {
                     <h1 className="text-3xl font-bold text-gradient">Análisis</h1>
                     <p className="text-text-muted mt-1">Gestione los análisis microbiológicos, fisicoquímicos y ambientales.</p>
                 </div>
-                <button
-                    id="btn-nuevo-analisis"
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
-                >
-                    <Plus size={20} />
-                    Nuevo Análisis
-                </button>
+                <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
+                    <button
+                        id="btn-nuevo-analisis"
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
+                    >
+                        <Plus size={20} />
+                        Nuevo Análisis
+                    </button>
+                </RoleGuard>
             </div>
 
             {/* Search bar */}
@@ -140,7 +149,7 @@ const AnalysisPage = () => {
                     />
                 </div>
                 <button
-                    onClick={fetchData}
+                    onClick={fetchAnalyses}
                     className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
                 >
                     <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
@@ -194,18 +203,22 @@ const AnalysisPage = () => {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleEditClick(item)}
-                                                className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(item)}
-                                                className="p-2 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
+                                                <button
+                                                    onClick={() => handleEditClick(item)}
+                                                    className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                            </RoleGuard>
+                                            <RoleGuard roles={['administrador', 'supervisor']}>
+                                                <button
+                                                    onClick={() => handleDelete(item)}
+                                                    className="p-2 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </RoleGuard>
                                         </div>
                                     </td>
                                 </tr>
@@ -215,60 +228,31 @@ const AnalysisPage = () => {
                 </table>
             </div>
 
-            {/* Modal Crear */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors">
-                            <X size={24} />
-                        </button>
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
                         <h2 className="text-2xl font-bold text-gradient mb-6">Nuevo Análisis</h2>
-                        <form onSubmit={handleCreate} className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Tipo de Análisis</label>
-                                <select
-                                    value={formData.tipo_analisis}
-                                    onChange={(e) => setFormData({ ...formData, tipo_analisis: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all appearance-none"
-                                >
-                                    {TIPO_OPCIONES.map((t) => (
-                                        <option key={t} value={t} className="bg-bg-dark capitalize">{t}</option>
+                        <form onSubmit={createForm.handleSubmit(handleCreateAnalysis)} className="space-y-4">
+                            <FormField label="Tipo de Análisis" error={createForm.formState.errors.tipo_analisis}>
+                                <select {...createForm.register('tipo_analisis')} className={inputCls(createForm.formState.errors.tipo_analisis) + ' appearance-none'}>
+                                    {['microbiologico', 'fisicoquimico', 'ambiental', 'producto'].map(t => (
+                                        <option key={t} className="bg-bg-dark" value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
                                     ))}
                                 </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <User size={14} /> ID de Operario (opcional)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formData.operario_id}
-                                    onChange={(e) => setFormData({ ...formData, operario_id: e.target.value })}
-                                    placeholder="Ej: 1"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <FileText size={14} /> Descripción
-                                </label>
-                                <textarea
-                                    value={formData.descripcion}
-                                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                                    rows="3"
-                                    placeholder="Detalles del análisis a realizar..."
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all resize-none"
-                                />
-                            </div>
+                            </FormField>
+                            <FormField label="ID Operario (Opcional)" error={createForm.formState.errors.operario_id}>
+                                <input type="number" min="1" placeholder="Ej: 1" {...createForm.register('operario_id')} className={inputCls(createForm.formState.errors.operario_id)} />
+                            </FormField>
+                            <FormField label="Descripción" error={createForm.formState.errors.descripcion}>
+                                <textarea {...createForm.register('descripcion')} rows="4"
+                                    placeholder="Describir el análisis a realizar..."
+                                    className={inputCls(createForm.formState.errors.descripcion) + ' resize-none'} />
+                            </FormField>
                             <div className="flex gap-4 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">
-                                    Cancelar
-                                </button>
-                                <button type="submit" disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    Crear Análisis
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Crear Análisis
                                 </button>
                             </div>
                         </form>
@@ -276,36 +260,21 @@ const AnalysisPage = () => {
                 </div>
             )}
 
-            {/* Modal Editar */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors">
-                            <X size={24} />
-                        </button>
+                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
                         <h2 className="text-2xl font-bold text-gradient mb-2">Editar Análisis</h2>
-                        <p className="text-sm text-text-muted mb-6">Actualizando análisis <span className="text-white font-mono">#{currentItem?.analisis_id}</span></p>
-                        <form onSubmit={handleUpdate} className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <FileText size={14} /> Descripción
-                                </label>
-                                <textarea
-                                    value={editFormData.descripcion}
-                                    onChange={(e) => setEditFormData({ ...editFormData, descripcion: e.target.value })}
-                                    rows="4"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all resize-none"
-                                />
-                            </div>
+                        <p className="text-sm text-text-muted mb-6">Actualice la descripción del análisis <span className="text-white font-mono">#{currentItem?.analisis_id}</span>.</p>
+                        <form onSubmit={editForm.handleSubmit(handleUpdateAnalysis)} className="space-y-4">
+                            <FormField label="Descripción" error={editForm.formState.errors.descripcion}>
+                                <textarea {...editForm.register('descripcion')} rows="5"
+                                    className={inputCls(editForm.formState.errors.descripcion) + ' resize-none'} />
+                            </FormField>
                             <div className="flex gap-4 pt-2">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">
-                                    Cancelar
-                                </button>
-                                <button type="submit" disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    Actualizar
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Actualizar
                                 </button>
                             </div>
                         </form>

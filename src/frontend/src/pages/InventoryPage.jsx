@@ -3,6 +3,11 @@ import { Plus, Search, RefreshCcw, Package, FlaskConical, BarChart3, X, Check, E
 import { inventoryService } from '../api/inventoryService';
 import { toast } from 'react-hot-toast';
 import AnimatedPage from '../components/AnimatedPage';
+import RoleGuard from '../components/RoleGuard';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { polvoSchema, polvoEditSchema, medioSchema } from '../validation/schemas';
+import FormField, { inputCls } from '../components/FormField';
 
 // ─── Tab Components ──────────────────────────────────────────────────────────
 
@@ -22,8 +27,15 @@ const PolvosTab = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [current, setCurrent] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ nombre: '', codigo: '', unidad: 'gramos' });
-    const [editForm, setEditForm] = useState({ nombre: '' });
+
+    const createForm = useForm({
+        resolver: zodResolver(polvoSchema),
+        defaultValues: { nombre: '', codigo: '', unidad: 'g' },
+    });
+    const editForm = useForm({
+        resolver: zodResolver(polvoEditSchema),
+        defaultValues: { nombre: '' },
+    });
 
     const fetch = async () => {
         setLoading(true);
@@ -34,26 +46,24 @@ const PolvosTab = () => {
 
     useEffect(() => { fetch(); }, []);
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
+    const handleCreate = async (data) => {
         setSubmitting(true);
         try {
-            await inventoryService.createPolvo(form);
-            toast.success('Polvo/Suplemento creado');
+            await inventoryService.createPolvo(data);
             setIsModalOpen(false);
-            setForm({ nombre: '', codigo: '', unidad: 'gramos' });
+            createForm.reset();
+            toast.success('Polvo/Suplemento creado');
             fetch();
         } catch { toast.error('Error al crear polvo'); }
         finally { setSubmitting(false); }
     };
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
+    const handleUpdate = async (data) => {
         setSubmitting(true);
         try {
-            await inventoryService.updatePolvo(current.polvo_id, editForm);
-            toast.success('Polvo actualizado');
+            await inventoryService.updatePolvo(current.polvo_id, data);
             setIsEditModalOpen(false);
+            toast.success('Polvo actualizado');
             fetch();
         } catch { toast.error('Error al actualizar'); }
         finally { setSubmitting(false); }
@@ -87,10 +97,12 @@ const PolvosTab = () => {
                 <button onClick={fetch} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
                     <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
                 </button>
-                <button id="btn-nuevo-polvo" onClick={() => setIsModalOpen(true)}
-                    className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
-                    <Plus size={16} /> Nuevo Polvo
-                </button>
+                <RoleGuard roles={['administrador', 'supervisor']}>
+                    <button id="btn-nuevo-polvo" onClick={() => setIsModalOpen(true)}
+                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
+                        <Plus size={16} /> Nuevo Polvo
+                    </button>
+                </RoleGuard>
             </div>
 
             <div className="glass-card overflow-hidden">
@@ -115,10 +127,12 @@ const PolvosTab = () => {
                                 <td className="px-5 py-3 text-sm text-text-muted">{item.unidad}</td>
                                 <td className="px-5 py-3">
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => { setCurrent(item); setEditForm({ nombre: item.nombre }); setIsEditModalOpen(true); }}
-                                            className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"><Edit2 size={14} /></button>
-                                        <button onClick={() => handleDelete(item)}
-                                            className="p-1.5 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"><Trash2 size={14} /></button>
+                                        <RoleGuard roles={['administrador', 'supervisor']}>
+                                            <button onClick={() => { setCurrent(item); editForm.reset({ nombre: item.nombre }); setIsEditModalOpen(true); }}
+                                                className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"><Edit2 size={14} /></button>
+                                            <button onClick={() => handleDelete(item)}
+                                                className="p-1.5 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"><Trash2 size={14} /></button>
+                                        </RoleGuard>
                                     </div>
                                 </td>
                             </tr>
@@ -129,26 +143,22 @@ const PolvosTab = () => {
 
             {/* Modal Crear */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-5 right-5 text-text-muted hover:text-white"><X size={22} /></button>
-                        <h2 className="text-xl font-bold text-gradient mb-5">Nuevo Polvo / Suplemento</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            {[
-                                { label: 'Nombre', key: 'nombre', placeholder: 'Ej: Agar Mueller-Hinton', required: true },
-                                { label: 'Código', key: 'codigo', placeholder: 'Ej: AMH-001' },
-                                { label: 'Unidad', key: 'unidad', placeholder: 'Ej: gramos', required: true },
-                            ].map(({ label, key, placeholder, required }) => (
-                                <div key={key} className="space-y-1">
-                                    <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</label>
-                                    <input type="text" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                                        required={required} placeholder={placeholder}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm" />
-                                </div>
-                            ))}
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
+                        <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Polvo</h3>
+                        <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
+                            <FormField label="Nombre" error={createForm.formState.errors.nombre}>
+                                <input type="text" placeholder="Ej: Glicerina" {...createForm.register('nombre')} className={inputCls(createForm.formState.errors.nombre)} />
+                            </FormField>
+                            <FormField label="Código" error={createForm.formState.errors.codigo}>
+                                <input type="text" placeholder="Ej: POL-001" {...createForm.register('codigo')} className={inputCls(createForm.formState.errors.codigo)} />
+                            </FormField>
+                            <FormField label="Unidad" error={createForm.formState.errors.unidad}>
+                                <input type="text" placeholder="Ej: g, kg, ml" {...createForm.register('unidad')} className={inputCls(createForm.formState.errors.unidad)} />
+                            </FormField>
                             <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl bg-grad-primary text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white text-sm hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 px-4 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                     {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Crear
                                 </button>
                             </div>
@@ -159,20 +169,17 @@ const PolvosTab = () => {
 
             {/* Modal Editar */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-text-muted hover:text-white"><X size={22} /></button>
-                        <h2 className="text-xl font-bold text-gradient mb-5">Editar Polvo #{current?.polvo_id}</h2>
-                        <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Nombre</label>
-                                <input type="text" value={editForm.nombre} onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })} required
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm" />
-                            </div>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
+                        <h3 className="text-xl font-bold text-gradient mb-5">Editar Polvo</h3>
+                        <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
+                            <FormField label="Nombre" error={editForm.formState.errors.nombre}>
+                                <input type="text" {...editForm.register('nombre')} className={inputCls(editForm.formState.errors.nombre)} />
+                            </FormField>
                             <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl bg-grad-primary text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all">
-                                    {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Actualizar
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white text-sm hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 px-4 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Guardar
                                 </button>
                             </div>
                         </form>
@@ -190,7 +197,11 @@ const MediosTab = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ nombre: '', tipo: 'agar', volumen_ml: '' });
+
+    const createForm = useForm({
+        resolver: zodResolver(medioSchema),
+        defaultValues: { nombre: '', tipo: 'agar', volumen_ml: '' },
+    });
 
     const fetch = async () => {
         setLoading(true);
@@ -201,14 +212,13 @@ const MediosTab = () => {
 
     useEffect(() => { fetch(); }, []);
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
+    const handleCreate = async (data) => {
         setSubmitting(true);
         try {
-            await inventoryService.createMedio({ ...form, volumen_ml: parseFloat(form.volumen_ml) });
+            await inventoryService.createMedio({ ...data, volumen_ml: parseFloat(data.volumen_ml) });
             toast.success('Medio preparado creado');
             setIsModalOpen(false);
-            setForm({ nombre: '', tipo: 'agar', volumen_ml: '' });
+            createForm.reset();
             fetch();
         } catch { toast.error('Error al crear medio'); }
         finally { setSubmitting(false); }
@@ -220,10 +230,12 @@ const MediosTab = () => {
                 <button onClick={fetch} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
                     <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
                 </button>
-                <button id="btn-nuevo-medio" onClick={() => setIsModalOpen(true)}
-                    className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
-                    <Plus size={16} /> Nuevo Medio
-                </button>
+                <RoleGuard roles={['administrador', 'supervisor']}>
+                    <button id="btn-nuevo-medio" onClick={() => setIsModalOpen(true)}
+                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
+                        <Plus size={16} /> Nuevo Medio
+                    </button>
+                </RoleGuard>
             </div>
 
             <div className="glass-card overflow-hidden">
@@ -257,36 +269,26 @@ const MediosTab = () => {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-5 right-5 text-text-muted hover:text-white"><X size={22} /></button>
-                        <h2 className="text-xl font-bold text-gradient mb-5">Nuevo Medio Preparado</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Nombre</label>
-                                <input type="text" value={form.nombre} required onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                                    placeholder="Ej: Caldo Nutritivo"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Tipo</label>
-                                <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all appearance-none text-sm">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
+                        <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Medio Preparado</h3>
+                        <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
+                            <FormField label="Nombre" error={createForm.formState.errors.nombre}>
+                                <input type="text" placeholder="Ej: Caldo Nutritivo" {...createForm.register('nombre')} className={inputCls(createForm.formState.errors.nombre)} />
+                            </FormField>
+                            <FormField label="Tipo" error={createForm.formState.errors.tipo}>
+                                <select {...createForm.register('tipo')} className={inputCls(createForm.formState.errors.tipo) + " appearance-none"}>
                                     {['agar', 'caldo', 'solución', 'buffer'].map(t => (
                                         <option key={t} value={t} className="bg-bg-dark capitalize">{t}</option>
                                     ))}
                                 </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Volumen (mL)</label>
-                                <input type="number" step="0.1" min="0" value={form.volumen_ml} required
-                                    onChange={(e) => setForm({ ...form, volumen_ml: e.target.value })}
-                                    placeholder="Ej: 500"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm" />
-                            </div>
+                            </FormField>
+                            <FormField label="Volumen (mL)" error={createForm.formState.errors.volumen_ml}>
+                                <input type="number" step="0.1" min="0" placeholder="Ej: 500" {...createForm.register('volumen_ml')} className={inputCls(createForm.formState.errors.volumen_ml)} />
+                            </FormField>
                             <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl bg-grad-primary text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white text-sm hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 px-4 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                     {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Crear
                                 </button>
                             </div>

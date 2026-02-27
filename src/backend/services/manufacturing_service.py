@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session
+from typing import List
+from sqlalchemy.orm import Session, joinedload
 from src.backend.repositories.fact import (OrdenManufacturaRepository, ManufacturaRepository, 
                                            HistoricoEstadoManufacturaRepository, EstadoManufacturaRepository)
-from src.backend.models.fact import Manufactura
+from src.backend.models.fact import Manufactura, OrdenManufactura, HistoricoEstadoManufactura
 
 class ManufacturingService:
     def __init__(self,
@@ -44,3 +45,33 @@ class ManufacturingService:
         })
 
         return manufactura
+
+    def get_orden_trazabilidad(self, db: Session, orden_id: int):
+        """Retorna la orden con sus procesos anidados (para la vista de trazabilidad)."""
+        return (
+            db.query(OrdenManufactura)
+            .options(
+                joinedload(OrdenManufactura.manufacturas).joinedload(Manufactura.estado)
+            )
+            .filter(OrdenManufactura.orden_manufactura_id == orden_id)
+            .first()
+        )
+
+    def get_procesos_by_orden(self, db: Session, orden_id: int) -> List[Manufactura]:
+        """Retorna todos los procesos de manufactura de una orden específica."""
+        return (
+            db.query(Manufactura)
+            .options(joinedload(Manufactura.estado))
+            .filter(Manufactura.orden_manufactura_id == orden_id)
+            .all()
+        )
+
+    def get_historial_proceso(self, db: Session, manufactura_id: int) -> List[HistoricoEstadoManufactura]:
+        """Retorna el historial de cambios de estado de un proceso."""
+        return (
+            db.query(HistoricoEstadoManufactura)
+            .options(joinedload(HistoricoEstadoManufactura.estado_manufactura))
+            .filter(HistoricoEstadoManufactura.manufactura_id == manufactura_id)
+            .order_by(HistoricoEstadoManufactura.fecha.asc())
+            .all()
+        )

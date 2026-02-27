@@ -5,11 +5,14 @@ from sqlalchemy.orm import Session
 from src.backend.api.dependencies import get_db
 from src.backend.api.schemas.dim import PlantaCreate, PlantaUpdate, PlantaResponse
 from src.backend.repositories.dim import PlantaRepository
-from src.backend.api.security import get_current_user
+from src.backend.api.security import get_current_user, require_role
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
-@router.post("/plantas", response_model=PlantaResponse, status_code=status.HTTP_201_CREATED)
+_ESCRITURA = ["administrador", "supervisor"]
+
+@router.post("/plantas", response_model=PlantaResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_planta(body: PlantaCreate, db: Session = Depends(get_db)):
     repo = PlantaRepository()
     return repo.create(db, body.model_dump())
@@ -27,7 +30,8 @@ def get_planta(planta_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Planta no encontrada")
     return planta
 
-@router.put("/plantas/{planta_id}", response_model=PlantaResponse)
+@router.put("/plantas/{planta_id}", response_model=PlantaResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
 def update_planta(planta_id: int, body: PlantaUpdate, db: Session = Depends(get_db)):
     repo = PlantaRepository()
     obj = repo.get(db, planta_id)
@@ -35,7 +39,8 @@ def update_planta(planta_id: int, body: PlantaUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Planta no encontrada")
     return repo.update(db, obj, body.model_dump(exclude_unset=True))
 
-@router.delete("/plantas/{planta_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/plantas/{planta_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("administrador"))])
 def delete_planta(planta_id: int, db: Session = Depends(get_db)):
     repo = PlantaRepository()
     if not repo.delete(db, planta_id):

@@ -13,15 +13,20 @@ from src.backend.api.schemas.fact import (
 )
 from src.backend.repositories.fact import SolicitudMuestreoRepository, EnvioMuestraRepository, RecepcionRepository
 from src.backend.services.sample_service import SampleService
-from src.backend.api.security import get_current_user
+from src.backend.api.security import get_current_user, require_role
 from src.backend.models.auth import Usuario
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
+# Operadores y analistas pueden crear muestras; supervisores y admins pueden eliminar
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_ESCRITURA = ["administrador", "supervisor"]
+
 
 # ─── Solicitudes ──────────────────────────────────────────────
 
-@router.post("/solicitudes", response_model=SolicitudMuestreoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/solicitudes", response_model=SolicitudMuestreoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_solicitud(
     body: SolicitudMuestreoCreate,
     db: Session = Depends(get_db),
@@ -36,7 +41,8 @@ def list_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     return repo.get_all(db, skip=skip, limit=limit)
 
 
-@router.put("/solicitudes/{solicitud_id}", response_model=SolicitudMuestreoResponse)
+@router.put("/solicitudes/{solicitud_id}", response_model=SolicitudMuestreoResponse,
+            dependencies=[Depends(require_role(*_OPERATIVOS))])
 def update_solicitud(
     solicitud_id: int,
     body: SolicitudMuestreoUpdate,
@@ -49,7 +55,8 @@ def update_solicitud(
     return repo.update(db, obj, body.model_dump(exclude_unset=True))
 
 
-@router.delete("/solicitudes/{solicitud_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/solicitudes/{solicitud_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role(*_ESCRITURA))])
 def delete_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
     repo = SolicitudMuestreoRepository()
     obj = repo.get(db, solicitud_id)
@@ -60,12 +67,9 @@ def delete_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
 
 
 # ─── Sesiones de Muestreo ────────────────────────────────────
-# ... (rest of endpoints protected)
 
-
-# ─── Sesiones de Muestreo ────────────────────────────────────
-
-@router.post("/sesiones", response_model=MuestreoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/sesiones", response_model=MuestreoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_muestreo(
     body: MuestreoConMuestrasCreate,
     db: Session = Depends(get_db),
@@ -77,7 +81,8 @@ def create_muestreo(
 
 # ─── Envíos ──────────────────────────────────────────────────
 
-@router.post("/envios", response_model=EnvioMuestraResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/envios", response_model=EnvioMuestraResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_envio(body: EnvioMuestraCreate, db: Session = Depends(get_db)):
     from src.backend.repositories.fact import EnvioMuestraRepository
     repo = EnvioMuestraRepository()
@@ -86,7 +91,8 @@ def create_envio(body: EnvioMuestraCreate, db: Session = Depends(get_db)):
 
 # ─── Recepción ───────────────────────────────────────────────
 
-@router.post("/recepciones", response_model=RecepcionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/recepciones", response_model=RecepcionResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_recepcion(
     body: RecepcionCreate,
     db: Session = Depends(get_db),

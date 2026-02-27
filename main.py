@@ -1,4 +1,8 @@
 import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 from src.backend.database.db_manager import db_manager
 

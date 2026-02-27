@@ -1,9 +1,15 @@
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, RefreshCcw, FlaskConical, Calendar, Tag, FileText, X, Check, Edit2, Loader2 } from 'lucide-react';
 import SampleService from '../api/sampleService';
 import EquipmentService from '../api/equipmentService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import AnimatedPage from '../components/AnimatedPage';
+import RoleGuard from '../components/RoleGuard';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { solicitudMuestreoSchema, solicitudMuestreoEditSchema } from '../validation/schemas';
+import FormField, { inputCls } from '../components/FormField';
 
 const SamplesPage = () => {
     const [solicitudes, setSolicitudes] = useState([]);
@@ -16,16 +22,13 @@ const SamplesPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const { user } = useAuth();
 
-    // Form state
-    const [formData, setFormData] = useState({
-        tipo: 'Ambiental',
-        equipo_instrumento_id: '',
-        observacion: '',
-        estado_solicitud_id: 1
+    const createForm = useForm({
+        resolver: zodResolver(solicitudMuestreoSchema),
+        defaultValues: { tipo: 'Ambiental', equipo_instrumento_id: '', observacion: '', estado_solicitud_id: 1 },
     });
-
-    const [editFormData, setEditFormData] = useState({
-        observacion: ''
+    const editForm = useForm({
+        resolver: zodResolver(solicitudMuestreoEditSchema),
+        defaultValues: { observacion: '' },
     });
 
     useEffect(() => {
@@ -49,22 +52,19 @@ const SamplesPage = () => {
         }
     };
 
-    const handleCreateSolicitud = async (e) => {
-        e.preventDefault();
+    const handleCreateSolicitud = async (data) => {
         setSubmitting(true);
         try {
             const payload = {
-                ...formData,
-                usuario_id: 1,
-                equipo_instrumento_id: formData.equipo_instrumento_id ? parseInt(formData.equipo_instrumento_id) : null
+                ...data, usuario_id: 1,
+                equipo_instrumento_id: data.equipo_instrumento_id ? Number(data.equipo_instrumento_id) : null
             };
             await SampleService.createSolicitud(payload);
             setIsModalOpen(false);
             toast.success('Solicitud creada');
             fetchData();
-            setFormData({ tipo: 'Ambiental', equipo_instrumento_id: '', observacion: '', estado_solicitud_id: 1 });
+            createForm.reset();
         } catch (error) {
-            console.error('Error creating request:', error);
             toast.error('Error al crear solicitud');
         } finally {
             setSubmitting(false);
@@ -73,22 +73,18 @@ const SamplesPage = () => {
 
     const handleEditClick = (item) => {
         setCurrentSolicitud(item);
-        setEditFormData({ observacion: item.observacion || '' });
+        editForm.reset({ observacion: item.observacion || '' });
         setIsEditModalOpen(true);
     };
 
-    const handleUpdateSolicitud = async (e) => {
-        e.preventDefault();
+    const handleUpdateSolicitud = async (data) => {
         setSubmitting(true);
         try {
-            await SampleService.updateSolicitud(currentSolicitud.solicitud_muestreo_id, {
-                observacion: editFormData.observacion
-            });
+            await SampleService.updateSolicitud(currentSolicitud.solicitud_muestreo_id, data);
             setIsEditModalOpen(false);
             toast.success('Solicitud actualizada');
             fetchData();
         } catch (error) {
-            console.error('Error updating request:', error);
             toast.error('Error al actualizar solicitud');
         } finally {
             setSubmitting(false);
@@ -118,13 +114,15 @@ const SamplesPage = () => {
                     <h1 className="text-3xl font-bold text-gradient">Solicitudes de Muestreo</h1>
                     <p className="text-text-muted mt-1">Gestione las peticiones de muestreo ambiental y de procesos.</p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
-                >
-                    <Plus size={20} />
-                    Nueva Solicitud
-                </button>
+                <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
+                    >
+                        <Plus size={20} />
+                        Nueva Solicitud
+                    </button>
+                </RoleGuard>
             </div>
 
             <div className="glass-card p-4 flex flex-col md:flex-row gap-4 items-center">
@@ -192,12 +190,14 @@ const SamplesPage = () => {
                                         {item.observacion || '-'}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => handleEditClick(item)}
-                                            className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
+                                        <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
+                                            <button
+                                                onClick={() => handleEditClick(item)}
+                                                className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                        </RoleGuard>
                                     </td>
                                 </tr>
                             ))
@@ -206,81 +206,36 @@ const SamplesPage = () => {
                 </table>
             </div>
 
-            {/* Modal de Nueva Solicitud */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
                         <h2 className="text-2xl font-bold text-gradient mb-6">Nueva Solicitud</h2>
-
-                        <form onSubmit={handleCreateSolicitud} className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <Tag size={14} /> Tipo de Muestreo
-                                </label>
-                                <select
-                                    value={formData.tipo}
-                                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all appearance-none"
-                                >
-                                    <option className="bg-bg-dark" value="Ambiental">Ambiental</option>
-                                    <option className="bg-bg-dark" value="Producto">Producto</option>
-                                    <option className="bg-bg-dark" value="Proceso">Proceso</option>
-                                    <option className="bg-bg-dark" value="Personal">Personal</option>
-                                    <option className="bg-bg-dark" value="Agua">Agua</option>
+                        <form onSubmit={createForm.handleSubmit(handleCreateSolicitud)} className="space-y-4">
+                            <FormField label="Tipo de Muestreo" error={createForm.formState.errors.tipo}>
+                                <select {...createForm.register('tipo')} className={inputCls(createForm.formState.errors.tipo) + ' appearance-none'}>
+                                    {['Ambiental', 'Producto', 'Proceso', 'Personal', 'Agua'].map(t => (
+                                        <option key={t} className="bg-bg-dark" value={t}>{t}</option>
+                                    ))}
                                 </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <Tag size={14} /> Equipo / Instrumento (Opcional)
-                                </label>
-                                <select
-                                    value={formData.equipo_instrumento_id}
-                                    onChange={(e) => setFormData({ ...formData, equipo_instrumento_id: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all appearance-none"
-                                >
+                            </FormField>
+                            <FormField label="Equipo / Instrumento (Opcional)" error={createForm.formState.errors.equipo_instrumento_id}>
+                                <select {...createForm.register('equipo_instrumento_id')} className={inputCls(createForm.formState.errors.equipo_instrumento_id) + ' appearance-none'}>
                                     <option className="bg-bg-dark" value="">Ninguno</option>
                                     {equipments.map(eq => (
                                         <option key={eq.equipo_instrumento_id} className="bg-bg-dark" value={eq.equipo_instrumento_id}>{eq.nombre} ({eq.codigo})</option>
                                     ))}
                                 </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <FileText size={14} /> Observaciones
-                                </label>
-                                <textarea
-                                    value={formData.observacion}
-                                    onChange={(e) => setFormData({ ...formData, observacion: e.target.value })}
-                                    rows="3"
+                            </FormField>
+                            <FormField label="Observaciones" error={createForm.formState.errors.observacion}>
+                                <textarea {...createForm.register('observacion')} rows="3"
                                     placeholder="Detalles adicionales sobre la toma de muestra..."
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all resize-none"
-                                />
-                            </div>
-
-                            <div className="flex gap-4 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    Crear Solicitud
+                                    className={inputCls(createForm.formState.errors.observacion) + ' resize-none'} />
+                            </FormField>
+                            <div className="flex gap-4 pt-2">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Crear Solicitud
                                 </button>
                             </div>
                         </form>
@@ -288,49 +243,21 @@ const SamplesPage = () => {
                 </div>
             )}
 
-            {/* Modal de Edición de Observación */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button
-                            onClick={() => setIsEditModalOpen(false)}
-                            className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-
-                        <h2 className="text-2xl font-bold text-gradient mb-6">Editar Observación</h2>
-                        <p className="text-sm text-text-muted mb-6">Actualice las notas para la solicitud <span className="text-white font-mono">#{currentSolicitud?.solicitud_muestreo_id}</span>.</p>
-
-                        <form onSubmit={handleUpdateSolicitud} className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                                    <FileText size={14} /> Observaciones
-                                </label>
-                                <textarea
-                                    value={editFormData.observacion}
-                                    onChange={(e) => setEditFormData({ ...editFormData, observacion: e.target.value })}
-                                    rows="4"
-                                    required
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all resize-none"
-                                />
-                            </div>
-
-                            <div className="flex gap-4 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    Actualizar
+                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
+                        <h2 className="text-2xl font-bold text-gradient mb-2">Editar Observación</h2>
+                        <p className="text-sm text-text-muted mb-6">Solicitud <span className="text-white font-mono">#{currentSolicitud?.solicitud_muestreo_id}</span>.</p>
+                        <form onSubmit={editForm.handleSubmit(handleUpdateSolicitud)} className="space-y-4">
+                            <FormField label="Observaciones" error={editForm.formState.errors.observacion}>
+                                <textarea {...editForm.register('observacion')} rows="4" required
+                                    className={inputCls(editForm.formState.errors.observacion) + ' resize-none'} />
+                            </FormField>
+                            <div className="flex gap-4 pt-2">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Actualizar
                                 </button>
                             </div>
                         </form>

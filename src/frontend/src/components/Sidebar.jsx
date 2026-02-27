@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { LogOut, LayoutDashboard, Database, HardDrive, MapPin, FlaskConical, Factory } from 'lucide-react';
 
 const Sidebar = () => {
-    const { logout, user } = useAuth();
+    const { logout, user, userRoles } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -23,7 +23,7 @@ const Sidebar = () => {
     ];
 
     return (
-        <aside className="w-64 h-screen glass border-r border-white/10 flex flex-col fixed left-0 top-0 z-50">
+        <aside className="w-64 h-screen bg-[#0d0e15] border-r border-white/10 flex flex-col fixed left-0 top-0 z-50">
             <div className="p-6">
                 <h1 className="text-xl font-bold text-gradient">LIMS URUFARMA</h1>
                 <p className="text-[10px] text-text-muted mt-1 uppercase tracking-widest">Control de Calidad</p>
@@ -34,6 +34,7 @@ const Sidebar = () => {
                     <Link
                         key={item.path}
                         to={item.path}
+                        data-testid={`nav-${item.path.replace('/', '') || 'dashboard'}`}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-text-muted hover:text-white group"
                     >
                         <span className="text-accent-primary group-hover:scale-110 transition-transform">
@@ -51,10 +52,13 @@ const Sidebar = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xs font-medium text-white truncate w-32">{user?.username || 'Usuario'}</span>
-                        <span className="text-[10px] text-text-muted">Analista</span>
+                        <span className="text-[10px] text-text-muted capitalize">
+                            {userRoles[0] || 'sin rol'}
+                        </span>
                     </div>
                 </div>
                 <button
+                    data-testid="btn-logout"
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error/10 transition-all text-sm font-medium"
                 >

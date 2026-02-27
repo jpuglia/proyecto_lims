@@ -18,14 +18,18 @@ from src.backend.repositories.inventory import (
     MedioPreparadoRepository, StockMediosRepository, AprobacionMediosRepository,
 )
 from src.backend.services.inventory_service import InventoryService
-from src.backend.api.security import get_current_user
+from src.backend.api.security import get_current_user, require_role
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
+
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_ESCRITURA  = ["administrador", "supervisor"]
 
 
 # ─── Polvos / Suplementos ────────────────────────────────────
 
-@router.post("/polvos", response_model=PolvoSuplementoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/polvos", response_model=PolvoSuplementoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_polvo(body: PolvoSuplementoCreate, db: Session = Depends(get_db)):
     repo = PolvoSuplementoRepository()
     return repo.create(db, body.model_dump())
@@ -37,7 +41,8 @@ def list_polvos(db: Session = Depends(get_db)):
     return repo.get_all(db)
 
 
-@router.put("/polvos/{polvo_id}", response_model=PolvoSuplementoResponse)
+@router.put("/polvos/{polvo_id}", response_model=PolvoSuplementoResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
 def update_polvo(polvo_id: int, body: PolvoSuplementoUpdate, db: Session = Depends(get_db)):
     repo = PolvoSuplementoRepository()
     obj = repo.get(db, polvo_id)
@@ -46,7 +51,8 @@ def update_polvo(polvo_id: int, body: PolvoSuplementoUpdate, db: Session = Depen
     return repo.update(db, obj, body.model_dump(exclude_unset=True))
 
 
-@router.delete("/polvos/{polvo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/polvos/{polvo_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("administrador"))])
 def delete_polvo(polvo_id: int, db: Session = Depends(get_db)):
     repo = PolvoSuplementoRepository()
     obj = repo.get(db, polvo_id)
@@ -58,7 +64,8 @@ def delete_polvo(polvo_id: int, db: Session = Depends(get_db)):
 
 # ─── Recepción de Polvos ─────────────────────────────────────
 
-@router.post("/polvos/recepciones", response_model=RecepcionPolvoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/polvos/recepciones", response_model=RecepcionPolvoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def receive_polvo(
     body: RecepcionPolvoCreate,
     db: Session = Depends(get_db),
@@ -67,7 +74,8 @@ def receive_polvo(
     return service.register_powder_reception(db, body.model_dump())
 
 
-@router.put("/polvos/recepciones/{recep_id}", response_model=RecepcionPolvoResponse)
+@router.put("/polvos/recepciones/{recep_id}", response_model=RecepcionPolvoResponse,
+            dependencies=[Depends(require_role(*_OPERATIVOS))])
 def update_recepcion_polvo(recep_id: int, body: RecepcionPolvoUpdate, db: Session = Depends(get_db)):
     repo = RecepcionPolvoSuplementoRepository()
     obj = repo.get(db, recep_id)
@@ -78,7 +86,8 @@ def update_recepcion_polvo(recep_id: int, body: RecepcionPolvoUpdate, db: Sessio
 
 # ─── Medios Preparados ───────────────────────────────────────
 
-@router.post("/medios", response_model=MedioPreparadoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/medios", response_model=MedioPreparadoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def create_medio(body: MedioPreparadoCreate, db: Session = Depends(get_db)):
     repo = MedioPreparadoRepository()
     return repo.create(db, body.model_dump())
@@ -90,7 +99,8 @@ def list_medios(db: Session = Depends(get_db)):
     return repo.get_all(db)
 
 
-@router.put("/medios/{medio_id}", response_model=MedioPreparadoResponse)
+@router.put("/medios/{medio_id}", response_model=MedioPreparadoResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
 def update_medio(medio_id: int, body: MedioPreparadoUpdate, db: Session = Depends(get_db)):
     repo = MedioPreparadoRepository()
     obj = repo.get(db, medio_id)
@@ -101,7 +111,8 @@ def update_medio(medio_id: int, body: MedioPreparadoUpdate, db: Session = Depend
 
 # ─── Preparación de Medios ───────────────────────────────────
 
-@router.post("/medios/preparacion", response_model=OrdenPreparacionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/medios/preparacion", response_model=OrdenPreparacionResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def prepare_media(
     body: OrdenPreparacionCreate,
     db: Session = Depends(get_db),
@@ -124,13 +135,15 @@ def list_stock(db: Session = Depends(get_db)):
 
 # ─── Aprobaciones ────────────────────────────────────────────
 
-@router.post("/aprobaciones", response_model=AprobacionMediosResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/aprobaciones", response_model=AprobacionMediosResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
 def approve_media(body: AprobacionMediosCreate, db: Session = Depends(get_db)):
     repo = AprobacionMediosRepository()
     return repo.create(db, body.model_dump())
 
 
-@router.put("/aprobaciones/{aprob_id}", response_model=AprobacionMediosResponse)
+@router.put("/aprobaciones/{aprob_id}", response_model=AprobacionMediosResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
 def update_aprobacion(aprob_id: int, body: AprobacionMediosUpdate, db: Session = Depends(get_db)):
     repo = AprobacionMediosRepository()
     obj = repo.get(db, aprob_id)

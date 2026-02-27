@@ -1,6 +1,6 @@
 import api from './axios';
 
-const BASE = '/api/analisis';
+const BASE = '/analisis';
 
 export const analysisService = {
     getAll: (skip = 0, limit = 100) =>

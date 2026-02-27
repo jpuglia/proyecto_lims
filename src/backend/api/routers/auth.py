@@ -30,6 +30,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    from sqlalchemy.orm import joinedload as _jl
+    from src.backend.api.security import get_user_roles
+
     usuario_repo = UsuarioRepository()
     usuario = usuario_repo.get_by_nombre(db, body.username)
 
@@ -39,7 +42,21 @@ def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not verify_password(body.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
 
-    token = create_access_token(data={"sub": str(usuario.usuario_id), "username": usuario.nombre})
+    # Cargar roles del usuario para incluirlos en el token
+    from src.backend.models.auth import UsuarioRol, Rol
+    usuario_con_roles = (
+        db.query(Usuario)
+        .options(_jl(Usuario.roles).joinedload(UsuarioRol.rol))
+        .filter(Usuario.usuario_id == usuario.usuario_id)
+        .first()
+    )
+    roles = get_user_roles(usuario_con_roles) if usuario_con_roles else []
+
+    token = create_access_token(data={
+        "sub": str(usuario.usuario_id),
+        "username": usuario.nombre,
+        "roles": roles,
+    })
     return TokenResponse(access_token=token)
 
 

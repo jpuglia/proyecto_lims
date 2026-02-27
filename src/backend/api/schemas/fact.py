@@ -64,6 +64,20 @@ class ManufacturaResponse(ManufacturaBase):
     manufactura_id: int
     model_config = ConfigDict(from_attributes=True)
 
+class ManufacturaDetalleResponse(ManufacturaBase):
+    """ManufacturaResponse enriquecida con el nombre del estado."""
+    manufactura_id: int
+    estado_nombre: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_orm_extended(cls, obj):
+        data = cls.model_validate(obj)
+        if obj.estado:
+            data.estado_nombre = obj.estado.nombre
+        return data
+
 class ManufacturaUpdate(BaseModel):
     estado_manufactura_id: Optional[int] = None
     fecha_inicio: Optional[datetime] = None
@@ -74,6 +88,28 @@ class CambioEstadoManufacturaRequest(BaseModel):
     nuevo_estado_id: int
     usuario_id: int
 
+
+class HistoricoEstadoManufacturaResponse(BaseModel):
+    historico_estado_manufactura_id: int
+    manufactura_id: int
+    estado_manufactura_id: int
+    estado_nombre: Optional[str] = None
+    usuario_id: int
+    fecha: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrdenManufacturaDetalleResponse(OrdenManufacturaBase):
+    """OrdenManufacturaResponse con procesos anidados para trazabilidad."""
+    orden_manufactura_id: int
+    procesos: List['ManufacturaDetalleResponse'] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Rebuild forward refs
+OrdenManufacturaDetalleResponse.model_rebuild()
 
 # ─── SolicitudMuestreo ──────────────────────────────────────
 

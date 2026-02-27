@@ -36,8 +36,23 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    /**
+     * Devuelve true si el usuario tiene al menos uno de los roles indicados.
+     * @param {...string} roles - nombres de roles a verificar
+     */
+    const hasRole = (...roles) => {
+        if (!user) return false;
+        const userRoles = user.roles || [];
+        return roles.some(r => userRoles.includes(r));
+    };
+
+    /**
+     * Roles del usuario actual (array de strings).
+     */
+    const userRoles = user?.roles || [];
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, hasRole, userRoles }}>
             {children}
         </AuthContext.Provider>
     );

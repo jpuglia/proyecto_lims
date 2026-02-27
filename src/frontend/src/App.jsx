@@ -12,8 +12,8 @@ import InventoryPage from './pages/InventoryPage';
 import ManufacturingPage from './pages/ManufacturingPage';
 import MainLayout from './components/MainLayout';
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ children, roles }) => {
+  const { user, loading, hasRole } = useAuth();
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-bg-dark text-accent-primary">
@@ -22,8 +22,22 @@ const ProtectedRoute = ({ children }) => {
   );
   if (!user) return <Navigate to="/login" />;
 
+  // Verificación de rol a nivel de ruta
+  if (roles && roles.length > 0 && !hasRole(...roles)) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <div className="text-6xl">🔒</div>
+          <h2 className="text-2xl font-bold text-white">Acceso Denegado</h2>
+          <p className="text-text-muted">No tenés los permisos necesarios para acceder a esta sección.</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return <MainLayout>{children}</MainLayout>;
 };
+
 
 import { useState, useEffect } from 'react';
 import api from './api/axios';

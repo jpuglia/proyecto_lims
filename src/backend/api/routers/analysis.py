@@ -12,15 +12,19 @@ from src.backend.api.schemas.fact import (
 )
 from src.backend.repositories.fact import AnalisisRepository
 from src.backend.services.analysis_service import AnalysisService
-from src.backend.api.security import get_current_user
+from src.backend.api.security import get_current_user, require_role
 from src.backend.models.auth import Usuario
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_ESCRITURA  = ["administrador", "supervisor"]
+
 
 # ─── Análisis ────────────────────────────────────────────────
 
-@router.post("/", response_model=AnalisisResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=AnalisisResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_analisis(
     body: AnalisisCreate,
     db: Session = Depends(get_db),
@@ -45,7 +49,8 @@ def get_analisis(analisis_id: int, db: Session = Depends(get_db)):
     return analisis
 
 
-@router.put("/{analisis_id}", response_model=AnalisisResponse)
+@router.put("/{analisis_id}", response_model=AnalisisResponse,
+            dependencies=[Depends(require_role(*_OPERATIVOS))])
 def update_analisis(
     analisis_id: int,
     body: AnalisisUpdate,
@@ -58,7 +63,8 @@ def update_analisis(
     return repo.update(db, analisis, body.model_dump(exclude_unset=True))
 
 
-@router.delete("/{analisis_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{analisis_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role(*_ESCRITURA))])
 def delete_analisis(analisis_id: int, db: Session = Depends(get_db)):
     repo = AnalisisRepository()
     analisis = repo.get(db, analisis_id)
@@ -70,7 +76,8 @@ def delete_analisis(analisis_id: int, db: Session = Depends(get_db)):
 
 # ─── Incubaciones ────────────────────────────────────────────
 
-@router.post("/incubaciones", response_model=IncubacionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/incubaciones", response_model=IncubacionResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def create_incubacion(
     body: IncubacionCreate,
     db: Session = Depends(get_db),
@@ -81,7 +88,8 @@ def create_incubacion(
 
 # ─── Resultados ──────────────────────────────────────────────
 
-@router.post("/resultados", response_model=ResultadoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/resultados", response_model=ResultadoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
 def register_resultado(
     body: ResultadoCreate,
     db: Session = Depends(get_db),

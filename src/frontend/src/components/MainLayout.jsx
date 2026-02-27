@@ -5,8 +5,8 @@ const MainLayout = ({ children }) => {
     return (
         <div className="flex min-h-screen bg-bg-dark text-white">
             <Sidebar />
-            <main className="flex-1 ml-64 p-8 min-h-screen overflow-y-auto">
-                <div className="max-w-6xl mx-auto">
+            <main className="flex-1 p-6 lg:p-8 min-h-screen overflow-x-hidden" style={{ marginLeft: '16rem' }}>
+                <div className="max-w-7xl mx-auto w-full">
                     {children}
                 </div>
             </main>

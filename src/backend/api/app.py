@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard
+from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard, documents, exports
 from src.backend.core.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -43,6 +43,8 @@ def create_app() -> FastAPI:
     app.include_router(analysis.router, prefix="/api/analisis", tags=["Operaciones - Análisis"])
     app.include_router(inventory.router, prefix="/api/inventario", tags=["Maestros - Inventario"])
     app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+    app.include_router(documents.router, prefix="/api/documentos", tags=["Documentos y Adjuntos"])
+    app.include_router(exports.router, prefix="/api/exports", tags=["Exportaciones CSV"])
 
     # Global Exception Handlers
     from fastapi import Request

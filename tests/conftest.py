@@ -10,6 +10,7 @@ import src.backend.models as models
 from src.backend.api.app import app
 from src.backend.api.dependencies import get_db
 from src.backend.api.security import hash_password
+from src.backend.models.auth import Usuario, Rol, UsuarioRol
 
 @pytest.fixture(scope="session")
 def engine():
@@ -50,11 +51,38 @@ def client(db_session):
     app.dependency_overrides.clear()
 
 
+def _create_test_user_with_role(db_session, rol_nombre: str) -> Usuario:
+    """Helper: inserta un usuario de test con el rol indicado en la BD de test."""
+    # Asegurar que el rol exista
+    rol = db_session.query(Rol).filter(Rol.nombre == rol_nombre).first()
+    if not rol:
+        rol = Rol(nombre=rol_nombre)
+        db_session.add(rol)
+        db_session.flush()
+
+    username = f"test_{rol_nombre}_fixture"
+    user = db_session.query(Usuario).filter(Usuario.nombre == username).first()
+    if not user:
+        user = Usuario(
+            nombre=username,
+            password_hash=hash_password("testpassword123"),
+            firma="T.F.",
+            activo=True,
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        asignacion = UsuarioRol(usuario_id=user.usuario_id, rol_id=rol.rol_id)
+        db_session.add(asignacion)
+        db_session.commit()
+        db_session.refresh(user)
+    return user
+
+
 @pytest.fixture(scope="function")
 def auth_client(db_session):
-    """TestClient autenticado: hace override de get_current_user con un usuario de test."""
-    from src.backend.api.security import hash_password, get_current_user
-    from src.backend.models.auth import Usuario
+    """TestClient autenticado con rol 'administrador' — acceso total."""
+    from src.backend.api.security import get_current_user
 
     def override_get_db():
         try:
@@ -62,18 +90,58 @@ def auth_client(db_session):
         finally:
             pass
 
-    # Insertar usuario de test directamente en la BD de test
-    test_user = Usuario(
-        nombre="test_auth_fixture",
-        password_hash=hash_password("testpassword123"),
-        firma="T.F.",
-        activo=True,
-    )
-    db_session.add(test_user)
-    db_session.commit()
-    db_session.refresh(test_user)
+    test_user = _create_test_user_with_role(db_session, "administrador")
 
-    # Override de get_current_user: siempre retorna nuestro usuario de test
+    def override_get_current_user():
+        return test_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def supervisor_client(db_session):
+    """TestClient autenticado con rol 'supervisor'."""
+    from src.backend.api.security import get_current_user
+
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    test_user = _create_test_user_with_role(db_session, "supervisor")
+
+    def override_get_current_user():
+        return test_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def operador_client(db_session):
+    """TestClient autenticado con rol 'operador' — acceso limitado."""
+    from src.backend.api.security import get_current_user
+
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    test_user = _create_test_user_with_role(db_session, "operador")
+
     def override_get_current_user():
         return test_user
 
