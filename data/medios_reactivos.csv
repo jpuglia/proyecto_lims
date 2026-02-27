@@ -1,0 +1,43 @@
+﻿MEDIO;Identificación;Tipo
+Agar Sabouraud;AS;Solido
+Agar Cetrimide;Cet-A;Solido
+Agar Columbia;Acol;Solido
+Agar Mac Conkey;MCA;Solido
+Agar Manitol Salado;MSA;Solido
+Agar Xilosa-Lisina;XLD;Solido
+Brian Heart Infusion Agar;BHIA;Solido
+Brian Heart Infusion Broth;BHIC;Liquido
+Caldo Mac Conkey;MCC;Liquido
+Caldo Mossel;Mo;Liquido
+Caldo Rappaport;RVSC;Liquido
+Coagulasa plasma con EDTA;COAG;Reactivo
+Lactobacilli MRS Broth;MRSB;Liquido
+Levine Eosine Metilene Blue Agar;EMB;Solido
+Medio 1;M1;Solido
+Medio 19;M19;Solido
+Nutrient Agar;NA;Solido
+Nutrient Broth;NB;Liquido
+Plate Count Agar;PCA;Solido
+Penicilinasa;PEN;Reactivo
+Peptona;PEP;Reactivo
+Pseudomona Agar F;PSF;Solido
+Pseudomona Agar P;PSP;Solido
+Reinforced Clostridium medium;MRCC;Reactivo
+Sabouraud broth;SB;Reactivo
+Tryptic Soy Agar;TSA;Solido
+Tryptone Soya Broth;TSB;Liquido
+Violeta Rojo Bilis Glucosa Agar;VRBGA;Solido
+YM Agar;YMA;Solido
+YM Broth;YMB;Liquido
+Brillant Green Broth Bilis Lactosado;CLBVB;Liquido
+m-Endo Agar;m-Endo;Solido
+Microbial Content Agar (heladera);MCTA;Solido
+TAT Broth Base;TAT;Liquido
+Caldo Lauril Triptosa;CLT;Liquido
+Medio 11;M11;Reactivo
+Medio 10 (Heladera);M10;Reactivo
+Lecitina;LEC;Reactivo
+Agar Sabouraud + Cloranfenicol;AS+Clor;Solido
+YGC Agar;YGC;Solido
+Letheen Broth;LET;Liquido
+Lactobacilli MRS Agar;MRSA;Solido

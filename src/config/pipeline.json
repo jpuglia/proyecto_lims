@@ -1,118 +1,85 @@
 {
   "data_dir": "./data",
-
   "pipelines": [
-
     {
       "name": "sistemas",
       "repo": "SistemaRepository",
-      "csv": "sistemas.csv"
+      "csv": "sistema_nitrogenos.csv",
+      "delimiter": ",",
+      "encoding": "utf-8",
+      "mappings": {
+        "sistema": [
+          "codigo",
+          "nombre"
+        ]
+      }
     },
-
     {
       "name": "plantas",
       "repo": "PlantaRepository",
       "csv": "plantas.csv",
-
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "defaults": {
+        "sistema_id": 1
+      },
+      "mappings": {
+        "planta_id": "codigo",
+        "nombre": "nombre"
+      },
       "fks": {
-        "sistema_codigo": {
+        "sis_nitrogeno_id": {
           "table": "sistema",
           "repo": "SistemaRepository",
-          "field": "codigo"
+          "field": "codigo",
+          "target_field": "sistema_id"
         }
       }
     },
-
-    {
-      "name": "productos",
-      "repo": "ProductoRepository",
-      "csv": "productos.csv",
-
-      "fks": {
-        "planta_codigo": {
-          "table": "planta",
-          "repo": "PlantaRepository",
-          "field": "codigo"
-        }
-      }
-    },
-
-    {
-      "name": "cepa_ref",
-      "repo": "CepaRepository",
-      "csv": "cepa_ref.csv"
-    },
-
-    {
-      "name": "metodo_version",
-      "repo": "MetodoVersionRepository",
-      "csv": "metodo_version.csv"
-    },
-
     {
       "name": "area",
       "repo": "AreaRepository",
       "csv": "areas.csv",
-
+      "delimiter": ";",
+      "encoding": "latin-1",
+      "defaults": {
+        "planta_id": 5
+      },
+      "mappings": {
+        "Código": "codigo",
+        "Centro Operativo": "nombre"
+      },
       "fks": {
-        "planta_codigo": {
+        "Ubicación": {
           "table": "planta",
           "repo": "PlantaRepository",
-          "field": "codigo"
+          "field": "codigo",
+          "target_field": "planta_id"
         }
       }
     },
-
     {
-      "name": "estado_qc",
-      "repo": "EstadoQCRepository",
-      "csv": "estado_qc.csv"
-    },
-
-    {
-      "name": "especificacion",
-      "repo": "EspecificacionRepository",
-      "csv": "especificacion.csv"
-    },
-
-    {
-      "name": "equipo",
-      "repo": "EquipoRepository",
-      "csv": "equipos.csv",
-
-      "fks":{
-        "area_codigo": {
-          "table": "area",
-          "repo": "AreaRepository",
-          "field": "codigo"
-        }
+      "name": "operarios",
+      "repo": "OperarioRepository",
+      "csv": "operarios.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo_empleado",
+      "mappings": {
+        "operarioID": "codigo_empleado",
+        "nombreOperario": "nombre"
       }
     },
-
     {
-      "name": "punto_muestreo",
-      "repo": "PuntoMuestreoRepository",
-      "csv": "punto_muestreo.csv",
-
-      "fks": {
-        "sistema_codigo": {
-          "table": "sistema",
-          "repo": "SistemaRepository",
-          "field": "codigo"
-        }
+      "name": "medios_preparados",
+      "repo": "MedioPreparadoRepository",
+      "csv": "medios_reactivos.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "mappings": {
+        "MEDIO": "codigo",
+        "Identificación": "nombre"
       }
-    },
-
-    {
-      "name": "estado_equipo",
-      "repo": "EstadoEquipoRepository",
-      "csv": "estado_equipo.csv"
-    },
-
-    {
-      "name": "usuario",
-      "repo": "UsuarioRepository",
-      "csv": "usuarios.csv"
     }
   ]
 }

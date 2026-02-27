@@ -21,7 +21,7 @@ class Planta(Base):
     planta_id = Column(Integer, primary_key=True)
     codigo = Column(String, unique=True, nullable=False)
     nombre = Column(String, nullable=False)
-    sistema_id = Column(Integer, ForeignKey("sistema.sistema_id"), nullable=False)
+    sistema_id = Column(Integer, ForeignKey("sistema.sistema_id"), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
 
     sistema = relationship("Sistema", back_populates="plantas")
@@ -33,7 +33,7 @@ class Area(Base):
 
     area_id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
-    planta_id = Column(Integer, ForeignKey("planta.planta_id"), nullable=False)
+    planta_id = Column(Integer, ForeignKey("planta.planta_id"), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
 
     planta = relationship("Planta", back_populates="areas")

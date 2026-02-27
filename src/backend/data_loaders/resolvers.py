@@ -2,7 +2,7 @@ from typing import Dict, Type
 
 from sqlalchemy.orm import Session
 
-from src.backend.repositories.base_repository import BaseRepository
+from src.backend.repositories.base import BaseRepository
 
 
 class FKResolver:

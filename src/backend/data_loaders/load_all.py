@@ -7,7 +7,7 @@ from src.backend.data_loaders.generic_loader import generic_csv_loader
 from src.backend.repositories.registry import REPOSITORY_REGISTRY
 
 
-CONFIG_PATH = "./config/pipeline.json"
+CONFIG_PATH = "src/config/pipeline.json"
 
 
 def main():

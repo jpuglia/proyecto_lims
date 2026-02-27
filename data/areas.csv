@@ -1,0 +1,273 @@
+Código;Centro Operativo;Tipo;Ubicación;Estado;Clasificación;Área Crítica;Frecuencia;productiva
+PA001;DEPÓSITO DE M.P DOSIFICADAS/ENSAMBLE;Productiva;P10;Activa;D;FALSO;Anual;
+PA002;ESC. EXCIPIENTES DOSIFICADOS;Productiva;P10;Activa;D;FALSO;Anual;
+PA003;Lavadero General;Productiva;P10;Activa;D;FALSO;Anual;
+PA004;ESC.INGRESO PERSONAL PESADAS;Productiva;P10;Activa;D;FALSO;Anual;
+PA005;SALA MUESTREO-PESADA ACTIVOS;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA006;LAVADERO MUESTREO-PESADA ACT.;Productiva;P10;Activa;D;FALSO;Anual;
+PA007;Esc. Egreso Personal Pesadas;Productiva;P10;Activa;D;FALSO;Anual;
+PA008;DEPÓSITO ACTIVOS CUARENTENA;Productiva;P10;Activa;D;FALSO;Anual;
+PA009;DEPÓSITO ACTIVOS APROBADOS;Productiva;P10;Activa;D;FALSO;Anual;
+PA010;CORREDOR GENERAL;Productiva;P10;Activa;D;FALSO;Anual;
+PA011;ESC. MAT. M-G-C;Productiva;P10;Activa;D;FALSO;Anual;
+PA012;Control en Proceso;Productiva;P10;Activa;D;FALSO;Anual;
+PA013;ESC. INGRESO PERSONAL M-G-C;Productiva;P10;Activa;D;FALSO;Anual;
+PA014;ESC. EGRESO PERSONAL M-G-C;Productiva;P10;Activa;D;FALSO;Anual;
+PA015;ESC. PRODUCCIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA016;CORREDOR M-G-C;Productiva;P10;Activa;D;FALSO;Anual;
+PA017;SALA TÉCNICA GRANULACIÓN 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA018;ANTESALA MEZCLA-GRANULACIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA019;SALA DE MEZCLA-GRANULACIÓN;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA020;Sala de Compresión 1;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA022;ANTESALA COMP-GRAN 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA023;Sala de Compresión 2;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA025;DEPÓSITO MATERIALES;Productiva;P10;Activa;D;FALSO;Anual;
+PA026;LAVADERO M-G-C;Productiva;P10;Activa;D;FALSO;Anual;
+PA028;Sala de Granulación 2;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA029;ESC. EGRESO PERSONAL REC.;Productiva;P10;Activa;D;FALSO;Anual;
+PA030;SALA TÉCNICA RECUBRIMIENTO 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA031;ESC. INGRESO PERSONAL REC.;Productiva;P10;Activa;D;FALSO;Anual;
+PA032;ESC. MAT. RECUBRIMIENTO;Productiva;P10;Activa;D;FALSO;Anual;
+PA033;CORREDOR RECUBRIMIENTO;Productiva;P10;Activa;D;FALSO;Anual;
+PA034;ANTESALA RECUBRIMIENTO 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA035;Sala de Recubrimiento 1;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA036;SALA PREPARACIÓN DE SOLUCIONES;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA039;LAVADERO RECUBRIMIENTO;Productiva;P10;Activa;D;FALSO;Anual;
+PA040;DEPÓSITO MAT. RECUBRIMIENTO;Productiva;P10;Activa;D;FALSO;Anual;
+PA042;OFICINA JEFE PRODUCCIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA043;OFICINA DE PLANTA;Productiva;P10;Activa;D;FALSO;Anual;
+PA044;DEPÓSITO DE GRANELES;Productiva;P10;Activa;D;FALSO;Anual;
+PA045;SALIDA DE RESIDUOS;Productiva;P10;Activa;D;FALSO;Anual;
+PA046;DEPÓSITO FRACCIONAMIENTO;Productiva;P10;Activa;D;FALSO;Anual;
+PA047;SALA DE REVISADO;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA048;ESC. MATERIALES REVISADO;Productiva;P10;Activa;D;FALSO;Anual;
+PA049;ESC. INGRESO PERSONAL REVISADO;Productiva;P10;Activa;D;FALSO;Anual;
+PA050;ESC. EGRESO PERSONAL REVISADO;Productiva;P10;Activa;D;FALSO;Anual;
+PA051;ESC. EGRESO PERSONAL FRACC. 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA052;ESC. INGRESO PERSONAL FRACC. 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA053;Esc. Materiales Fracc. 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA054;Lavadero Fraccionamiento 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA055;Lavadero Fraccionamiento 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA056;Esc. Materiales Fracc. 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA057;ESC. INGRESO PERSONAL FRACC. 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA058;ESC. EGRESO PERSONAL FRACC. 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA059;Sala de Fraccionamiento 2;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA060;Sala de Fraccionamiento 1;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PA061;Sala de Terminación 2;Productiva;P10;Activa;D;FALSO;Anual;
+PA062;Sala de Terminación 1;Productiva;P10;Activa;D;FALSO;Anual;
+PA063;ESC. TERMINACIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA064;ESC. PRODUCCIÓN - TERMINACIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA065;CORREDOR TERMINACIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA066;OFICINA SUPERVISOR TERMINACIÓN;Productiva;P10;Activa;D;FALSO;Anual;
+PA068;Sala de Terminación 3;Productiva;P10;Activa;D;FALSO;Anual;
+PA069;ESC. MATERIALES VARIOS;Productiva;P10;Activa;D;FALSO;Anual;
+PA070;ESC. DE PRODUCTO TERMINADO;Productiva;P10;Activa;D;FALSO;Anual;
+PE004;DEPOSITO DE MATERIAL DE EMPAQUE;Productiva;P10;Activa;D;FALSO;Anual;
+PE005;DEPÓSITO DE MATERIA PRIMA;Productiva;P10;Activa;D;FALSO;Anual;
+PE010;DEPÓSITO DE PRODUCTO TERMINADO;Productiva;P10;Activa;D;FALSO;Anual;
+PE023;DEPÓSITO DE MATERIAL EMPAQUE;Productiva;P10;Activa;D;FALSO;Anual;
+PE026;IMPRENTA;Productiva;P10;Activa;D;FALSO;Anual;
+PE072;SALA PESADAS DE PA NS Y EXCIPIENTES;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PE074;ESCLUSA MATERIALES PESADAS;Productiva;P10;Activa;D;FALSO;Anual;
+PE076;ESCLUSA PERSONAL PESADAS;Productiva;P10;Activa;D;FALSO;Anual;
+PE077;ESCLUSA PERSONAL;Productiva;P10;Activa;D;FALSO;Anual;
+PE078;ESCLUSA MUESTREO;Productiva;P10;Activa;D;FALSO;Anual;
+PE079;ESC. LAVADERO UTENSILIOS;Productiva;P10;Activa;D;FALSO;Anual;
+PE080;SALA DE MUESTREO;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+PE081;LAVADERO UTENSILIOS;Productiva;P10;Activa;D;FALSO;Anual;
+PE082;DEPÓSITO EXC. DOSIFICADOS/ENSAMBLE;Productiva;P10;Activa;D;FALSO;Anual;
+PE083;SALA DE MOLIENDA;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+CMP-003;Muestreo/Pesada de activos;Productiva;P10;Activa;D;VERDADERO;Mensual;1
+MC039;CORREDOR CIRCULACION;Productiva;P3;Activa;D;FALSO;Anual;
+NS001;Esc. Ingreso/Egreso Personal;Productiva;P7;Activa;D;FALSO;Anual;
+NS002;Esc. Ingreso/Egreso Materiales;Productiva;P7;Activa;D;FALSO;Anual;
+NS003;Sala de Mezcla Directa;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS004;Esc. Materiales Mezcla Directa;Productiva;P7;Activa;D;FALSO;Anual;
+NS005;Esc. Personal Mezcla Directa;Productiva;P7;Activa;D;FALSO;Anual;
+NS007;Esc. Personal Granulación;Productiva;P7;Activa;D;FALSO;Anual;
+NS008;Esc. Materiales Granualción;Productiva;P7;Activa;D;FALSO;Anual;
+NS009;Sala de Granulación;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS010;Sala de Capsulado;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS011;Esc. Materiales Capsulado;Productiva;P7;Activa;D;FALSO;Anual;
+NS012;Esc. Personal Capsulado;Productiva;P7;Activa;D;FALSO;Anual;
+NS013;Sala de Compresión 1;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS014;Esc. Personal Compresión 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS015;Esc. Materiales Compresión 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS016;Sala de Compresión 2;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS017;Esc. Materiales Compresión 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS018;Esc. Personal Compresión 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS019;Sala de Compresión 3;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS020;Esc. Personal Compresión 3;Productiva;P7;Activa;D;FALSO;Anual;
+NS021;Esc. Materiales Compresión 3;Productiva;P7;Activa;D;FALSO;Anual;
+NS027;Sala de Fraccionamiento 3;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS028;Esc. Personal Fracc. 3;Productiva;P7;Activa;D;FALSO;Anual;
+NS029;Esc. Materiales Fracc. 3;Productiva;P7;Activa;D;FALSO;Anual;
+NS031;Sala de Recubrimiento 1;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS032;Esc. Personal Recubrimiento 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS033;Esc. Mat. Recubrimiento 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS035;Sala de Terminación 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS036;Sala de Fraccionamiento 1;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS037;Esc. Personal Fracc. 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS038;Esc. Materiales Fracc. 1;Productiva;P7;Activa;D;FALSO;Anual;
+NS040;Sala de Terminación 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS041;Sala de Fraccionamiento 2;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS042;Esc. Personal Fracc. 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS043;Esc. Materiales Fracc. 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS044;Lavadero Producción;Productiva;P7;Activa;D;FALSO;Anual;
+NS045;Sala de Preparación de Lacas;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS046;Antesala Preparación de Lacas;Productiva;P7;Activa;D;FALSO;Anual;
+NS047;Sala de Recubrimiento 2;Productiva;P7;Activa;D;VERDADERO;Mensual;1
+NS048;Esc. Mat. Recubrimiento 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS049;Esc. Personal Recubrimiento 2;Productiva;P7;Activa;D;FALSO;Anual;
+NS051;Sala de Terminación 3;Productiva;P7;Activa;D;FALSO;Anual;
+NS053;Depósito;Productiva;P7;Activa;D;FALSO;Anual;
+NS059;Antesala Control en Proceso;Productiva;P7;Activa;D;FALSO;Anual;
+NS060;Control en Proceso;Productiva;P7;Activa;D;FALSO;Anual;
+ON003;Esc. Egreso Personal Pesadas;Productiva;P5;Activa;D;FALSO;Anual;
+ON004;Esc. Ingreso Personal Pesadas;Productiva;P5;Activa;D;FALSO;Anual;
+ON005;Esclusa Materiales Pesada;Productiva;P5;Activa;D;FALSO;Anual;
+ON006;Sala de Muestreo y Pesadas;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON007;Depósito Aprobado/Cuarentena;Productiva;P5;Activa;D;FALSO;Anual;
+ON008;Esc. Egreso Personal Granulcaión 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON009;Esc. Ingreso Personal Granulación 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON010;Esclusa Materiales Granulación 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON011;Sala de Granulación 1;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON012;Sala Técnica Granulación 1-2;Productiva;P5;Activa;D;FALSO;Anual;
+ON013;Esclusa Materiales Granulación 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON014;Esc. Ingreso Personal Granulación 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON015;Esc. Egreso Personal Granulación 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON016;Sala de Granulación 2;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON017;Esc. Egreso Personal Mezcla;Productiva;P5;Activa;D;FALSO;Anual;
+ON018;Esc. Ingreso Personal Mezcla;Productiva;P5;Activa;D;FALSO;Anual;
+ON019;Esclusa Materiales Mezcla;Productiva;P5;Activa;D;FALSO;Anual;
+ON020;Sala de Mezcla;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON021;Sala Técnica Mezcla;Productiva;P5;Activa;D;FALSO;Anual;
+ON022;Esc. Egreso Personal Compresión;Productiva;P5;Activa;D;FALSO;Anual;
+ON023;Esc. Ingreso Personal Compresión;Productiva;P5;Activa;D;FALSO;Anual;
+ON024;Esclusa Materiales Compresión;Productiva;P5;Activa;D;FALSO;Anual;
+ON025;Sala de Compresión;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON026;Esclusa Materiales Capsulado;Productiva;P5;Activa;D;FALSO;Anual;
+ON027;Esc. Ingreso Personal Capsulado;Productiva;P5;Activa;D;FALSO;Anual;
+ON028;Esc. Egreso Personal Capsulado;Productiva;P5;Activa;D;FALSO;Anual;
+ON029;Sala de Capsulado;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON030;Esc. Materiales Capsulado/Lavadero;Productiva;P5;Activa;D;FALSO;Anual;
+ON031;Lavadero Producción;Productiva;P5;Activa;D;FALSO;Anual;
+ON032;Esc. Materiales compresión/lavadero;Productiva;P5;Activa;D;FALSO;Anual;
+ON033;Esclusa Materiales Lavadero;Productiva;P5;Activa;D;FALSO;Anual;
+ON034;Esc. Egreso Personal Lavadero;Productiva;P5;Activa;D;FALSO;Anual;
+ON035;Esc. Ingreso Personal Lavadero;Productiva;P5;Activa;D;FALSO;Anual;
+ON036;Depósito Materiales Limpios;Productiva;P5;Activa;D;FALSO;Anual;
+ON037;Esc. Egreso Personal Recubrimiento;Productiva;P5;Activa;D;FALSO;Anual;
+ON038;Esc. Ingreso Personal Recubrimiento;Productiva;P5;Activa;D;FALSO;Anual;
+ON039;Esclusa Materiales Recubrimiento;Productiva;P5;Activa;D;FALSO;Anual;
+ON040;Sala de Recubrimiento;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON041;Sala Técnica Recubrimiento;Productiva;P5;Activa;D;FALSO;Anual;
+ON042;Antesala Control en Proceso;Productiva;P5;Activa;D;FALSO;Anual;
+ON043;Control en Proceso;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON044;Lavadero General;Productiva;P5;Activa;D;FALSO;Anual;
+ON045;Depósito;Productiva;P5;Activa;D;FALSO;Anual;
+ON046;Esc. Ingreso Personal Fraccionamiento 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON047;Esc. Egreso Personal Fraccionamiento 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON048;Esclusa Materiales Fraccionamiento 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON049;Sala de Fraccionamiento 1;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON050;Lavadero Fraccionamiento 1;Productiva;P5;Activa;D;FALSO;Anual;
+ON051;Lavadero Fraccionamiento 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON052;Esclusa Materiales Fraccionamiento 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON053;Esc. Ingreso Personal Fraccionamiento 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON054;Esc. Egreso Personal Fraccionamiento 2;Productiva;P5;Activa;D;FALSO;Anual;
+ON055;Sala de Fraccionamiento 2;Productiva;P5;Activa;D;VERDADERO;Mensual;1
+ON056;Sala de Terminación;Productiva;P5;Activa;D;FALSO;Anual;
+ON057;Depósito Material de Empaque;Productiva;P5;Activa;D;FALSO;Anual;
+ON059;Corredor de Circulación;Productiva;P5;Activa;D;FALSO;Anual;
+P-001;pasillo inflamables;Productiva;;Activa;D;FALSO;Anual;
+PB003;RI Planta Baja Área de Empaque;Productiva;;Activa;D;FALSO;Anual;
+FQ001;LABORATORIO FISICOQUIMICO;;P3;Activa;D;FALSO;Anual;
+FQ002;LAB. FISICOQUIMICO EQUIPOS;;P3;Activa;D;FALSO;Anual;
+FQ003;LAB. FISICOQUIMICO EQUIPOS;;P3;Activa;D;FALSO;Anual;
+FQ004;LAVADERO;;P3;Activa;D;FALSO;Anual;
+FQ005;DISOLUTORES;;P3;Activa;D;FALSO;Anual;
+FQ006;CAMPANAS Y MUFLA;;P3;Activa;D;FALSO;Anual;
+FQ007;SEGREGADOS;;P3;Activa;D;FALSO;Anual;
+FQ007E;ESCLUSA SEGREGADOS;;P3;Activa;D;FALSO;Anual;
+FQ008;PESADA;;P3;Activa;D;FALSO;Anual;
+FQ009;DEPOSITO REACTIVOS;;P3;Activa;D;FALSO;Anual;
+FQ010;OFIC. SUPERVISORES CONTROL Y DESARROLLO;;P3;Activa;D;FALSO;Anual;
+FQ011;OFICINA JEFE DESARROLLO;;P3;Activa;D;FALSO;Anual;
+FQ012;OFICINA JEFE CONTROL DE CALIDAD;;P3;Activa;D;FALSO;Anual;
+FQ013;OFICINA ADMINISTRATIVA;;P3;Activa;D;FALSO;Anual;
+FQ040;GASES;;P3;Activa;D;FALSO;Anual;
+MC014;INCUBACION Y LECTURA;;P3;Activa;D;FALSO;Anual;
+MC015;RECEPCION DE MUESTRAS;;P3;Activa;D;FALSO;Anual;
+MC016;LAVADERO ROPA;;P3;Activa;D;FALSO;Anual;
+MC017;LAVADERO;;P3;Activa;D;FALSO;Anual;
+MC018;DESCONTAMINACIÓN;;P3;Activa;D;FALSO;Anual;
+MC019;ESCLUSA ESTERILIDAD;;P3;Activa;B;VERDADERO;Mensual;
+MC020;ESTERILIDAD;;P3;Activa;B;VERDADERO;Mensual;
+MC021;ESCLUSA DE CONTROL HIGIENICO;;P3;Activa;C;VERDADERO;Mensual;
+MC022;CONTROL HIGIENICO;;P3;Activa;C;VERDADERO;Mensual;
+MC023;PREPARACION DE MEDIOS DE CULTIVO;;P3;Activa;D;FALSO;Anual;
+MC024;SALA TECNICA AUTOCLAVE ESTERILIZACIÓN;;P3;Activa;D;FALSO;Anual;
+MC025;ESCLUSA CEPAS;;P3;Activa;C;VERDADERO;Mensual;
+MC026;CEPAS;;P3;Activa;C;VERDADERO;Mensual;
+MC027;OFICINA SUPERVISOR MICRO;;P3;Activa;D;FALSO;Anual;
+MC035;RETEN MP Y PRODUCTOS;;P3;Activa;D;FALSO;Anual;
+PE022;SALA DE COMPUTOS DEPOSITO;;P10;Activa;D;FALSO;Anual;
+CMP-001;Pesada de exipientes (exterior a la planta);;P10;Activa;D;VERDADERO;Mensual;1
+CMP-002;Muestreo de exipientes (exterior a la planta);;P10;Activa;D;VERDADERO;Mensual;1
+FL-004;Flujo Laminar Vertical MC-022;;P3;Activa;A;VERDADERO;Semanal;
+FL-005;Flujo Laminar Horizontal MC-020;;P3;Activa;A;VERDADERO;Semanal;
+EB-004;Cabina de bioseguridad MC022;;P3;Activa;A;VERDADERO;Semanal;
+EB-001;Cabina de bioseguridad MC026;;P3;Activa;A;VERDADERO;Semanal;
+P5-101;ENTREPISO TECNICO ONC;Auxiliar;P5;Activa;;FALSO;Anual;
+MC022-1;FL-004 ;;P3;;A;VERDADERO;Semanal;
+MC022-2;FL-004 ;;P3;;A;VERDADERO;Semanal;
+MC022-3;FL-004 ;;P3;;A;VERDADERO;Semanal;
+MC022-4;EB-004;;P3;;A;VERDADERO;Semanal;
+MC022-5;EB-004;;P3;;A;VERDADERO;Semanal;
+MC022-7;MC022 (Esclusa materiales a MC039);;P3;;C;VERDADERO;Mensual;
+MC022-8;MC022 (Esclusa materiales a MC023);;P3;;C;VERDADERO;Mensual;
+MC020-1;FL-005;;P3;;A;VERDADERO;Semanal;
+MC020-2;FL-005;;P3;;A;VERDADERO;Semanal;
+MC020-3;FL-005;;P3;;A;VERDADERO;Semanal;
+MC020-5;MC020 (Esclusa materiales a MC023);;P3;;B;VERDADERO;Mensual;
+MC020-6;MC020 (Esclusa materiales a MC039);;P3;;B;VERDADERO;Mensual;
+MC026-1;EB-001;;P3;;A;VERDADERO;Semanal;
+MC026-2;EB-001;;P3;;A;VERDADERO;Semanal;
+MC026-3;EB-001;;P3;;A;VERDADERO;Semanal;
+MC026-5;MC026 (Esclusa a MC039);;P3;;C;VERDADERO;Mensual;
+MC039-1;Pasillo hacia oficina;;P3;;D;FALSO;Anual;
+MC039-2;Pasillo acceso microbiología;;P3;;D;FALSO;Anual;
+MC039-3;Pasillo hacia lectura;;P3;;D;FALSO;Anual;
+PM-MC039/Exterior;Pasamateriales hacia el exterior ;;P3;;D;FALSO;Anual;
+PM-MC039/FQ;Pasamateriales hacia Fisicoquímico;;P3;;D;FALSO;Anual;
+MC028;Esclusa Vestuario Masculino;;P3;;D;FALSO;Anual;
+MC031;Esclusa Vestuario Femenino;;P3;;D;FALSO;Anual;
+PM-MC017/Exterior;Pasamateriales residuos;;P3;;D;FALSO;Anual;
+PM-MC017/MC023;Pasamateriales Lavadero/Medios;;P3;;D;FALSO;Anual;
+P6-006;;;P6;;;FALSO;Anual;
+P6-005;;;P6;;;FALSO;Anual;
+P7-101;Entrepiso técnico No Segregados;Auxiliar;P7;Activa;;FALSO;;
+FQ041;GASES;;P3;Activa;;FALSO;Anual;
+PB;Área técnica/entrepiso técnico;;P10;Activa;;FALSO;;
+PD;Sala Inflamábles;;P10;Activa;;FALSO;;
+PL002;Sala de aire comprimido;;P10;Activa;;FALSO;;
+NS024;Oficina;;P7;Activa;D;;Anual;
+NS025;Oficina;;P7;Activa;D;;Anual;
+NS026;Depósito;;P7;Activa;D;;Anual;
+NS022;Depósito;;P7;;D;;;
+NS034;Depósito;;P7;;D;;;
+NS087;Corredor;;P7;;D;;;
+NS050;Lavadero;;P7;;D;;;
+NS030;;;P7;;D;;;
+NS039;;;P7;;D;;;
+EB-005;;;P5;;D;;;
+FL-003;;;P10;;D;;;
+FL-006;;;P5;;D;;;
+PA037;;;P10;;D;;;
+PA038;;;P10;;D;;;
+ON002;;;P5;;D;;;
+ON001;;;P5;;D;;;
+PE003;;;P10;;D;;;
+PE029;;;P10;;D;;;
+E1-PE029;Esclusa PE029;;P10;;D;;;
+E2-PE029;Esclusa PE029;;P10;;D;;;

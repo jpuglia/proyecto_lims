@@ -42,3 +42,17 @@ class BaseRepository(Generic[T]):
             db.commit()
             return True
         return False
+
+    def get_by_filters(self, db: Session, **filters) -> List[T]:
+        return db.query(self.model).filter_by(**filters).all()
+
+    def get_column_map(self, db: Session, key_field: str = "codigo", value_field: str = None) -> dict:
+        """
+        Retorna un mapeo de {key_field: id} (o value_field si se provee).
+        Util para resoluciones rápidas de FK.
+        """
+        primary_key = self.model.__mapper__.primary_key[0].name
+        target_value = value_field if value_field else primary_key
+        
+        results = db.query(getattr(self.model, key_field), getattr(self.model, target_value)).all()
+        return {str(k): v for k, v in results if k is not None}
