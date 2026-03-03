@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+    baseURL: (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/?$/, '/'),
     headers: {
         'Content-Type': 'application/json',
     },
@@ -28,7 +28,10 @@ api.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             // Token expired or invalid
             localStorage.removeItem('token');
-            window.location.href = '/login';
+            // Avoid infinite redirect if we are already trying to login
+            if (!error.config.url.includes('/auth/login')) {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

@@ -38,7 +38,7 @@ test.describe('CRUD Plantas — autenticado como admin', () => {
         await page.getByTestId('planta-nombre').fill('');
         await page.getByTestId('planta-submit').click();
 
-        await expect(page.getByText(/obligatorio|requerido|mínimo/i)).toBeVisible({ timeout: 5_000 });
+        await expect(page.locator('p', { hasText: /obligatorio|requerido|mínimo/i }).first()).toBeVisible({ timeout: 5_000 });
     });
 
 });

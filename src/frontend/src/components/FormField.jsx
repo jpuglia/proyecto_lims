@@ -1,43 +1,37 @@
-/**
- * FormField.jsx — Componente de campo de formulario con manejo de errores.
- *
- * Uso:
- *   <FormField label="Nombre" error={errors.nombre}>
- *     <input {...register('nombre')} />
- *   </FormField>
- *
- * O con el shorthand integrado para inputs simples:
- *   <FormField label="Código" error={errors.codigo} id="codigo">
- *     <input id="codigo" {...register('codigo')} className={inputCls(errors.codigo)} />
- *   </FormField>
- */
 import React from 'react';
 
 /**
- * Devuelve la clase CSS del input según si hay error.
- * Usá esta función para construir el className de tus inputs.
+ * Shared input styling following the new clean light theme
  */
-export const inputCls = (error) =>
-    `w-full bg-white/5 border rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none transition-all ${error
-        ? 'border-error/70 focus:border-error'
-        : 'border-white/10 focus:border-accent-primary'
-    }`;
+export const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none placeholder:text-slate-400";
 
-const FormField = ({ label, error, children, className = '' }) => (
-    <div className={`space-y-1.5 ${className}`}>
-        {label && (
-            <label className="text-xs font-semibold text-text-muted uppercase tracking-wider block">
-                {label}
-            </label>
-        )}
+const FormField = ({ label, error, required, children, helperText }) => {
+  return (
+    <div className="flex flex-col space-y-2 w-full">
+      {label && (
+        <label className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-1 ml-1">
+          {label}
+          {required && <span className="text-red-500 font-bold">*</span>}
+        </label>
+      )}
+      
+      <div className="relative">
         {children}
-        {error && (
-            <p className="text-[11px] text-error font-medium flex items-center gap-1 mt-1">
-                <span>⚠</span>
-                {error.message}
-            </p>
-        )}
+      </div>
+
+      {error && (
+        <span className="text-[11px] font-bold text-red-500 ml-1 animate-in fade-in slide-in-from-top-1">
+          {error}
+        </span>
+      )}
+      
+      {helperText && !error && (
+        <span className="text-[11px] font-medium text-slate-400 ml-1">
+          {helperText}
+        </span>
+      )}
     </div>
-);
+  );
+};
 
 export default FormField;

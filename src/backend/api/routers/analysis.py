@@ -7,8 +7,10 @@ from sqlalchemy.orm import Session
 from src.backend.api.dependencies import get_db, get_analysis_service
 from src.backend.api.schemas.fact import (
     AnalisisCreate, AnalisisResponse, AnalisisUpdate,
+    CambioEstadoAnalisisRequest,
     IncubacionCreate, IncubacionResponse,
     ResultadoCreate, ResultadoResponse,
+    UsoMediosCreate, UsoCepaCreate, ReporteConsolidadoResponse
 )
 from src.backend.repositories.fact import AnalisisRepository
 from src.backend.services.analysis_service import AnalysisService
@@ -63,6 +65,20 @@ def update_analisis(
     return repo.update(db, analisis, body.model_dump(exclude_unset=True))
 
 
+@router.post("/{analisis_id}/estado", response_model=AnalisisResponse,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def change_analisis_state(
+    analisis_id: int,
+    body: CambioEstadoAnalisisRequest,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    try:
+        return service.change_analysis_state(db, analisis_id, body.nuevo_estado_id, body.operario_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.delete("/{analisis_id}", status_code=status.HTTP_204_NO_CONTENT,
                dependencies=[Depends(require_role(*_ESCRITURA))])
 def delete_analisis(analisis_id: int, db: Session = Depends(get_db)):
@@ -96,3 +112,39 @@ def register_resultado(
     service: AnalysisService = Depends(get_analysis_service),
 ):
     return service.register_resultado(db, body.model_dump())
+
+
+# ─── Recursos ────────────────────────────────────────────────
+
+@router.post("/uso-medios", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def register_uso_medios(
+    body: UsoMediosCreate,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    return service.register_usage_media(db, body.model_dump())
+
+
+@router.post("/uso-cepas", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def register_uso_cepas(
+    body: UsoCepaCreate,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    return service.register_usage_strain(db, body.model_dump())
+
+
+# ─── Reporte ─────────────────────────────────────────────────
+
+@router.get("/report/{solicitud_id}", response_model=ReporteConsolidadoResponse)
+def get_report(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    report = service.get_analysis_report(db, solicitud_id)
+    if not report:
+        raise HTTPException(status_code=404, detail="Reporte no encontrado para esta solicitud")
+    return report

@@ -21,15 +21,41 @@ export default defineConfig({
             name: 'setup',
             testMatch: /auth\.setup\.js/,
         },
-        // All other tests — run after setup, reuse auth state
+        // Tests that REQUIRE being logged in as admin
         {
-            name: 'chromium',
+            name: 'chromium-authenticated',
             use: {
                 ...devices['Desktop Chrome'],
                 storageState: 'e2e/.auth/admin.json',
             },
             dependencies: ['setup'],
-            testIgnore: /auth\.setup\.js/,
+            testMatch: [
+                /crud_.*\.spec\.js/,
+                /navigation\.spec\.js/,
+                /permissions\.spec\.js/,
+                /form_validation\.spec\.js/,
+                /manufacturing_workflow\.spec\.js/,
+                /workflow_10steps\.spec\.js/
+            ],
+        },
+        // Tests that REQUIRE being logged in as operator
+        {
+            name: 'chromium-operator',
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: 'e2e/.auth/operator.json',
+            },
+            dependencies: ['setup'],
+            testMatch: [/rbac_enforcement\.spec\.js/],
+        },
+        // Tests that REQUIRE being logged out (Login page, redirections)
+        {
+            name: 'chromium-unauthenticated',
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: { cookies: [], origins: [] }, // Force empty state
+            },
+            testMatch: [/login\.spec\.js/],
         },
     ],
 });

@@ -115,26 +115,26 @@ const EquipmentsPage = () => {
     );
 
     return (
-        <AnimatedPage className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <AnimatedPage className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient">Gestión de Equipos</h1>
-                    <p className="text-text-muted mt-1">Administre el inventario de instrumentación y equipos del laboratorio.</p>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestión de Equipos</h1>
+                    <p className="text-secondary font-medium mt-2">Administre el inventario de instrumentación y equipos del laboratorio.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={handleExportCSV}
-                        className="bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"
+                        className="bg-white border border-slate-200 hover:bg-slate-50 active:scale-95 text-slate-700 px-5 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-sm"
                         title="Exportar a CSV"
                     >
-                        <DownloadIcon size={20} />
+                        <DownloadIcon size={20} className="text-primary" />
                         <span className="hidden sm:inline">Exportar CSV</span>
                     </button>
                     <RoleGuard roles={['administrador', 'supervisor']}>
                         <button
                             data-testid="btn-nuevo-equipo"
                             onClick={() => handleOpenModal()}
-                            className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
+                            className="bg-primary hover:bg-primary/90 active:scale-95 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-xl shadow-primary/20"
                         >
                             <Plus size={20} />
                             Nuevo Equipo
@@ -143,181 +143,165 @@ const EquipmentsPage = () => {
                 </div>
             </div>
 
-            <div className="glass-card p-4 flex flex-col md:flex-row gap-4 items-center">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
                         placeholder="Buscar por nombre o código..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-12 pr-4 text-white focus:outline-none focus:border-accent-primary transition-all"
                     />
                 </div>
                 <button
                     onClick={fetchEquipments}
-                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                    className="p-3.5 text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                    title="Actualizar lista"
                 >
-                    <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
+                    <RefreshCcw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
 
-            <div className="glass-card overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-white/5 border-b border-white/10">
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Equipo</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Código</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Estado ID</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Área ID</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {loading ? (
-                            <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center">
-                                    <Loader2 className="animate-spin text-accent-primary mx-auto" size={32} />
-                                </td>
-                            </tr>
-                        ) : filteredEquipments.length === 0 ? (
-                            <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center text-text-muted">
-                                    No se encontraron equipos registrados.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredEquipments.map((item) => (
-                                <tr key={item.equipo_instrumento_id} className="hover:bg-white/5 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-accent-primary/10 text-accent-primary">
-                                                <HardDrive size={18} />
-                                            </div>
-                                            <span className="font-medium text-white">{item.nombre}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-text-muted font-mono">{item.codigo}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/5 text-text-muted border border-white/10">
-                                            ID: {item.estado_equipo_id}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-text-muted">ID: {item.area_id}</td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        <RoleGuard roles={['administrador', 'supervisor']}>
-                                            <button
-                                                onClick={() => handleOpenModal(item)}
-                                                className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                        </RoleGuard>
-                                        <RoleGuard roles={['administrador']}>
-                                            <button
-                                                onClick={() => handleDelete(item.equipo_instrumento_id)}
-                                                className="p-2 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </RoleGuard>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                    <Loader2 className="animate-spin text-primary" size={48} />
+                    <p className="text-secondary font-bold animate-pulse">Cargando equipos...</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredEquipments.map((eq) => (
+                        <div key={eq.equipo_instrumento_id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all group overflow-hidden flex flex-col">
+                            <div className="p-6 flex-1">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-3 bg-slate-50 rounded-xl group-hover:bg-primary/10 transition-colors">
+                                        <HardDrive className="text-primary" size={24} />
+                                    </div>
+                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                        eq.estado_equipo_id === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                    }`}>
+                                        {eq.estado_equipo_id === 1 ? 'Activo' : 'Mantenimiento'}
+                                    </span>
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1">{eq.nombre}</h3>
+                                <p className="text-xs font-black text-secondary mt-1 uppercase tracking-wider">{eq.codigo}</p>
+                                
+                                <div className="mt-6 space-y-3">
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <MapPin size={16} className="text-slate-400" />
+                                        <span className="text-sm font-semibold truncate">Planta: {eq.area_id}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <Tag size={16} className="text-slate-400" />
+                                        <span className="text-sm font-semibold">Tipo: Instrumento</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                                <RoleGuard roles={['administrador', 'supervisor']}>
+                                    <button
+                                        onClick={() => handleOpenModal(eq)}
+                                        className="p-2.5 text-secondary hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
+                                        title="Editar"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(eq.equipo_instrumento_id)}
+                                        className="p-2.5 text-secondary hover:text-red-600 hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
+                                        title="Eliminar"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </RoleGuard>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
+            {/* Modal para Crear/Editar */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-
-                        <h2 className="text-2xl font-bold text-gradient mb-6">
-                            {currentEquip ? 'Editar Equipo' : 'Nuevo Equipo'}
-                        </h2>
-
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField label="Código" error={errors.codigo}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl relative animate-in fade-in zoom-in duration-300 overflow-hidden">
+                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 className="text-2xl font-black text-slate-900">
+                                {currentEquip ? 'Editar Equipo' : 'Nuevo Equipo'}
+                            </h2>
+                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                                <X size={24} className="text-slate-500" />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField label="Código" error={errors.codigo?.message} required>
                                     <input
-                                        type="text"
-                                        placeholder="Ej: EQU-001"
                                         {...register('codigo')}
-                                        className={inputCls(errors.codigo)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                                        placeholder="EQ-001"
                                     />
                                 </FormField>
-                                <FormField label="Nombre" error={errors.nombre}>
+                                <FormField label="Nombre" error={errors.nombre?.message} required>
                                     <input
-                                        data-testid="equipo-nombre"
-                                        type="text"
-                                        placeholder="Ej: Incubadora"
                                         {...register('nombre')}
-                                        className={inputCls(errors.nombre)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                                        placeholder="Microscopio Óptico"
                                     />
                                 </FormField>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField label="Área ID" error={errors.area_id}>
-                                    <input
-                                        type="number"
-                                        {...register('area_id')}
-                                        className={inputCls(errors.area_id)}
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <FormField label="Tipo">
+                                    <select
+                                        {...register('tipo_equipo_id', { valueAsNumber: true })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
+                                    >
+                                        <option value={1}>Instrumento</option>
+                                        <option value={2}>Equipo Crítico</option>
+                                    </select>
                                 </FormField>
-                                <FormField label="Tipo ID" error={errors.tipo_equipo_id}>
-                                    <input
-                                        type="number"
-                                        {...register('tipo_equipo_id')}
-                                        className={inputCls(errors.tipo_equipo_id)}
-                                    />
+                                <FormField label="Estado">
+                                    <select
+                                        {...register('estado_equipo_id', { valueAsNumber: true })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
+                                    >
+                                        <option value={1}>Activo</option>
+                                        <option value={2}>Mantenimiento</option>
+                                        <option value={3}>Fuera de Servicio</option>
+                                    </select>
+                                </FormField>
+                                <FormField label="Área/Planta">
+                                    <select
+                                        {...register('area_id', { valueAsNumber: true })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
+                                    >
+                                        <option value={1}>Planta Montevideo</option>
+                                        <option value={2}>Planta Canelones</option>
+                                    </select>
                                 </FormField>
                             </div>
 
-                            <FormField label="Estado ID" error={errors.estado_equipo_id}>
-                                <input
-                                    type="number"
-                                    {...register('estado_equipo_id')}
-                                    className={inputCls(errors.estado_equipo_id)}
-                                />
-                            </FormField>
-
-                            <div className="flex gap-4 pt-4">
+                            <div className="pt-4 border-t border-slate-100 flex justify-end gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all"
+                                    className="px-6 py-3 rounded-xl font-bold text-secondary hover:bg-slate-100 transition-all"
                                 >
                                     Cancelar
                                 </button>
                                 <button
-                                    data-testid="equipo-submit"
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
                                 >
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    {currentEquip ? 'Guardar Cambios' : 'Crear Equipo'}
+                                    {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                                    {currentEquip ? 'Actualizar' : 'Guardar Equipo'}
                                 </button>
                             </div>
                         </form>
-
-                        {/* Area de Subida de Documentos (solo si estamos editando uno existente) */}
-                        {currentEquip && (
-                            <div className="mt-8 pt-6 border-t border-white/10">
-                                <FileUploader
-                                    entidadTipo="equipo"
-                                    entidadId={currentEquip.equipo_instrumento_id}
-                                />
-                            </div>
-                        )}
                     </div>
                 </div>
             )}

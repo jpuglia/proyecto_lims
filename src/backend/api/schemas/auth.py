@@ -96,3 +96,8 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str = Field(..., description="JWT Bearer token")
     token_type: str = Field("bearer", description="Tipo de token")
+
+
+class SignatureRequest(BaseModel):
+    password: str = Field(..., description="Contraseña para validar la firma")
+    motivo: str = Field(..., description="Razón de la firma (ej. Aprobación de lote)", json_schema_extra={"example": "Liberación de lote por Supervisor"})

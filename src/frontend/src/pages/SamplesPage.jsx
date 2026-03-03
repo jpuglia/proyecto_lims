@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, RefreshCcw, FlaskConical, Calendar, Tag, FileText, X, Check, Edit2, Loader2 } from 'lucide-react';
+import { Plus, Search, RefreshCcw, FlaskConical, Calendar, Tag, FileText, X, Check, Edit2, Loader2, Play, Package, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import SampleService from '../api/sampleService';
 import EquipmentService from '../api/equipmentService';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { solicitudMuestreoSchema, solicitudMuestreoEditSchema } from '../validation/schemas';
 import FormField, { inputCls } from '../components/FormField';
+import WorkflowStepper from '../components/WorkflowStepper';
 
 const SamplesPage = () => {
     const [solicitudes, setSolicitudes] = useState([]);
@@ -17,10 +19,12 @@ const SamplesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isSamplingModalOpen, setIsSamplingModalOpen] = useState(false);
     const [currentSolicitud, setCurrentSolicitud] = useState(null);
     const [equipments, setEquipments] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     const createForm = useForm({
         resolver: zodResolver(solicitudMuestreoSchema),
@@ -56,7 +60,7 @@ const SamplesPage = () => {
         setSubmitting(true);
         try {
             const payload = {
-                ...data, usuario_id: 1,
+                ...data, usuario_id: user?.sub ? Number(user.sub) : 1,
                 equipo_instrumento_id: data.equipo_instrumento_id ? Number(data.equipo_instrumento_id) : null
             };
             await SampleService.createSolicitud(payload);
@@ -91,6 +95,42 @@ const SamplesPage = () => {
         }
     };
 
+    const handleSamplingClick = (item) => {
+        setCurrentSolicitud(item);
+        setIsSamplingModalOpen(true);
+    };
+
+    const handleExecuteSampling = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const formData = new FormData(e.target);
+            const payload = {
+                session: {
+                    solicitud_muestreo_id: currentSolicitud.solicitud_muestreo_id,
+                    operario_id: Number(formData.get('operario_id')),
+                    fecha_inicio: new Date().toISOString()
+                },
+                muestras: [
+                    {
+                        tipo_muestra: currentSolicitud.tipo,
+                        codigo_etiqueta: formData.get('codigo_etiqueta'),
+                        observacion: formData.get('muestra_obs'),
+                        equipo_instrumento_id: currentSolicitud.equipo_instrumento_id
+                    }
+                ]
+            };
+            await SampleService.createSession(payload);
+            toast.success('Sesión de muestreo registrada');
+            setIsSamplingModalOpen(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Error al registrar muestreo');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const filteredSolicitudes = solicitudes.filter(s =>
         s.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.observacion?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -111,8 +151,8 @@ const SamplesPage = () => {
         <AnimatedPage className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient">Solicitudes de Muestreo</h1>
-                    <p className="text-text-muted mt-1">Gestione las peticiones de muestreo ambiental y de procesos.</p>
+                    <h1 className="text-3xl font-bold text-gradient">Muestreo y Solicitudes</h1>
+                    <p className="text-text-muted mt-1">Gestione el flujo desde la solicitud hasta la toma de muestras.</p>
                 </div>
                 <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
                     <button
@@ -149,10 +189,10 @@ const SamplesPage = () => {
                     <thead>
                         <tr className="bg-white/5 border-b border-white/10">
                             <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">ID</th>
+                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Flujo</th>
                             <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Tipo</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Fecha</th>
                             <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Estado</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Observación</th>
+                            <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -172,6 +212,9 @@ const SamplesPage = () => {
                             filteredSolicitudes.map((item) => (
                                 <tr key={item.solicitud_muestreo_id} className="hover:bg-white/5 transition-colors group">
                                     <td className="px-6 py-4 font-mono text-xs text-text-muted">#{item.solicitud_muestreo_id}</td>
+                                    <td className="px-6 py-4 min-w-[200px]">
+                                        <WorkflowStepper currentStep={item.estado_solicitud_id === 3 ? 3 : 1} />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 rounded-lg bg-accent-primary/10 text-accent-primary">
@@ -180,24 +223,36 @@ const SamplesPage = () => {
                                             <span className="font-medium text-white">{item.tipo}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-text-muted">
-                                        {new Date(item.fecha).toLocaleDateString()}
-                                    </td>
                                     <td className="px-6 py-4">
                                         {getStatusBadge(item.estado_solicitud_id)}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-text-muted italic max-w-xs truncate">
-                                        {item.observacion || '-'}
-                                    </td>
                                     <td className="px-6 py-4 text-right">
-                                        <RoleGuard roles={['administrador', 'supervisor', 'analista', 'operador']}>
+                                        <div className="flex justify-end gap-2">
+                                            {item.estado_solicitud_id === 3 && (
+                                                <button
+                                                    onClick={() => navigate(`/report/${item.solicitud_muestreo_id}`)}
+                                                    className="p-2 rounded-lg bg-accent-primary/20 text-accent-primary hover:bg-accent-primary/30 transition-all flex items-center gap-1 text-xs font-bold"
+                                                    title="Ver Informe"
+                                                >
+                                                    <Eye size={14} /> Informe
+                                                </button>
+                                            )}
+                                            {item.estado_solicitud_id === 1 && (
+                                                <button
+                                                    onClick={() => handleSamplingClick(item)}
+                                                    className="p-2 rounded-lg bg-success/20 text-success hover:bg-success/30 transition-all flex items-center gap-1 text-xs font-bold"
+                                                    title="Ejecutar Muestreo"
+                                                >
+                                                    <Play size={14} /> Muestrear
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleEditClick(item)}
                                                 className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
-                                        </RoleGuard>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -206,10 +261,11 @@ const SamplesPage = () => {
                 </table>
             </div>
 
+            {/* Modal Nueva Solicitud */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative">
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white"><X size={24} /></button>
                         <h2 className="text-2xl font-bold text-gradient mb-6">Nueva Solicitud</h2>
                         <form onSubmit={createForm.handleSubmit(handleCreateSolicitud)} className="space-y-4">
                             <FormField label="Tipo de Muestreo" error={createForm.formState.errors.tipo}>
@@ -228,14 +284,12 @@ const SamplesPage = () => {
                                 </select>
                             </FormField>
                             <FormField label="Observaciones" error={createForm.formState.errors.observacion}>
-                                <textarea {...createForm.register('observacion')} rows="3"
-                                    placeholder="Detalles adicionales sobre la toma de muestra..."
-                                    className={inputCls(createForm.formState.errors.observacion) + ' resize-none'} />
+                                <textarea {...createForm.register('observacion')} rows="3" className={inputCls(createForm.formState.errors.observacion) + ' resize-none'} />
                             </FormField>
                             <div className="flex gap-4 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Crear Solicitud
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold">
+                                    {submitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Crear Solicitud'}
                                 </button>
                             </div>
                         </form>
@@ -243,21 +297,48 @@ const SamplesPage = () => {
                 </div>
             )}
 
-            {isEditModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"><X size={24} /></button>
-                        <h2 className="text-2xl font-bold text-gradient mb-2">Editar Observación</h2>
-                        <p className="text-sm text-text-muted mb-6">Solicitud <span className="text-white font-mono">#{currentSolicitud?.solicitud_muestreo_id}</span>.</p>
-                        <form onSubmit={editForm.handleSubmit(handleUpdateSolicitud)} className="space-y-4">
-                            <FormField label="Observaciones" error={editForm.formState.errors.observacion}>
-                                <textarea {...editForm.register('observacion')} rows="4" required
-                                    className={inputCls(editForm.formState.errors.observacion) + ' resize-none'} />
+            {/* Modal Ejecutar Muestreo (Step 2) */}
+            {isSamplingModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative">
+                        <button onClick={() => setIsSamplingModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white"><X size={24} /></button>
+                        <h2 className="text-2xl font-bold text-gradient mb-2">Ejecutar Muestreo</h2>
+                        <p className="text-sm text-text-muted mb-6">Materializando solicitud <span className="text-white font-mono">#{currentSolicitud?.solicitud_muestreo_id}</span> ({currentSolicitud?.tipo})</p>
+                        <form onSubmit={handleExecuteSampling} className="space-y-4">
+                            <FormField label="Operario Responsable (ID)">
+                                <input type="number" name="operario_id" required defaultValue="1" className={inputCls()} />
+                            </FormField>
+                            <FormField label="Código de Etiqueta (Muestra)">
+                                <input type="text" name="codigo_etiqueta" required placeholder="Ej: LOTE-AG-001" className={inputCls()} />
+                            </FormField>
+                            <FormField label="Observaciones de Toma">
+                                <textarea name="muestra_obs" rows="2" className={inputCls() + ' resize-none'} />
                             </FormField>
                             <div className="flex gap-4 pt-2">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} Actualizar
+                                <button type="button" onClick={() => setIsSamplingModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-success text-white font-semibold">
+                                    {submitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Registrar Muestras'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Editar */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative">
+                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-text-muted hover:text-white"><X size={24} /></button>
+                        <h2 className="text-2xl font-bold text-gradient mb-2">Editar Observación</h2>
+                        <form onSubmit={editForm.handleSubmit(handleUpdateSolicitud)} className="space-y-4">
+                            <FormField label="Observaciones" error={editForm.formState.errors.observacion}>
+                                <textarea {...editForm.register('observacion')} rows="4" className={inputCls(editForm.formState.errors.observacion) + ' resize-none'} />
+                            </FormField>
+                            <div className="flex gap-4 pt-2">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold">
+                                    {submitting ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Actualizar'}
                                 </button>
                             </div>
                         </form>

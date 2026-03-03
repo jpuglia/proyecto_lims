@@ -149,6 +149,29 @@ def generic_csv_loader(config: Dict[str, Any]) -> Callable[[str], None]:
                             data[field] = def_val
 
                     # ----------------------------
+                    # Casting de datos (SQLAlchemy types)
+                    # ----------------------------
+                    from sqlalchemy import Date, DateTime, Integer, Float
+                    from datetime import date, datetime
+
+                    for col in repo.model.__table__.columns:
+                        if col.name in data and data[col.name] is not None:
+                            val = data[col.name]
+                            if isinstance(val, str) and val.strip() != "":
+                                try:
+                                    if isinstance(col.type, Date):
+                                        data[col.name] = date.fromisoformat(val)
+                                    elif isinstance(col.type, DateTime):
+                                        data[col.name] = datetime.fromisoformat(val.replace("Z", "+00:00"))
+                                    elif isinstance(col.type, Integer):
+                                        data[col.name] = int(val)
+                                    elif isinstance(col.type, Float):
+                                        data[col.name] = float(val)
+                                except (ValueError, TypeError):
+                                    # Fallback or log warning
+                                    pass
+
+                    # ----------------------------
                     # Filtrar solo campos válidos para el modelo
                     # ----------------------------
                     final_data = {k: v for k, v in data.items() if k in model_columns}

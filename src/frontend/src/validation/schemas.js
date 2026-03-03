@@ -6,24 +6,29 @@
  *   - Los mensajes de error están en español.
  *   - Los campos opcionales usan .optional() o .nullable().
  *   - Los IDs numéricos reciben strings desde inputs HTML y se coerc con z.coerce.number().
+ *   - Se aplica .trim() a todos los strings para evitar entradas vacías con espacios.
  */
 import { z } from 'zod';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const requiredStr = (msg = 'Campo requerido') => z.string().min(1, msg).trim();
-const positiveInt = (msg = 'Debe ser un número positivo') =>
-    z.coerce.number({ invalid_type_error: msg }).int().positive(msg);
+const requiredStr = (msg = 'Campo requerido', min = 1, max = 255) => 
+    z.string().trim().min(min, min > 1 ? `Debe tener al menos ${min} caracteres` : msg).max(max, `Máximo ${max} caracteres`);
+
+const positiveInt = (msg = 'Debe ser un número entero positivo') =>
+    z.coerce.number({ invalid_type_error: msg }).int().min(1, msg);
+
 const positiveNum = (msg = 'Debe ser un número positivo') =>
     z.coerce.number({ invalid_type_error: msg }).positive(msg);
+
+const nonNegativeNum = (msg = 'No puede ser un número negativo') =>
+    z.coerce.number({ invalid_type_error: msg }).min(0, msg);
 
 // ─── Equipos ──────────────────────────────────────────────────────────────────
 
 export const equipoSchema = z.object({
-    codigo: requiredStr('El código es obligatorio')
-        .max(50, 'Máximo 50 caracteres'),
-    nombre: requiredStr('El nombre es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
+    codigo: requiredStr('El código es obligatorio', 1, 50),
+    nombre: requiredStr('El nombre es obligatorio', 3, 100),
     tipo_equipo_id: positiveInt('Tipo de equipo inválido'),
     estado_equipo_id: positiveInt('Estado de equipo inválido'),
     area_id: positiveInt('Área inválida'),
@@ -32,10 +37,8 @@ export const equipoSchema = z.object({
 // ─── Plantas / Ubicaciones ────────────────────────────────────────────────────
 
 export const plantaSchema = z.object({
-    codigo: requiredStr('El código es obligatorio')
-        .max(20, 'Máximo 20 caracteres'),
-    nombre: requiredStr('El nombre es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
+    codigo: requiredStr('El código es obligatorio', 1, 20),
+    nombre: requiredStr('El nombre es obligatorio', 3, 100),
     sistema_id: positiveInt('Sistema inválido'),
     activo: z.boolean().default(true),
 });
@@ -46,13 +49,14 @@ export const solicitudMuestreoSchema = z.object({
     tipo: z.enum(['Ambiental', 'Producto', 'Proceso', 'Personal', 'Agua'], {
         errorMap: () => ({ message: 'Seleccioná un tipo de muestreo válido' }),
     }),
-    equipo_instrumento_id: z.coerce.number().nullable().optional(),
-    observacion: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
+    equipo_instrumento_id: z.coerce.number().int().positive().nullable().optional()
+        .transform(v => (v === 0 || isNaN(v)) ? null : v),
+    observacion: z.string().trim().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
     estado_solicitud_id: z.coerce.number().int().default(1),
 });
 
 export const solicitudMuestreoEditSchema = z.object({
-    observacion: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
+    observacion: z.string().trim().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
 });
 
 // ─── Análisis ───────────────────────────────────────────────────────────────
@@ -62,34 +66,30 @@ export const analisisSchema = z.object({
         errorMap: () => ({ message: 'Seleccioná un tipo de análisis válido' }),
     }),
     operario_id: z.coerce.number().int().positive().nullable().optional()
-        .transform(v => v === 0 ? null : v),
-    descripcion: z.string().max(1000, 'Máximo 1000 caracteres').optional().or(z.literal('')),
+        .transform(v => (v === 0 || isNaN(v)) ? null : v),
+    descripcion: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().or(z.literal('')),
 });
 
 export const analisisEditSchema = z.object({
-    descripcion: z.string().max(1000, 'Máximo 1000 caracteres').optional().or(z.literal('')),
+    descripcion: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().or(z.literal('')),
 });
 
 // ─── Inventario — Polvos ─────────────────────────────────────────────────────
 
 export const polvoSchema = z.object({
-    nombre: requiredStr('El nombre es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
-    codigo: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
-    unidad: requiredStr('La unidad es obligatoria')
-        .max(20, 'Máximo 20 caracteres'),
+    nombre: requiredStr('El nombre es obligatorio', 3, 100),
+    codigo: z.string().trim().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
+    unidad: requiredStr('La unidad es obligatoria', 1, 20),
 });
 
 export const polvoEditSchema = z.object({
-    nombre: requiredStr('El nombre es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
+    nombre: requiredStr('El nombre es obligatorio', 3, 100),
 });
 
 // ─── Inventario — Medios ──────────────────────────────────────────────────────
 
 export const medioSchema = z.object({
-    nombre: requiredStr('El nombre es obligatorio')
-        .max(100, 'Máximo 100 caracteres'),
+    nombre: requiredStr('El nombre es obligatorio', 3, 100),
     tipo: z.enum(['agar', 'caldo', 'solución', 'buffer'], {
         errorMap: () => ({ message: 'Seleccioná un tipo válido' }),
     }),
@@ -99,15 +99,12 @@ export const medioSchema = z.object({
 // ─── Manufactura — Órdenes ────────────────────────────────────────────────────
 
 export const ordenManufacturaSchema = z.object({
-    codigo: requiredStr('El código es obligatorio')
-        .max(50, 'Máximo 50 caracteres'),
-    lote: requiredStr('El lote es obligatorio')
-        .max(50, 'Máximo 50 caracteres'),
+    codigo: requiredStr('El código es obligatorio', 1, 50),
+    lote: requiredStr('El lote es obligatorio', 1, 50),
     fecha: requiredStr('La fecha es obligatoria'),
     producto_id: positiveInt('El ID de producto debe ser positivo'),
     cantidad: positiveNum('La cantidad debe ser un número positivo'),
-    unidad: requiredStr('La unidad es obligatoria')
-        .max(20, 'Máximo 20 caracteres'),
+    unidad: requiredStr('La unidad es obligatoria', 1, 20),
     operario_id: positiveInt('El ID de operario debe ser positivo'),
 });
 
@@ -116,7 +113,7 @@ export const ordenManufacturaSchema = z.object({
 export const procesoManufacturaSchema = z.object({
     orden_manufactura_id: positiveInt('El ID de orden debe ser positivo'),
     estado_manufactura_id: positiveInt('El estado debe ser positivo'),
-    observacion: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
+    observacion: z.string().trim().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
 });
 
 export const cambioEstadoSchema = z.object({

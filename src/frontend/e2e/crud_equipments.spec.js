@@ -12,8 +12,8 @@ test.describe('CRUD Equipos — autenticado como admin', () => {
         await page.waitForTimeout(1500);
 
         // Either the empty message or a table row is visible
-        const emptyMsg = page.getByText(/no se encontraron/i);
-        const firstRow = page.locator('tbody tr').first();
+        const emptyMsg = page.locator('tbody td').filter({ hasText: /no se encontraron/i });
+        const firstRow = page.locator('tbody tr').filter({ hasNotText: /no se encontraron/i }).first();
         await expect(emptyMsg.or(firstRow)).toBeVisible({ timeout: 10_000 });
     });
 
@@ -43,7 +43,7 @@ test.describe('CRUD Equipos — autenticado como admin', () => {
         await page.getByTestId('equipo-submit').click();
 
         // Zod error message should appear (inline, in Spanish)
-        await expect(page.getByText(/obligatorio|requerido|mínimo/i)).toBeVisible({ timeout: 5_000 });
+        await expect(page.locator('p', { hasText: /obligatorio|requerido|mínimo/i }).first()).toBeVisible({ timeout: 5_000 });
     });
 
 });

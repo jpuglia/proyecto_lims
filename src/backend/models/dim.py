@@ -1,5 +1,8 @@
 from datetime import date, datetime, timezone
-from sqlalchemy import Column, Integer, String, Boolean, Date, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    Column, Integer,
+    String, Boolean, Date,
+    DateTime, ForeignKey, UniqueConstraint)
 from sqlalchemy.orm import relationship
 
 from src.backend.models.base import Base

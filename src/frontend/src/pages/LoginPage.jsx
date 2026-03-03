@@ -18,7 +18,6 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // Create URLSearchParams as required by FastAPI OAuth2PasswordRequestForm
       const params = new URLSearchParams();
       params.append('username', username);
       params.append('password', password);
@@ -32,30 +31,31 @@ const LoginPage = () => {
       login(response.data.access_token);
       navigate('/');
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Error de autenticación. Verifique sus credenciales.');
+      console.error('Login error full:', err);
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || 'Error de autenticación. Verifique sus credenciales.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-bg-dark">
-      <div className="glass-card w-full max-w-md p-10 text-center animate-in fade-in zoom-in duration-500">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-gradient mb-2 tracking-tight">LIMS URUFARMA</h1>
-          <p className="text-sm text-text-muted">Gestión de Laboratorio de Alta Tecnología</p>
+    <div className="flex items-center justify-center min-h-screen p-4 bg-slate-50">
+      <div className="bg-white w-full max-w-md p-12 text-center rounded-3xl border border-slate-200 shadow-premium animate-in fade-in zoom-in duration-500">
+        <div className="mb-12">
+          <h1 className="text-4xl font-black text-primary mb-2 tracking-tight">LIMS URUFARMA</h1>
+          <p className="text-sm text-secondary font-semibold uppercase tracking-wider">Control de Calidad</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {error && (
-            <div data-testid="login-error" className="bg-error/10 border border-error/50 text-error text-xs p-3 rounded-xl animate-shake">
+            <div data-testid="login-error" className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold p-4 rounded-xl animate-shake">
               {error}
             </div>
           )}
 
           <div className="relative group">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent-primary transition-colors" size={20} />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
             <input
               data-testid="login-username"
               type="text"
@@ -63,12 +63,12 @@ const LoginPage = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-text-muted focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all shadow-inner"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
             />
           </div>
 
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent-primary transition-colors" size={20} />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
             <input
               data-testid="login-password"
               type="password"
@@ -76,7 +76,7 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-text-muted focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all shadow-inner"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
             />
           </div>
 
@@ -84,7 +84,7 @@ const LoginPage = () => {
             data-testid="login-submit"
             type="submit"
             disabled={loading}
-            className="w-full bg-grad-primary hover:brightness-110 active:scale-[0.98] text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70"
+            className="w-full bg-primary hover:bg-primary/90 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70"
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : (
               <>
@@ -94,9 +94,9 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="mt-12">
-          <p className="text-[10px] text-text-muted uppercase tracking-widest font-medium">
-            © 2026 Urufarma S.A. - Control de Calidad
+        <div className="mt-16 pt-8 border-t border-slate-100">
+          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-bold">
+            © 2026 Urufarma S.A.
           </p>
         </div>
       </div>

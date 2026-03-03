@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, RefreshCcw, Factory, ClipboardList, Settings, GitBranch,
-    X, Check, Edit2, Trash2, Loader2, ArrowRightLeft, ChevronDown, ChevronRight, Clock, Download as DownloadIcon
+    X, Check, Edit2, Trash2, Loader2, ArrowRightLeft, ChevronDown, ChevronRight, Clock, Play, Download as DownloadIcon
 } from 'lucide-react';
 import { manufacturingService } from '../api/manufacturingService';
+import { productService } from '../api/productService';
+import { operatorService } from '../api/operatorService';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import AnimatedPage from '../components/AnimatedPage';
@@ -11,7 +13,7 @@ import RoleGuard from '../components/RoleGuard';
 import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ordenManufacturaSchema, procesoManufacturaSchema } from '../validation/schemas';
+import { ordenManufacturaSchema, procesoManufacturaSchema, cambioEstadoSchema } from '../validation/schemas';
 import FormField, { inputCls } from '../components/FormField';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -29,7 +31,7 @@ const ESTADO_COLORS = {
 const estadoBadge = (nombre) => {
     const key = (nombre || '').toLowerCase();
     const cls = ESTADO_COLORS[key] || 'bg-white/10 text-text-muted';
-    return <span className={`inline - flex items - center px - 2.5 py - 0.5 rounded - full text - xs font - medium ${cls} `}>{nombre || '—'}</span>;
+    return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}`}>{nombre || '—'}</span>;
 };
 
 const fmtDate = (d) => {
@@ -40,13 +42,17 @@ const fmtDate = (d) => {
 
 // ─── Órdenes Tab ─────────────────────────────────────────────────────────────
 
-const OrdenesTab = ({ estados }) => {
+const OrdenesTab = ({ estados, onIniciarProceso }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState(''); // Renamed to 'q' in the snippet, but keeping 'search' for consistency with 'filtered'
+    const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // Data for dropdowns
+    const [productos, setProductos] = useState([]);
+    const [operarios, setOperarios] = useState([]);
 
     // Trazabilidad: expanded row
     const [expandedId, setExpandedId] = useState(null);
@@ -58,14 +64,34 @@ const OrdenesTab = ({ estados }) => {
         defaultValues: { codigo: '', lote: '', fecha: '', producto_id: '', cantidad: '', unidad: 'kg', operario_id: '' },
     });
 
-    const fetchOrdenes = async () => {
+    const [errorMsg, setErrorMsg] = useState(null);
+
+    const fetchData = async () => {
         setLoading(true);
-        try { setItems(await manufacturingService.getOrdenes()); }
-        catch { toast.error('Error al cargar órdenes'); }
+        setErrorMsg(null);
+        
+        try {
+            const [orders, prods, ops] = await Promise.all([
+                manufacturingService.getOrdenes().catch(e => { console.error('Orders failed', e); return []; }),
+                productService.getAll().catch(e => { console.error('Products failed', e); return []; }),
+                operatorService.getAll().catch(e => { console.error('Operators failed', e); return []; })
+            ]);
+            setItems(orders);
+            setProductos(prods);
+            setOperarios(ops);
+            
+            if (orders.length === 0 && prods.length === 0 && ops.length === 0) {
+                // If all are empty, maybe something is wrong with connectivity
+                // but only show if it was an error
+            }
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setErrorMsg('Error al cargar datos de manufactura');
+        }
         setLoading(false);
     };
 
-    useEffect(() => { fetchOrdenes(); }, []);
+    useEffect(() => { fetchData(); }, []);
 
     const openCreate = () => {
         setEditId(null);
@@ -104,9 +130,10 @@ const OrdenesTab = ({ estados }) => {
                 toast.success('Orden creada');
             }
             setShowModal(false);
-            fetchOrdenes();
+            fetchData();
         } catch (err) {
-            toast.error(err.response?.data?.detail || 'Error al guardar');
+            const detail = err.response?.data?.detail || err.message || 'Error al guardar';
+            toast.error(detail);
         }
         setSubmitting(false);
     };
@@ -116,7 +143,7 @@ const OrdenesTab = ({ estados }) => {
         try {
             await manufacturingService.deleteOrden(item.orden_manufactura_id);
             toast.success('Orden eliminada');
-            fetchOrdenes();
+            fetchData();
         } catch { toast.error('Error al eliminar'); }
     };
 
@@ -176,17 +203,23 @@ const OrdenesTab = ({ estados }) => {
                     >
                         <DownloadIcon size={18} />
                     </button>
-                    <button onClick={fetchOrdenes} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
+                    <button onClick={fetchData} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
                         <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
                     </button>
-                    <RoleGuard roles={['administrador', 'supervisor', 'operador']}>
-                        <button onClick={openCreate} className="bg-grad-primary hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2">
+                    <RoleGuard roles={['administrador', 'supervisor']}>
+                        <button data-testid="btn-nueva-orden" onClick={openCreate} className="bg-grad-primary hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2">
                             <Plus size={20} />
                             Nueva Orden
                         </button>
                     </RoleGuard>
                 </div>
             </div>
+
+            {errorMsg && (
+                <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-xl text-sm">
+                    {errorMsg}
+                </div>
+            )}
 
             {/* Table */}
             {loading ? (
@@ -223,13 +256,21 @@ const OrdenesTab = ({ estados }) => {
                                         <td className="px-4 py-3">{item.cantidad}</td>
                                         <td className="px-4 py-3">{item.unidad}</td>
                                         <td className="px-4 py-3 text-right space-x-1" onClick={(e) => e.stopPropagation()}>
+                                            <RoleGuard roles={['administrador', 'supervisor', 'operador', 'analista']}>
+                                                <button
+                                                    onClick={() => onIniciarProceso && onIniciarProceso(item)}
+                                                    title="Iniciar Proceso"
+                                                    className="p-1.5 rounded-lg hover:bg-success/20 transition-colors text-success"
+                                                >
+                                                    <Play size={14} fill="currentColor" />
+                                                </button>
+                                            </RoleGuard>
                                             <RoleGuard roles={['administrador', 'supervisor']}>
                                                 <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-accent-secondary"><Edit2 size={14} /></button>
                                                 <button onClick={() => handleDelete(item)} className="p-1.5 rounded-lg hover:bg-error/20 transition-colors text-error"><Trash2 size={14} /></button>
                                             </RoleGuard>
                                         </td>
                                     </tr>
-                                    {/* Expanded trazabilidad row */}
                                     {expandedId === item.orden_manufactura_id && (
                                         <tr className="border-b border-white/5 bg-white/[0.02]">
                                             <td colSpan={7} className="px-8 py-4">
@@ -293,8 +334,13 @@ const OrdenesTab = ({ estados }) => {
                                 <FormField label="Fecha" error={form.formState.errors.fecha}>
                                     <input type="date" {...form.register('fecha')} className={inputCls(form.formState.errors.fecha)} />
                                 </FormField>
-                                <FormField label="Producto ID" error={form.formState.errors.producto_id}>
-                                    <input type="number" min="1" {...form.register('producto_id')} placeholder="1" className={inputCls(form.formState.errors.producto_id)} />
+                                <FormField label="Producto" error={form.formState.errors.producto_id}>
+                                    <select {...form.register('producto_id')} className={inputCls(form.formState.errors.producto_id) + ' appearance-none'}>
+                                        <option value="">Seleccionar producto…</option>
+                                        {productos.map(p => (
+                                            <option key={p.producto_id} value={p.producto_id} className="bg-bg-dark">{p.nombre} ({p.codigo})</option>
+                                        ))}
+                                    </select>
                                 </FormField>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
@@ -304,8 +350,13 @@ const OrdenesTab = ({ estados }) => {
                                 <FormField label="Unidad" error={form.formState.errors.unidad}>
                                     <input {...form.register('unidad')} placeholder="kg" className={inputCls(form.formState.errors.unidad)} />
                                 </FormField>
-                                <FormField label="Operario ID" error={form.formState.errors.operario_id}>
-                                    <input type="number" min="1" {...form.register('operario_id')} placeholder="1" className={inputCls(form.formState.errors.operario_id)} />
+                                <FormField label="Operario Asignado" error={form.formState.errors.operario_id}>
+                                    <select {...form.register('operario_id')} className={inputCls(form.formState.errors.operario_id) + ' appearance-none'}>
+                                        <option value="">Seleccionar…</option>
+                                        {operarios.map(o => (
+                                            <option key={o.operario_id} value={o.operario_id} className="bg-bg-dark">{o.nombre} {o.apellido}</option>
+                                        ))}
+                                    </select>
                                 </FormField>
                             </div>
                             <div className="flex justify-end gap-2 pt-2">
@@ -325,7 +376,7 @@ const OrdenesTab = ({ estados }) => {
 
 // ─── Procesos Tab ────────────────────────────────────────────────────────────
 
-const ProcesosTab = ({ estados }) => {
+const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
     const { user } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -349,8 +400,25 @@ const ProcesosTab = ({ estados }) => {
     });
 
     const estadoForm = useForm({
-        defaultValues: { nuevo_estado_id: '' },
+        resolver: zodResolver(cambioEstadoSchema),
+        defaultValues: { nuevo_estado_id: '', usuario_id: 1 },
     });
+
+    useEffect(() => {
+        if (prefill) {
+            createForm.reset({
+                orden_manufactura_id: String(prefill.orden_manufactura_id),
+                estado_manufactura_id: '1', // Default to Planificado
+                observacion: `Proceso iniciado para orden ${prefill.codigo}`
+            });
+            setShowModal(true);
+            // Delay calling onPrefillUsed to ensure modal stays open during state transition
+            const timer = setTimeout(() => {
+                onPrefillUsed && onPrefillUsed();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [prefill]);
 
     const fetchProcesos = async () => {
         setLoading(true);
@@ -374,14 +442,16 @@ const ProcesosTab = ({ estados }) => {
             createForm.reset();
             fetchProcesos();
         } catch (err) {
-            toast.error(err.response?.data?.detail || 'Error al crear proceso');
+            const detail = err.response?.data?.detail || err.message || 'Error al crear proceso';
+            toast.error(detail);
         }
         setSubmitting(false);
     };
 
     const openEstadoModal = (item) => {
         setEstadoTarget(item);
-        estadoForm.reset({ nuevo_estado_id: '' });
+        const currentUserId = parseInt(user?.sub, 10) || 1;
+        estadoForm.reset({ nuevo_estado_id: '', usuario_id: currentUserId });
         setShowEstadoModal(true);
     };
 
@@ -391,7 +461,7 @@ const ProcesosTab = ({ estados }) => {
             await manufacturingService.changeEstado(
                 estadoTarget.manufactura_id,
                 Number(data.nuevo_estado_id),
-                parseInt(user?.sub, 10) || 1,   // JWT sub = str(usuario_id)
+                data.usuario_id
             );
             toast.success('Estado actualizado');
             setShowEstadoModal(false);
@@ -479,7 +549,7 @@ const ProcesosTab = ({ estados }) => {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="glass-card p-6 w-full max-w-md space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Nuevo Proceso de Manufactura</h3>
+                            <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Proceso de Manufactura</h3>
                             <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/10"><X size={18} /></button>
                         </div>
                         <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-3">
@@ -515,7 +585,7 @@ const ProcesosTab = ({ estados }) => {
                 </div>
             )}
 
-            {/* Cambio de Estado Modal (usuario_id from JWT) */}
+            {/* Cambio de Estado Modal */}
             {showEstadoModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="glass-card p-6 w-full max-w-sm space-y-4">
@@ -532,9 +602,19 @@ const ProcesosTab = ({ estados }) => {
                                 {estados.length > 0 ? (
                                     <select {...estadoForm.register('nuevo_estado_id', { required: true })} className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all appearance-none text-sm">
                                         <option value="">Seleccionar…</option>
-                                        {estados.map(e => (
-                                            <option key={e.estado_manufactura_id} value={e.estado_manufactura_id} className="bg-bg-dark">{e.nombre}</option>
-                                        ))}
+                                        {estados
+                                            .filter(e => {
+                                                const current = (estadoTarget?.estado_nombre || '').toLowerCase();
+                                                const target = (e.nombre || '').toLowerCase();
+                                                if (target === 'cancelado') return true; // Cancelado is always allowed
+                                                if (current === 'planificado') return ['en curso', 'en proceso'].includes(target);
+                                                if (['en curso', 'en proceso'].includes(current)) return ['finalizado', 'completado'].includes(target);
+                                                return false;
+                                            })
+                                            .map(e => (
+                                                <option key={e.estado_manufactura_id} value={e.estado_manufactura_id} className="bg-bg-dark">{e.nombre}</option>
+                                            ))
+                                        }
                                     </select>
                                 ) : (
                                     <input type="number" min="1" {...estadoForm.register('nuevo_estado_id', { required: true })} className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm" />
@@ -602,12 +682,18 @@ const TABS = [
 const ManufacturingPage = () => {
     const [activeTab, setActiveTab] = useState('ordenes');
     const [estados, setEstados] = useState([]);
+    const [prefilledOrden, setPrefilledOrden] = useState(null);
 
     useEffect(() => {
         manufacturingService.getEstados()
             .then(setEstados)
             .catch(() => setEstados([]));
     }, []);
+
+    const handleIniciarProceso = (item) => {
+        setPrefilledOrden(item);
+        setActiveTab('procesos');
+    };
 
     return (
         <AnimatedPage className="space-y-6">
@@ -627,10 +713,10 @@ const ManufacturingPage = () => {
                     const active = activeTab === tab.id;
                     return (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                            className={`flex items - center gap - 2 px - 5 py - 2.5 rounded - xl text - sm font - medium transition - all ${active
-                                    ? 'bg-grad-primary text-white shadow-lg shadow-accent-primary/20'
-                                    : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
-                                } `}>
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${active
+                                ? 'bg-grad-primary text-white shadow-lg shadow-accent-primary/20'
+                                : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'
+                                }`}>
                             <Icon size={16} />
                             {tab.label}
                         </button>
@@ -639,8 +725,14 @@ const ManufacturingPage = () => {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'ordenes' && <OrdenesTab estados={estados} />}
-            {activeTab === 'procesos' && <ProcesosTab estados={estados} />}
+            {activeTab === 'ordenes' && <OrdenesTab estados={estados} onIniciarProceso={handleIniciarProceso} />}
+            {activeTab === 'procesos' && (
+                <ProcesosTab
+                    estados={estados}
+                    prefill={prefilledOrden}
+                    onPrefillUsed={() => setPrefilledOrden(null)}
+                />
+            )}
         </AnimatedPage>
     );
 };

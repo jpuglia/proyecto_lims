@@ -85,66 +85,10 @@ const PolvosTab = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex gap-3 items-center">
-                <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
-                    <input
-                        type="text" placeholder="Buscar por nombre o código..."
-                        value={search} onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm"
-                    />
-                </div>
-                <button onClick={fetch} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
-                    <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
-                </button>
-                <RoleGuard roles={['administrador', 'supervisor']}>
-                    <button id="btn-nuevo-polvo" onClick={() => setIsModalOpen(true)}
-                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
-                        <Plus size={16} /> Nuevo Polvo
-                    </button>
-                </RoleGuard>
-            </div>
-
-            <div className="glass-card overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-white/5 border-b border-white/10">
-                            {['ID', 'Nombre', 'Código', 'Unidad', 'Acciones'].map(h => (
-                                <th key={h} className="px-5 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {loading ? (
-                            <tr><td colSpan="5" className="px-5 py-10 text-center"><RefreshCcw className="animate-spin text-accent-primary mx-auto" size={28} /></td></tr>
-                        ) : filtered.length === 0 ? (
-                            <tr><td colSpan="5" className="px-5 py-10 text-center text-text-muted text-sm">No se encontraron polvos o suplementos.</td></tr>
-                        ) : filtered.map((item) => (
-                            <tr key={item.polvo_id} className="hover:bg-white/5 transition-colors group">
-                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.polvo_id}</td>
-                                <td className="px-5 py-3 font-medium text-white">{item.nombre}</td>
-                                <td className="px-5 py-3 text-sm text-text-muted font-mono">{item.codigo || '—'}</td>
-                                <td className="px-5 py-3 text-sm text-text-muted">{item.unidad}</td>
-                                <td className="px-5 py-3">
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <RoleGuard roles={['administrador', 'supervisor']}>
-                                            <button onClick={() => { setCurrent(item); editForm.reset({ nombre: item.nombre }); setIsEditModalOpen(true); }}
-                                                className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"><Edit2 size={14} /></button>
-                                            <button onClick={() => handleDelete(item)}
-                                                className="p-1.5 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"><Trash2 size={14} /></button>
-                                        </RoleGuard>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
             {/* Modal Crear */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
-                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Polvo</h3>
                         <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
                             <FormField label="Nombre" error={createForm.formState.errors.nombre}>
@@ -170,7 +114,7 @@ const PolvosTab = () => {
             {/* Modal Editar */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
-                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-gradient mb-5">Editar Polvo</h3>
                         <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
                             <FormField label="Nombre" error={editForm.formState.errors.nombre}>
@@ -186,6 +130,62 @@ const PolvosTab = () => {
                     </div>
                 </div>
             )}
+
+            <div className="flex gap-3 items-center">
+                <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                    <input
+                        type="text" placeholder="Buscar por nombre o código..."
+                        value={search} onChange={(e) => setSearch(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-accent-primary transition-all text-sm"
+                    />
+                </div>
+                <button onClick={fetch} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
+                    <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+                </button>
+                <RoleGuard roles={['administrador', 'supervisor']}>
+                    <button data-testid="btn-nuevo-polvo" onClick={() => setIsModalOpen(true)}
+                        className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
+                        <Plus size={16} /> Nuevo Polvo
+                    </button>
+                </RoleGuard>
+            </div>
+
+            <div className="glass-card overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-white/5 border-b border-white/10">
+                            {['ID', 'Nombre', 'Código', 'Unidad', 'Acciones'].map(h => (
+                                <th key={h} className="px-5 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {loading ? (
+                            <tr><td colSpan="5" className="px-5 py-10 text-center"><RefreshCcw className="animate-spin text-accent-primary mx-auto" size={28} /></td></tr>
+                        ) : filtered.length === 0 ? (
+                            <tr><td colSpan="5" className="px-5 py-10 text-center text-text-muted text-sm">No se encontraron polvos o suplementos.</td></tr>
+                        ) : filtered.map((item) => (
+                            <tr key={item.polvo_suplemento_id} className="hover:bg-white/5 transition-colors group">
+                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.polvo_suplemento_id}</td>
+                                <td className="px-5 py-3 font-medium text-white">{item.nombre}</td>
+                                <td className="px-5 py-3 text-sm text-text-muted font-mono">{item.codigo || '—'}</td>
+                                <td className="px-5 py-3 text-sm text-text-muted">{item.unidad}</td>
+                                <td className="px-5 py-3">
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <RoleGuard roles={['administrador', 'supervisor']}>
+                                            <button onClick={() => { setCurrent(item); editForm.reset({ nombre: item.nombre }); setIsEditModalOpen(true); }}
+                                                className="p-1.5 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"><Edit2 size={14} /></button>
+                                            <button onClick={() => handleDelete(item)}
+                                                className="p-1.5 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"><Trash2 size={14} /></button>
+                                        </RoleGuard>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
@@ -226,12 +226,42 @@ const MediosTab = () => {
 
     return (
         <div className="space-y-4">
+            {/* Modal Crear */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-md p-7 shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Medio Preparado</h3>
+                        <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
+                            <FormField label="Nombre" error={createForm.formState.errors.nombre}>
+                                <input data-testid="medio-nombre" type="text" placeholder="Ej: Caldo Nutritivo" {...createForm.register('nombre')} className={inputCls(createForm.formState.errors.nombre)} />
+                            </FormField>
+                            <FormField label="Tipo" error={createForm.formState.errors.tipo}>
+                                <select {...createForm.register('tipo')} className={inputCls(createForm.formState.errors.tipo) + " appearance-none"}>
+                                    {['agar', 'caldo', 'solución', 'buffer'].map(t => (
+                                        <option key={t} value={t} className="bg-bg-dark capitalize">{t}</option>
+                                    ))}
+                                </select>
+                            </FormField>
+                            <FormField label="Volumen (mL)" error={createForm.formState.errors.volumen_ml}>
+                                <input data-testid="medio-volumen" type="number" step="0.1" placeholder="Ej: 500" {...createForm.register('volumen_ml')} className={inputCls(createForm.formState.errors.volumen_ml)} />
+                            </FormField>
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white text-sm hover:bg-white/5 transition-all">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 px-4 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Crear
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center">
                 <button onClick={fetch} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
                     <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
                 </button>
                 <RoleGuard roles={['administrador', 'supervisor']}>
-                    <button id="btn-nuevo-medio" onClick={() => setIsModalOpen(true)}
+                    <button data-testid="btn-nuevo-medio" onClick={() => setIsModalOpen(true)}
                         className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-accent-primary/20">
                         <Plus size={16} /> Nuevo Medio
                     </button>
@@ -253,49 +283,20 @@ const MediosTab = () => {
                         ) : items.length === 0 ? (
                             <tr><td colSpan="4" className="px-5 py-10 text-center text-text-muted text-sm">No hay medios preparados registrados.</td></tr>
                         ) : items.map((item) => (
-                            <tr key={item.medio_id} className="hover:bg-white/5 transition-colors">
-                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.medio_id}</td>
+                            <tr key={item.medio_preparado_id} className="hover:bg-white/5 transition-colors">
+                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.medio_preparado_id}</td>
                                 <td className="px-5 py-3 font-medium text-white">{item.nombre}</td>
                                 <td className="px-5 py-3">
                                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent-secondary/10 text-accent-secondary">
-                                        {item.tipo}
+                                        {item.tipo || 'N/A'}
                                     </span>
                                 </td>
-                                <td className="px-5 py-3 text-sm text-text-muted">{item.volumen_ml} mL</td>
+                                <td className="px-5 py-3 text-sm text-text-muted">{item.volumen_ml || 0} mL</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-
-            {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm">
-                    <div className="glass-card w-full max-w-md p-7 shadow-2xl">
-                        <h3 className="text-xl font-bold text-gradient mb-5">Nuevo Medio Preparado</h3>
-                        <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
-                            <FormField label="Nombre" error={createForm.formState.errors.nombre}>
-                                <input type="text" placeholder="Ej: Caldo Nutritivo" {...createForm.register('nombre')} className={inputCls(createForm.formState.errors.nombre)} />
-                            </FormField>
-                            <FormField label="Tipo" error={createForm.formState.errors.tipo}>
-                                <select {...createForm.register('tipo')} className={inputCls(createForm.formState.errors.tipo) + " appearance-none"}>
-                                    {['agar', 'caldo', 'solución', 'buffer'].map(t => (
-                                        <option key={t} value={t} className="bg-bg-dark capitalize">{t}</option>
-                                    ))}
-                                </select>
-                            </FormField>
-                            <FormField label="Volumen (mL)" error={createForm.formState.errors.volumen_ml}>
-                                <input type="number" step="0.1" min="0" placeholder="Ej: 500" {...createForm.register('volumen_ml')} className={inputCls(createForm.formState.errors.volumen_ml)} />
-                            </FormField>
-                            <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 px-4 rounded-xl border border-white/10 text-white text-sm hover:bg-white/5 transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 px-4 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} Crear
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
@@ -338,7 +339,7 @@ const StockTab = () => {
                             <tr><td colSpan="4" className="px-5 py-10 text-center text-text-muted text-sm">No hay registros de stock disponibles.</td></tr>
                         ) : items.map((item, idx) => (
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
-                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.stock_id || idx + 1}</td>
+                                <td className="px-5 py-3 font-mono text-xs text-text-muted">#{item.stock_medios_id || item.stock_id || idx + 1}</td>
                                 <td className="px-5 py-3 text-sm text-text-muted">{item.medio_preparado_id}</td>
                                 <td className="px-5 py-3">
                                     <span className={`font-bold text-lg ${item.cantidad_disponible > 0 ? 'text-success' : 'text-error'}`}>
@@ -379,7 +380,9 @@ const InventoryPage = () => {
                             : 'text-text-muted hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        {tab.icon}
+                        {tab.id === 'polvos' && <Package size={16} />}
+                        {tab.id === 'medios' && <FlaskConical size={16} />}
+                        {tab.id === 'stock' && <BarChart3 size={16} />}
                         {tab.label}
                     </button>
                 ))}

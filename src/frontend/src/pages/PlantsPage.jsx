@@ -230,7 +230,7 @@ const PlantsPage = () => {
 
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                             <FormField label="Código" error={errors.codigo}>
-                                <input type="text" placeholder="Ej: PLT-01" {...register('codigo')} className={inputCls(errors.codigo)} />
+                                <input data-testid="planta-codigo" type="text" placeholder="Ej: PLT-01" {...register('codigo')} className={inputCls(errors.codigo)} />
                             </FormField>
 
                             <FormField label="Nombre" error={errors.nombre}>

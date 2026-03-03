@@ -112,6 +112,32 @@ class EquipoInstrumentoResponse(EquipoInstrumentoBase):
     equipo_instrumento_id: int
     model_config = ConfigDict(from_attributes=True)
 
+class EquipoDetalleResponse(EquipoInstrumentoResponse):
+    tipo_nombre: Optional[str] = None
+    estado_nombre: Optional[str] = None
+    area_nombre: Optional[str] = None
+    is_compliant: bool = True
+
+    @classmethod
+    def from_orm_extended(cls, obj):
+        data = cls.model_validate(obj)
+        if hasattr(obj, "tipo_equipo") and obj.tipo_equipo:
+            data.tipo_nombre = obj.tipo_equipo.nombre
+        if hasattr(obj, "estado") and obj.estado:
+            data.estado_nombre = obj.estado.nombre
+        if hasattr(obj, "area") and obj.area:
+            data.area_nombre = obj.area.nombre
+        
+        # Check compliance based on last calibration
+        if hasattr(obj, "calibraciones") and obj.calibraciones:
+            from datetime import date
+            # Get the most recent calibration
+            latest = sorted(obj.calibraciones, key=lambda x: x.fecha, reverse=True)[0]
+            if latest.vence and latest.vence < date.today():
+                data.is_compliant = False
+        
+        return data
+
 
 # ─── CambioEstadoEquipo ──────────────────────────────────────
 

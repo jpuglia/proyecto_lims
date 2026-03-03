@@ -1,0 +1,281 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - heading "LIMS URUFARMA" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Control de Calidad
+    - navigation [ref=e8]:
+      - link "Dashboard" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img [ref=e11]
+        - generic [ref=e16]: Dashboard
+      - link "Muestras" [ref=e17] [cursor=pointer]:
+        - /url: /samples
+        - img [ref=e19]
+        - generic [ref=e21]: Muestras
+      - link "Equipos" [ref=e22] [cursor=pointer]:
+        - /url: /equipments
+        - img [ref=e24]
+        - generic [ref=e28]: Equipos
+      - link "Plantas" [ref=e29] [cursor=pointer]:
+        - /url: /plants
+        - img [ref=e31]
+        - generic [ref=e34]: Plantas
+      - link "Análisis" [ref=e35] [cursor=pointer]:
+        - /url: /analysis
+        - img [ref=e37]
+        - generic [ref=e39]: Análisis
+      - link "Inventario" [ref=e40] [cursor=pointer]:
+        - /url: /inventory
+        - img [ref=e42]
+        - generic [ref=e44]: Inventario
+      - link "Manufactura" [ref=e45] [cursor=pointer]:
+        - /url: /manufacturing
+        - img [ref=e47]
+        - generic [ref=e49]: Manufactura
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]: AD
+        - generic [ref=e53]:
+          - generic [ref=e54]: admin
+          - generic [ref=e55]: administrador
+      - button "Cerrar Sesión" [ref=e56]:
+        - img [ref=e57]
+        - text: Cerrar Sesión
+  - main [ref=e60]:
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "Muestreo y Solicitudes" [level=1] [ref=e65]
+          - paragraph [ref=e66]: Gestione el flujo desde la solicitud hasta la toma de muestras.
+        - button "Nueva Solicitud" [ref=e67]:
+          - img [ref=e68]
+          - text: Nueva Solicitud
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - img [ref=e71]
+          - textbox "Buscar por tipo o descripción..." [ref=e74]
+        - button [ref=e75]:
+          - img [ref=e76]
+      - table [ref=e82]:
+        - rowgroup [ref=e83]:
+          - row "ID Flujo Tipo Estado Acciones" [ref=e84]:
+            - columnheader "ID" [ref=e85]
+            - columnheader "Flujo" [ref=e86]
+            - columnheader "Tipo" [ref=e87]
+            - columnheader "Estado" [ref=e88]
+            - columnheader "Acciones" [ref=e89]
+        - rowgroup [ref=e90]:
+          - row "#1 1 Solicitud 2 Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe Ambiental Pendiente Muestrear" [ref=e91]:
+            - cell "#1" [ref=e92]
+            - cell "1 Solicitud 2 Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe" [ref=e93]:
+              - generic [ref=e95]:
+                - generic [ref=e96]:
+                  - generic [ref=e98]: "1"
+                  - generic [ref=e99]: Solicitud
+                - generic [ref=e101]:
+                  - generic [ref=e103]: "2"
+                  - generic [ref=e104]: Muestreo
+                - generic [ref=e106]:
+                  - generic [ref=e108]: "3"
+                  - generic [ref=e109]: Envío
+                - generic [ref=e111]:
+                  - generic [ref=e113]: "4"
+                  - generic [ref=e114]: Recepción
+                - generic [ref=e116]:
+                  - generic [ref=e118]: "5"
+                  - generic [ref=e119]: Entrada Análisis
+                - generic [ref=e121]:
+                  - generic [ref=e123]: "6"
+                  - generic [ref=e124]: Ejecución
+                - generic [ref=e126]:
+                  - generic [ref=e128]: "7"
+                  - generic [ref=e129]: Medios/Insumos
+                - generic [ref=e131]:
+                  - generic [ref=e133]: "8"
+                  - generic [ref=e134]: Equipos
+                - generic [ref=e136]:
+                  - generic [ref=e138]: "9"
+                  - generic [ref=e139]: Resultados
+                - generic [ref=e141]:
+                  - generic [ref=e143]: "10"
+                  - generic [ref=e144]: Informe
+            - cell "Ambiental" [ref=e145]:
+              - generic [ref=e146]:
+                - img [ref=e148]
+                - generic [ref=e150]: Ambiental
+            - cell "Pendiente" [ref=e151]
+            - cell "Muestrear" [ref=e152]:
+              - generic [ref=e153]:
+                - button "Muestrear" [ref=e154]:
+                  - img [ref=e155]
+                  - text: Muestrear
+                - button [ref=e157]:
+                  - img [ref=e158]
+          - row "#2 Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe Ambiental Completado Informe" [ref=e160]:
+            - cell "#2" [ref=e161]
+            - cell "Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe" [ref=e162]:
+              - generic [ref=e164]:
+                - generic [ref=e165]:
+                  - img [ref=e167]
+                  - generic [ref=e169]: Solicitud
+                - generic [ref=e171]:
+                  - img [ref=e173]
+                  - generic [ref=e175]: Muestreo
+                - generic [ref=e177]:
+                  - generic [ref=e179]: "3"
+                  - generic [ref=e180]: Envío
+                - generic [ref=e182]:
+                  - generic [ref=e184]: "4"
+                  - generic [ref=e185]: Recepción
+                - generic [ref=e187]:
+                  - generic [ref=e189]: "5"
+                  - generic [ref=e190]: Entrada Análisis
+                - generic [ref=e192]:
+                  - generic [ref=e194]: "6"
+                  - generic [ref=e195]: Ejecución
+                - generic [ref=e197]:
+                  - generic [ref=e199]: "7"
+                  - generic [ref=e200]: Medios/Insumos
+                - generic [ref=e202]:
+                  - generic [ref=e204]: "8"
+                  - generic [ref=e205]: Equipos
+                - generic [ref=e207]:
+                  - generic [ref=e209]: "9"
+                  - generic [ref=e210]: Resultados
+                - generic [ref=e212]:
+                  - generic [ref=e214]: "10"
+                  - generic [ref=e215]: Informe
+            - cell "Ambiental" [ref=e216]:
+              - generic [ref=e217]:
+                - img [ref=e219]
+                - generic [ref=e221]: Ambiental
+            - cell "Completado" [ref=e222]
+            - cell "Informe" [ref=e223]:
+              - generic [ref=e224]:
+                - button "Informe" [ref=e225]:
+                  - img [ref=e226]
+                  - text: Informe
+                - button [ref=e229]:
+                  - img [ref=e230]
+          - row "#3 Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe Ambiental Completado Informe" [ref=e232]:
+            - cell "#3" [ref=e233]
+            - cell "Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe" [ref=e234]:
+              - generic [ref=e236]:
+                - generic [ref=e237]:
+                  - img [ref=e239]
+                  - generic [ref=e241]: Solicitud
+                - generic [ref=e243]:
+                  - img [ref=e245]
+                  - generic [ref=e247]: Muestreo
+                - generic [ref=e249]:
+                  - generic [ref=e251]: "3"
+                  - generic [ref=e252]: Envío
+                - generic [ref=e254]:
+                  - generic [ref=e256]: "4"
+                  - generic [ref=e257]: Recepción
+                - generic [ref=e259]:
+                  - generic [ref=e261]: "5"
+                  - generic [ref=e262]: Entrada Análisis
+                - generic [ref=e264]:
+                  - generic [ref=e266]: "6"
+                  - generic [ref=e267]: Ejecución
+                - generic [ref=e269]:
+                  - generic [ref=e271]: "7"
+                  - generic [ref=e272]: Medios/Insumos
+                - generic [ref=e274]:
+                  - generic [ref=e276]: "8"
+                  - generic [ref=e277]: Equipos
+                - generic [ref=e279]:
+                  - generic [ref=e281]: "9"
+                  - generic [ref=e282]: Resultados
+                - generic [ref=e284]:
+                  - generic [ref=e286]: "10"
+                  - generic [ref=e287]: Informe
+            - cell "Ambiental" [ref=e288]:
+              - generic [ref=e289]:
+                - img [ref=e291]
+                - generic [ref=e293]: Ambiental
+            - cell "Completado" [ref=e294]
+            - cell "Informe" [ref=e295]:
+              - generic [ref=e296]:
+                - button "Informe" [ref=e297]:
+                  - img [ref=e298]
+                  - text: Informe
+                - button [ref=e301]:
+                  - img [ref=e302]
+          - row "#4 Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe Ambiental Completado Informe" [ref=e304]:
+            - cell "#4" [ref=e305]
+            - cell "Solicitud Muestreo 3 Envío 4 Recepción 5 Entrada Análisis 6 Ejecución 7 Medios/Insumos 8 Equipos 9 Resultados 10 Informe" [ref=e306]:
+              - generic [ref=e308]:
+                - generic [ref=e309]:
+                  - img [ref=e311]
+                  - generic [ref=e313]: Solicitud
+                - generic [ref=e315]:
+                  - img [ref=e317]
+                  - generic [ref=e319]: Muestreo
+                - generic [ref=e321]:
+                  - generic [ref=e323]: "3"
+                  - generic [ref=e324]: Envío
+                - generic [ref=e326]:
+                  - generic [ref=e328]: "4"
+                  - generic [ref=e329]: Recepción
+                - generic [ref=e331]:
+                  - generic [ref=e333]: "5"
+                  - generic [ref=e334]: Entrada Análisis
+                - generic [ref=e336]:
+                  - generic [ref=e338]: "6"
+                  - generic [ref=e339]: Ejecución
+                - generic [ref=e341]:
+                  - generic [ref=e343]: "7"
+                  - generic [ref=e344]: Medios/Insumos
+                - generic [ref=e346]:
+                  - generic [ref=e348]: "8"
+                  - generic [ref=e349]: Equipos
+                - generic [ref=e351]:
+                  - generic [ref=e353]: "9"
+                  - generic [ref=e354]: Resultados
+                - generic [ref=e356]:
+                  - generic [ref=e358]: "10"
+                  - generic [ref=e359]: Informe
+            - cell "Ambiental" [ref=e360]:
+              - generic [ref=e361]:
+                - img [ref=e363]
+                - generic [ref=e365]: Ambiental
+            - cell "Completado" [ref=e366]
+            - cell "Informe" [ref=e367]:
+              - generic [ref=e368]:
+                - button "Informe" [ref=e369]:
+                  - img [ref=e370]
+                  - text: Informe
+                - button [ref=e373]:
+                  - img [ref=e374]
+      - generic [ref=e377]:
+        - button [ref=e378]:
+          - img [ref=e379]
+        - heading "Nueva Solicitud" [level=2] [ref=e382]
+        - generic [ref=e383]:
+          - generic [ref=e384]:
+            - generic [ref=e385]: Tipo de Muestreo
+            - combobox [ref=e386]:
+              - option "Ambiental" [selected]
+              - option "Producto"
+              - option "Proceso"
+              - option "Personal"
+              - option "Agua"
+          - generic [ref=e387]:
+            - generic [ref=e388]: Equipo / Instrumento (Opcional)
+            - combobox [active] [ref=e389]:
+              - option "Ninguno" [selected]
+            - paragraph [ref=e390]:
+              - generic [ref=e391]: ⚠
+              - text: "Too small: expected number to be >0"
+          - generic [ref=e392]:
+            - generic [ref=e393]: Observaciones
+            - textbox [ref=e394]: Test Automatizado Workflow
+          - generic [ref=e395]:
+            - button "Cancelar" [ref=e396]
+            - button "Crear Solicitud" [ref=e397]
+```

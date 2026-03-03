@@ -16,7 +16,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session, joinedload
 
 from src.backend.api.dependencies import get_db
-from src.backend.models.auth import Usuario
+from src.backend.models.auth import Usuario, UsuarioRol
 
 # ─── Configuration ────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ def get_current_user(
 
     usuario = (
         db.query(Usuario)
-        .options(joinedload(Usuario.roles).joinedload("rol"))
+        .options(joinedload(Usuario.roles).joinedload(UsuarioRol.rol))
         .filter(Usuario.usuario_id == usuario_id)
         .first()
     )
@@ -98,7 +98,7 @@ def get_current_user_optional(
             return None
         return (
             db.query(Usuario)
-            .options(joinedload(Usuario.roles).joinedload("rol"))
+            .options(joinedload(Usuario.roles).joinedload(UsuarioRol.rol))
             .filter(Usuario.usuario_id == int(sub))
             .first()
         )

@@ -1,0 +1,8 @@
+codigo;nombre;tipo_equipo_id;area_id;estado_equipo_id
+INC-001;Incubadora Memmert 30C;4;1374;1
+INC-002;Incubadora Memmert 25C;4;1374;1
+AUT-001;Autoclave de Esterilización;1;1384;1
+BAL-001;Balanza Analítica Sartorius;5;1367;1
+HPL-001;HPLC Agilent 1260;6;1360;1
+FRI-001;Heladera Preservación;2;1386;1
+CON-001;Congelador -20C;3;1386;1

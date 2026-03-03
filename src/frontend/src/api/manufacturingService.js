@@ -1,8 +1,8 @@
 import api from './axios';
 
-const ORDENES = '/manufactura/ordenes';
-const PROCESOS = '/manufactura/procesos';
-const ESTADOS = '/manufactura/estados';
+const ORDENES = 'manufactura/ordenes';
+const PROCESOS = 'manufactura/procesos';
+const ESTADOS = 'manufactura/estados';
 
 export const manufacturingService = {
     // ─── Estados de Manufactura (catálogo) ───────────────────────────────

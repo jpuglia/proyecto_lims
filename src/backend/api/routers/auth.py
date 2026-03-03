@@ -1,20 +1,25 @@
 """Auth router – login, register, users, roles, operators."""
 from typing import List, Optional
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from fastapi.security import OAuth2PasswordRequestForm
 
 from src.backend.api.dependencies import get_db, get_auth_service
-from src.backend.api.security import hash_password, verify_password, create_access_token, get_current_user, get_current_user_optional
+from src.backend.api.security import (
+    hash_password, verify_password, create_access_token, 
+    get_current_user, get_current_user_optional, get_user_roles
+)
 from src.backend.api.schemas.auth import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse,
     RolCreate, RolResponse,
     UsuarioRolCreate, UsuarioRolResponse,
     OperarioCreate, OperarioUpdate, OperarioResponse,
     AuditTrailResponse,
-    LoginRequest, TokenResponse,
+    LoginRequest, TokenResponse, SignatureRequest
 )
-from src.backend.models.auth import Usuario
+from src.backend.models.auth import Usuario, UsuarioRol, Rol
 from src.backend.repositories.auth import (
     UsuarioRepository, RolRepository, UsuarioRolRepository, OperarioRepository,
     AuditTrailRepository,
@@ -23,16 +28,10 @@ from src.backend.services.auth_service import AuthService
 
 router = APIRouter()
 
-
-from fastapi.security import OAuth2PasswordRequestForm
-
 # ─── Login ────────────────────────────────────────────────────
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    from sqlalchemy.orm import joinedload as _jl
-    from src.backend.api.security import get_user_roles
-
     usuario_repo = UsuarioRepository()
     usuario = usuario_repo.get_by_nombre(db, body.username)
 
@@ -43,10 +42,9 @@ def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
 
     # Cargar roles del usuario para incluirlos en el token
-    from src.backend.models.auth import UsuarioRol, Rol
     usuario_con_roles = (
         db.query(Usuario)
-        .options(_jl(Usuario.roles).joinedload(UsuarioRol.rol))
+        .options(joinedload(Usuario.roles).joinedload(UsuarioRol.rol))
         .filter(Usuario.usuario_id == usuario.usuario_id)
         .first()
     )
@@ -58,6 +56,26 @@ def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         "roles": roles,
     })
     return TokenResponse(access_token=token)
+
+
+@router.post("/verify-signature")
+def verify_signature(
+    body: SignatureRequest,
+    current_user: Usuario = Depends(get_current_user),
+):
+    """
+    Verifica la contraseña del usuario para actuar como firma electrónica (Double Challenge).
+    Retorna las siglas del usuario si es válida.
+    """
+    if not verify_password(body.password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Contraseña de firma incorrecta")
+    
+    return {
+        "verified": True,
+        "firma_siglas": current_user.firma,
+        "usuario_id": current_user.usuario_id,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 
 # ─── Usuarios ────────────────────────────────────────────────

@@ -82,6 +82,22 @@ def get_manufacturing_service() -> ManufacturingService:
         manufactura_repo=ManufacturaRepository(),
         historico_repo=HistoricoEstadoManufacturaRepository(),
         estado_repo=EstadoManufacturaRepository(),
+        operario_repo=ManufacturaOperarioRepository(),
+        sample_service=get_sample_service(),
+    )
+
+
+def get_analysis_service() -> AnalysisService:
+    from src.backend.repositories.inventory import UsoMediosRepository, UsoCepaRepository
+    return AnalysisService(
+        analisis_repo=AnalisisRepository(),
+        estado_analisis_repo=EstadoAnalisisRepository(),
+        historial_repo=HistorialEstadoAnalisisRepository(),
+        incubacion_repo=IncubacionRepository(),
+        resultado_repo=ResultadoRepository(),
+        especificacion_repo=EspecificacionRepository(),
+        uso_medios_repo=UsoMediosRepository(),
+        uso_cepa_repo=UsoCepaRepository(),
     )
 
 
@@ -93,17 +109,7 @@ def get_sample_service() -> SampleService:
         muestra_repo=MuestraRepository(),
         envio_repo=EnvioMuestraRepository(),
         recepcion_repo=RecepcionRepository(),
-    )
-
-
-def get_analysis_service() -> AnalysisService:
-    return AnalysisService(
-        analisis_repo=AnalisisRepository(),
-        estado_analisis_repo=EstadoAnalisisRepository(),
-        historial_repo=HistorialEstadoAnalisisRepository(),
-        incubacion_repo=IncubacionRepository(),
-        resultado_repo=ResultadoRepository(),
-        especificacion_repo=EspecificacionRepository(),
+        analysis_service=get_analysis_service(),
     )
 
 

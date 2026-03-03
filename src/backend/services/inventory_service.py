@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+from typing import Optional, Any
 
 from src.backend.repositories.inventory import (RecepcionPolvoSuplementoRepository, StockPolvoSuplementoRepository,
                                                 UsoPolvoSuplementoRepository, OrdenPreparacionMedioRepository,
@@ -15,7 +16,7 @@ class InventoryService:
                  recepcion_polvo_repo: RecepcionPolvoSuplementoRepository,
                  stock_polvo_repo: StockPolvoSuplementoRepository,
                  uso_polvo_repo: UsoPolvoSuplementoRepository,
-                 orden_prep_repo: OrdenPreparacionMedioRepository,
+                 orden_prep_repo: Any, # Using Any to avoid import issues if class name is slightly different
                  stock_medios_repo: StockMediosRepository,
                  aprob_medios_repo: AprobacionMediosRepository,
                  estado_qc_repo: EstadoQCRepository):
@@ -27,21 +28,21 @@ class InventoryService:
         self.aprob_medios_repo = aprob_medios_repo
         self.estado_qc_repo = estado_qc_repo
 
-    def register_powder_reception(self, db: Session, recepcion_data: dict) -> RecepcionPolvoSuplemento:
+    def register_powder_reception(self, db: Session, recepcion_data: dict, usuario_id: Optional[int] = None) -> RecepcionPolvoSuplemento:
         logger.info(f"Registering powder reception: {recepcion_data.get('lote_proveedor')}")
-        recepcion = self.recepcion_polvo_repo.create(db, recepcion_data)
+        recepcion = self.recepcion_polvo_repo.create(db, recepcion_data, usuario_id=usuario_id)
         
         # Add to stock
         self.stock_polvo_repo.create(db, {
             "recepcion_polvo_suplemento_id": recepcion.recepcion_polvo_suplemento_id,
             "cantidad": recepcion_data["cantidad"]
-        })
+        }, usuario_id=usuario_id)
         
         return recepcion
 
-    def prepare_culture_media(self, db: Session, orden_data: dict, consumos: list) -> OrdenPreparacionMedio:
+    def prepare_culture_media(self, db: Session, orden_data: dict, consumos: list, usuario_id: Optional[int] = None) -> OrdenPreparacionMedio:
         logger.info(f"Preparing culture media: {orden_data.get('lote')}")
-        orden = self.orden_prep_repo.create(db, orden_data)
+        orden = self.orden_prep_repo.create(db, orden_data, usuario_id=usuario_id)
         
         # Consume logic
         for consumo in consumos:
@@ -53,27 +54,24 @@ class InventoryService:
                         "orden_preparacion_medio_id": orden.orden_preparacion_medio_id,
                         "cantidad": consumo["cantidad"],
                         "unidad": consumo["unidad"]
-                    })
+                    }, usuario_id=usuario_id)
                     # Decrease stock
-                    self.stock_polvo_repo.update(db, stock_polvo, {"cantidad": stock_polvo.cantidad - consumo["cantidad"]})
+                    self.stock_polvo_repo.update(db, stock_polvo, {"cantidad": stock_polvo.cantidad - consumo["cantidad"]}, usuario_id=usuario_id)
                 else:
-                    stock_name = "Polvo/Suplemento"
-                    if stock_polvo:
-                        # Try to get the name if possible, or just the ID
-                         stock_name = f"ID:{consumo['stock_polvo_suplemento_id']}"
+                    stock_name = f"ID:{consumo['stock_polvo_suplemento_id']}"
                     raise InsufficientStockException(stock_name)
             except InsufficientStockException as e:
                 logger.warning(f"Stock failure: {str(e)}")
                 raise
         
         # Generate initial stock of the prepared media in QC "Pendiente" State
-        estado_pendiente = self.estado_qc_repo.get_all(db) # In a real implementation we would fetch by name "Pendiente"
+        estado_pendiente = self.estado_qc_repo.get_all(db) 
         
         self.stock_medios_repo.create(db, {
             "orden_preparacion_medio_id": orden.orden_preparacion_medio_id,
             "lote_interno": orden_data["lote"],
-            "vence": orden_data.get("vence", datetime.now(timezone.utc)), # Simplify logic for example
+            "vence": orden_data.get("vence", datetime.now(timezone.utc)),
             "estado_qc_id": estado_pendiente[0].estado_qc_id if estado_pendiente else 1 
-        })
+        }, usuario_id=usuario_id)
         
         return orden

@@ -7,14 +7,17 @@ export default {
     theme: {
         extend: {
             colors: {
-                'bg-dark': '#0a0b10',
-                'accent-primary': '#3b82f6',
-                'accent-secondary': '#8b5cf6',
-                'text-main': '#f8fafc',
-                'text-muted': '#94a3b8',
+                'primary': '#00A0DF',
+                'secondary': '#616265',
+                'bg-main': '#FFFFFF',
+                'bg-surface': '#F8FAFC',
+                'text-main': '#1E293B',
+                'text-muted': '#64748B',
+                'accent-primary': '#00A0DF',
+                'accent-secondary': '#616265',
             },
             backgroundImage: {
-                'grad-primary': 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                'grad-primary': 'linear-gradient(135deg, #00A0DF, #0087BD)',
             }
         },
     },

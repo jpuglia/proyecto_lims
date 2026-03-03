@@ -11,6 +11,7 @@ from src.backend.api.schemas.fact import (
     ManufacturaCreate, ManufacturaResponse, ManufacturaDetalleResponse, ManufacturaUpdate,
     CambioEstadoManufacturaRequest,
     EstadoManufacturaResponse, HistoricoEstadoManufacturaResponse,
+    ManufacturaOperarioCreate, ManufacturaOperarioResponse, ManufacturaOperarioDetalleResponse,
 )
 from src.backend.repositories.fact import (
     OrdenManufacturaRepository, ManufacturaRepository, EstadoManufacturaRepository,
@@ -49,13 +50,20 @@ def list_ordenes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     return repo.get_all(db, skip=skip, limit=limit)
 
 
-@router.get("/ordenes/{orden_id}", response_model=OrdenManufacturaResponse)
-def get_orden(orden_id: int, db: Session = Depends(get_db)):
-    repo = OrdenManufacturaRepository()
-    obj = repo.get(db, orden_id)
+@router.get("/ordenes/{orden_id}", response_model=OrdenManufacturaDetalleResponse)
+def get_orden(
+    orden_id: int,
+    db: Session = Depends(get_db),
+    service: ManufacturingService = Depends(get_manufacturing_service)
+):
+    obj = service.get_orden_trazabilidad(db, orden_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    return obj
+    
+    # Map to detailed schema
+    res = OrdenManufacturaDetalleResponse.model_validate(obj)
+    res.procesos = [ManufacturaDetalleResponse.from_orm_extended(p) for p in obj.manufacturas]
+    return res
 
 
 @router.get("/ordenes/{orden_id}/procesos", response_model=List[ManufacturaDetalleResponse])
@@ -149,3 +157,31 @@ def change_manufactura_state(
         return service.change_manufacture_state(db, manufactura_id, body.nuevo_estado_id, body.usuario_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ─── Operarios de Manufactura ────────────────────────────────────────────────
+
+@router.post("/procesos/{manufactura_id}/operarios", response_model=ManufacturaOperarioResponse,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def assign_operator(
+    manufactura_id: int,
+    body: ManufacturaOperarioCreate,
+    db: Session = Depends(get_db),
+    service: ManufacturingService = Depends(get_manufacturing_service),
+):
+    """Asigna un operario a un proceso de manufactura."""
+    if body.manufactura_id != manufactura_id:
+        raise HTTPException(status_code=400, detail="ID de manufactura no coincide")
+    return service.assign_operator_to_process(db, body.model_dump())
+
+
+@router.get("/procesos/{manufactura_id}/operarios", response_model=List[ManufacturaOperarioDetalleResponse])
+def list_operators(
+    manufactura_id: int,
+    db: Session = Depends(get_db),
+    service: ManufacturingService = Depends(get_manufacturing_service),
+):
+    """Lista los operarios asignados a un proceso específico."""
+    operarios = service.get_operators_by_process(db, manufactura_id)
+    return [ManufacturaOperarioDetalleResponse.from_orm_extended(o) for o in operarios]
+

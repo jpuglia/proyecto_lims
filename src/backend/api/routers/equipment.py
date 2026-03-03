@@ -1,5 +1,5 @@
 """Equipment router – CRUD, state changes, calibrations."""
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from src.backend.api.dependencies import get_db, get_equipment_service
 from src.backend.api.schemas.dim import (
     EquipoInstrumentoCreate, EquipoInstrumentoUpdate, EquipoInstrumentoResponse,
+    EquipoDetalleResponse,
     CambioEstadoEquipoRequest,
     ZonaEquipoCreate, ZonaEquipoUpdate, ZonaEquipoResponse,
     CalibracionCreate, CalibracionResponse,
@@ -33,23 +34,37 @@ def create_equipo(
     body: EquipoInstrumentoCreate,
     db: Session = Depends(get_db),
     service: EquipmentService = Depends(get_equipment_service),
+    current_user: Usuario = Depends(get_current_user),
 ):
-    return service.create_equipo(db, body.model_dump())
+    return service.create_equipo(db, body.model_dump(), usuario_id=current_user.usuario_id)
 
 
-@router.get("/", response_model=List[EquipoInstrumentoResponse])
-def list_equipos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    repo = EquipoInstrumentoRepository()
-    return repo.get_all(db, skip=skip, limit=limit)
+@router.get("/", response_model=List[EquipoDetalleResponse])
+def list_equipos(
+    skip: int = 0, 
+    limit: int = 100, 
+    area_id: Optional[int] = None,
+    tipo_id: Optional[int] = None,
+    estado_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    service: EquipmentService = Depends(get_equipment_service)
+):
+    equipos = service.get_equipment_with_details(db, skip, limit, area_id, tipo_id, estado_id)
+    return [EquipoDetalleResponse.from_orm_extended(e) for e in equipos]
 
 
-@router.get("/{equipo_id}", response_model=EquipoInstrumentoResponse)
+@router.get("/{equipo_id}", response_model=EquipoDetalleResponse)
 def get_equipo(equipo_id: int, db: Session = Depends(get_db)):
+    from sqlalchemy.orm import joinedload
     repo = EquipoInstrumentoRepository()
-    equipo = repo.get(db, equipo_id)
+    equipo = repo.get(db, equipo_id, options=[
+        joinedload(repo.model.tipo_equipo),
+        joinedload(repo.model.estado),
+        joinedload(repo.model.area)
+    ])
     if not equipo:
         raise HTTPException(status_code=404, detail="Equipo no encontrado")
-    return equipo
+    return EquipoDetalleResponse.from_orm_extended(equipo)
 
 
 @router.put("/{equipo_id}", response_model=EquipoInstrumentoResponse,

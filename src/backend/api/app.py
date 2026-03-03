@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard, documents, exports
+from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard, documents, exports, products, master
 from src.backend.core.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -25,10 +25,10 @@ def create_app() -> FastAPI:
         },
     )
 
-    # CORS – permitir todos los orígenes en desarrollo
+    # CORS – permitir orígenes específicos para habilitar el envío de credenciales (JWT)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -36,13 +36,15 @@ def create_app() -> FastAPI:
 
     # Routers
     app.include_router(auth.router, prefix="/api/auth", tags=["Seguridad & Autenticación"])
+    app.include_router(master.router, prefix="/api/maestros", tags=["Maestros - Catálogos Generales"])
     app.include_router(equipment.router, prefix="/api/equipos", tags=["Maestros - Equipos"])
-    app.include_router(locations.router, prefix="/api/ubicaciones", tags=["Maestros - Ubicaciones"])
+    app.include_router(locations.router, prefix="/api/ubicaciones", tags=["Maestros - Infraestructura (Sistemas/Plantas/Áreas)"])
     app.include_router(manufacturing.router, prefix="/api/manufactura", tags=["Procesos - Manufactura"])
     app.include_router(samples.router, prefix="/api/muestreo", tags=["Operaciones - Muestreo"])
     app.include_router(analysis.router, prefix="/api/analisis", tags=["Operaciones - Análisis"])
     app.include_router(inventory.router, prefix="/api/inventario", tags=["Maestros - Inventario"])
     app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+    app.include_router(products.router, prefix="/api/productos", tags=["Maestros - Productos"])
     app.include_router(documents.router, prefix="/api/documentos", tags=["Documentos y Adjuntos"])
     app.include_router(exports.router, prefix="/api/exports", tags=["Exportaciones CSV"])
 

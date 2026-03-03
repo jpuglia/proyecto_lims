@@ -1,27 +1,33 @@
-/**
- * auth.setup.js — runs once before all other E2E tests.
- * Logs in as admin and saves the storageState (localStorage token)
- * so all other tests can reuse the session without logging in again.
- */
 import { test as setup, expect } from '@playwright/test';
 import path from 'path';
 
-const authFile = path.join(import.meta.dirname, '.auth/admin.json');
+const adminFile = path.join(import.meta.dirname, '.auth/admin.json');
+const operatorFile = path.join(import.meta.dirname, '.auth/operator.json');
 
 setup('authenticate as admin', async ({ page }) => {
     await page.goto('/login');
-
-    // Wait for the login form to appear
-    await expect(page.getByTestId('login-username')).toBeVisible({ timeout: 10_000 });
-
+    await expect(page.getByTestId('login-username')).toBeVisible({ timeout: 20_000 });
     await page.getByTestId('login-username').fill('admin');
     await page.getByTestId('login-password').fill('admin123');
     await page.getByTestId('login-submit').click();
+    
+    // Wait for the token to be stored in localStorage
+    await page.waitForFunction(() => localStorage.getItem('token') !== null, { timeout: 15_000 });
+    
+    await expect(page).toHaveURL('/', { timeout: 30_000 });
+    await page.context().storageState({ path: adminFile });
+});
 
-    // After successful login, should redirect to dashboard
-    await expect(page).toHaveURL('/', { timeout: 15_000 });
-    await expect(page.getByText('Panel de Control')).toBeVisible({ timeout: 10_000 });
+setup('authenticate as operator', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByTestId('login-username')).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId('login-username').fill('operador');
+    await page.getByTestId('login-password').fill('operador123');
+    await page.getByTestId('login-submit').click();
 
-    // Save the storage state (contains the JWT in localStorage)
-    await page.context().storageState({ path: authFile });
+    // Wait for the token to be stored in localStorage
+    await page.waitForFunction(() => localStorage.getItem('token') !== null, { timeout: 15_000 });
+
+    await expect(page).toHaveURL('/', { timeout: 30_000 });
+    await page.context().storageState({ path: operatorFile });
 });

@@ -80,6 +80,110 @@
         "MEDIO": "codigo",
         "Identificación": "nombre"
       }
+    },
+    {
+      "name": "productos",
+      "repo": "ProductoRepository",
+      "csv": "productos.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "nombre": "nombre"
+      },
+      "fks": {
+        "planta_id": {
+          "table": "planta",
+          "repo": "PlantaRepository",
+          "field": "codigo",
+          "target_field": "planta_id"
+        }
+      }
+    },
+    {
+      "name": "equipos",
+      "repo": "EquipoInstrumentoRepository",
+      "csv": "equipos.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "nombre": "nombre"
+      }
+    },
+    {
+      "name": "puntos_muestreo",
+      "repo": "PuntoMuestreoRepository",
+      "csv": "puntos_muestreo.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "nombre": "nombre"
+      }
+    },
+    {
+      "name": "ordenes_manufactura",
+      "repo": "OrdenManufacturaRepository",
+      "csv": "ordenes_manufactura.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "lote": "lote"
+      }
+    },
+    {
+      "name": "metodos",
+      "repo": "MetodoVersionRepository",
+      "csv": "metodos.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "nombre": "nombre"
+      }
+    },
+    {
+      "name": "especificaciones",
+      "repo": "EspecificacionRepository",
+      "csv": "especificaciones.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "parametro",
+      "mappings": {
+        "parametro": "parametro",
+        "tipo_limite": "tipo_limite"
+      }
+    },
+    {
+      "name": "polvos",
+      "repo": "PolvoSuplementoRepository",
+      "csv": "polvos.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo",
+      "mappings": {
+        "codigo": "codigo",
+        "nombre": "nombre"
+      }
+    },
+    {
+      "name": "cepas",
+      "repo": "CepaReferenciaRepository",
+      "csv": "cepas.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "unique_field": "codigo_atcc",
+      "mappings": {
+        "codigo_atcc": "codigo_atcc",
+        "lote": "lote"
+      }
     }
   ]
 }

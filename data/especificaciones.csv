@@ -1,0 +1,6 @@
+producto_id;parametro;tipo_limite;valor_min;valor_max;unidad
+1;Recuento de Aerobios;Max;0;1000;CFU/g
+1;Recuento de Hongos;Max;0;100;CFU/g
+1;E. coli;Ausencia;0;0;neg/g
+2;Recuento de Aerobios;Max;0;1000;CFU/g
+3;Recuento de Aerobios;Max;0;1000;CFU/g
