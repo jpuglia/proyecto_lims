@@ -2,7 +2,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from src.backend.api.dependencies import get_db, get_sample_service
 from src.backend.api.schemas.fact import (
@@ -15,11 +15,12 @@ from src.backend.repositories.fact import SolicitudMuestreoRepository, EnvioMues
 from src.backend.services.sample_service import SampleService
 from src.backend.api.security import get_current_user, require_role
 from src.backend.models.auth import Usuario
+from src.backend.models.fact import SolicitudMuestreo
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # Operadores y analistas pueden crear muestras; supervisores y admins pueden eliminar
-_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador", "inspector"]
 _ESCRITURA = ["administrador", "supervisor"]
 
 
@@ -38,7 +39,12 @@ def create_solicitud(
 @router.get("/solicitudes", response_model=List[SolicitudMuestreoResponse])
 def list_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     repo = SolicitudMuestreoRepository()
-    return repo.get_all(db, skip=skip, limit=limit)
+    options = [
+        joinedload(SolicitudMuestreo.usuario),
+        joinedload(SolicitudMuestreo.orden_manufactura),
+        joinedload(SolicitudMuestreo.punto_muestreo)
+    ]
+    return repo.get_all(db, skip=skip, limit=limit, options=options)
 
 
 @router.put("/solicitudes/{solicitud_id}", response_model=SolicitudMuestreoResponse,
@@ -49,7 +55,12 @@ def update_solicitud(
     db: Session = Depends(get_db),
 ):
     repo = SolicitudMuestreoRepository()
-    obj = repo.get(db, solicitud_id)
+    options = [
+        joinedload(SolicitudMuestreo.usuario),
+        joinedload(SolicitudMuestreo.orden_manufactura),
+        joinedload(SolicitudMuestreo.punto_muestreo)
+    ]
+    obj = repo.get(db, solicitud_id, options=options)
     if not obj:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     return repo.update(db, obj, body.model_dump(exclude_unset=True))
@@ -76,7 +87,8 @@ def create_muestreo(
     service: SampleService = Depends(get_sample_service),
 ):
     muestras_data = [m.model_dump() for m in body.muestras]
-    return service.register_sampling_session(db, body.session.model_dump(), muestras_data)
+    envios_data = [e.model_dump() for e in body.envios] if body.envios else None
+    return service.register_sampling_session(db, body.session.model_dump(), muestras_data, envios_data=envios_data)
 
 
 # ─── Envíos ──────────────────────────────────────────────────

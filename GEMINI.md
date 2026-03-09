@@ -57,4 +57,3 @@ El Sistema LIMS (Laboratory Information Management System) para URUFARMA S.A. es
 - `documentacion/prd.md`: Core requirements and scope.
 - `documentacion/MER.mmd`: Database schema and relationships.
 - `documentacion/onboarding_architecture.md`: System architectural overview.
-- `itinerario/`: Granular progress tracking (latest: `itinerario_08.md`).

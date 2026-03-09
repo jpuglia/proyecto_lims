@@ -1,10 +1,11 @@
 import pytest
 from src.backend.services.auth_service import AuthService
-from src.backend.repositories.auth import UsuarioRepository, AuditTrailRepository
+from src.backend.repositories.auth import UsuarioRepository
+from src.backend.repositories.audit import AuditLogRepository
 
 def test_auth_service_create_usuario(db_session):
     usuario_repo = UsuarioRepository()
-    audit_repo = AuditTrailRepository()
+    audit_repo = AuditLogRepository()
     service = AuthService(usuario_repo, audit_repo)
     
     # Create a user to act as current_user for audit purposes
@@ -19,5 +20,5 @@ def test_auth_service_create_usuario(db_session):
     # Verify audit trail was created
     audits = audit_repo.get_all(db_session)
     assert len(audits) >= 1
-    assert audits[-1].tabla == "usuario"
+    assert audits[-1].tabla_nombre == "usuario"
     assert audits[-1].usuario_id == admin.usuario_id

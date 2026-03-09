@@ -21,6 +21,8 @@ class UsuarioUpdate(BaseModel):
 
 class UsuarioResponse(UsuarioBase):
     usuario_id: int
+    roles: Optional[list["UsuarioRolResponse"]] = None
+    laboratorios: Optional[list["UsuarioLaboratorioResponse"]] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -37,6 +39,19 @@ class RolResponse(RolBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# ─── Laboratorio ──────────────────────────────────────────────
+
+class LaboratorioBase(BaseModel):
+    nombre: str = Field(..., description="Nombre del laboratorio (ej. Microbiología, Fisicoquímico)", json_schema_extra={"example": "Microbiología"})
+
+class LaboratorioCreate(LaboratorioBase):
+    pass
+
+class LaboratorioResponse(LaboratorioBase):
+    laboratorio_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ─── UsuarioRol ───────────────────────────────────────────────
 
 class UsuarioRolCreate(BaseModel):
@@ -47,7 +62,29 @@ class UsuarioRolCreate(BaseModel):
 
 class UsuarioRolResponse(UsuarioRolCreate):
     usuario_rol_id: int
+    rol: Optional[RolResponse] = None
     model_config = ConfigDict(from_attributes=True)
+
+
+# ─── UsuarioLaboratorio ────────────────────────────────────────
+
+class UsuarioLaboratorioCreate(BaseModel):
+    usuario_id: int
+    laboratorio_id: int
+
+class UsuarioLaboratorioResponse(UsuarioLaboratorioCreate):
+    usuario_laboratorio_id: int
+    laboratorio: Optional[LaboratorioResponse] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ─── Sync Payloads ───────────────────────────────────────────
+
+class UserRolesSync(BaseModel):
+    roles_ids: list[int] = Field(..., description="Lista de IDs de roles a asignar", json_schema_extra={"example": [1, 2]})
+
+class UserLaboratoriosSync(BaseModel):
+    laboratorios_ids: list[int] = Field(..., description="Lista de IDs de laboratorios a asignar", json_schema_extra={"example": [1]})
 
 
 # ─── Operario ─────────────────────────────────────────────────
@@ -72,18 +109,18 @@ class OperarioResponse(OperarioBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ─── AuditTrail ───────────────────────────────────────────────
+# ─── AuditLog ─────────────────────────────────────────────────
 
-class AuditTrailResponse(BaseModel):
-    audit_trail_id: int
-    tabla: str
+class AuditLogResponse(BaseModel):
+    audit_log_id: int
+    tabla_nombre: str
     registro_id: int
-    columna: Optional[str] = None
-    old_val: Optional[str] = None
-    new_val: Optional[str] = None
-    accion: str
-    timestamp: datetime
-    usuario_id: int
+    operacion: str
+    valor_anterior: Optional[dict] = None
+    valor_nuevo: Optional[dict] = None
+    usuario_id: Optional[int] = None
+    ip_address: Optional[str] = None
+    fecha: datetime
     model_config = ConfigDict(from_attributes=True)
 
 

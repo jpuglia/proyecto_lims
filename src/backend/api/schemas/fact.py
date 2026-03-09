@@ -2,6 +2,8 @@
 from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
+from src.backend.api.schemas.auth import UsuarioResponse
+from src.backend.api.schemas.dim import PuntoMuestreoResponse
 
 
 # ─── EstadoManufactura ────────────────────────────────────────
@@ -119,6 +121,37 @@ class ManufacturaOperarioDetalleResponse(ManufacturaOperarioResponse):
         return data
 
 
+# ─── UsoMaterialManufactura ──────────────────────────────────
+
+class UsoMaterialManufacturaBase(BaseModel):
+    manufactura_id: int
+    stock_polvo_suplemento_id: int
+    cantidad: float
+    unidad: str
+
+class UsoMaterialManufacturaCreate(UsoMaterialManufacturaBase):
+    pass
+
+class UsoMaterialManufacturaResponse(UsoMaterialManufacturaBase):
+    uso_material_manufactura_id: int
+    fecha_uso: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class UsoMaterialManufacturaDetalleResponse(UsoMaterialManufacturaResponse):
+    """UsoMaterialManufacturaResponse enriquecida con nombre del material."""
+    material_nombre: Optional[str] = None
+    lote_proveedor: Optional[str] = None
+
+    @classmethod
+    def from_orm_extended(cls, obj):
+        data = cls.model_validate(obj)
+        if obj.stock_polvo and obj.stock_polvo.recepcion:
+            if obj.stock_polvo.recepcion.polvo_suplemento:
+                data.material_nombre = obj.stock_polvo.recepcion.polvo_suplemento.nombre
+            data.lote_proveedor = obj.stock_polvo.recepcion.lote_proveedor
+        return data
+
+
 class HistoricoEstadoManufacturaResponse(BaseModel):
     historico_estado_manufactura_id: int
     manufactura_id: int
@@ -148,29 +181,58 @@ class EstadoSolicitudResponse(EstadoSolicitudBase):
 class SolicitudMuestreoBase(BaseModel):
     usuario_id: int = Field(..., description="ID del usuario que solicita")
     tipo: str = Field(..., description="Tipo de solicitud (Ambiental, Producto, Proceso, etc.)", json_schema_extra={"example": "Ambiental"})
+    fecha_limite: Optional[datetime] = Field(None, description="Fecha límite para completar el muestreo")
     orden_manufactura_id: Optional[int] = Field(None, description="ID de orden asociada")
-    equipo_instrumento_id: Optional[int] = Field(None, description="ID de equipo asociado")
+    equipo_instrumento_id: Optional[int] = Field(None, description="ID de equipo asociado (Legacy)")
     punto_muestreo_id: Optional[int] = Field(None, description="ID de punto de muestreo")
     operario_id: Optional[int] = Field(None, description="ID de operario asociado")
     estado_solicitud_id: int = Field(..., description="ID del estado de la solicitud")
     observacion: Optional[str] = Field(None, description="Notas adicionales")
+    
+    # Ad-hoc Extension Fields
+    destino: Optional[str] = None
+    producto_id: Optional[int] = None
+    lote_number: Optional[str] = None
+    cantidad_extraida: Optional[float] = None
+    area_id: Optional[int] = None
+    region_swabbed: Optional[str] = None
 
 class SolicitudMuestreoCreate(SolicitudMuestreoBase):
-    pass
+    equipos_ids: Optional[List[int]] = Field(None, description="Lista de IDs de equipos utilizados")
 
 class SolicitudMuestreoResponse(SolicitudMuestreoBase):
     solicitud_muestreo_id: int
     fecha: datetime
+    equipamiento: Optional[List["SolicitudMuestreoEquipoResponse"]] = None
+    
+    usuario: Optional[UsuarioResponse] = None
+    orden_manufactura: Optional[OrdenManufacturaResponse] = None
+    punto_muestreo: Optional[PuntoMuestreoResponse] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class SolicitudMuestreoEquipoResponse(BaseModel):
+    solicitud_muestreo_equipo_id: int
+    solicitud_muestreo_id: int
+    equipo_instrumento_id: int
     model_config = ConfigDict(from_attributes=True)
 
 class SolicitudMuestreoUpdate(BaseModel):
     tipo: Optional[str] = None
+    fecha_limite: Optional[datetime] = None
     orden_manufactura_id: Optional[int] = None
     equipo_instrumento_id: Optional[int] = None
     punto_muestreo_id: Optional[int] = None
     operario_id: Optional[int] = None
     estado_solicitud_id: Optional[int] = None
     observacion: Optional[str] = None
+    equipos_ids: Optional[List[int]] = None
+    destino: Optional[str] = None
+    producto_id: Optional[int] = None
+    lote_number: Optional[str] = None
+    cantidad_extraida: Optional[float] = None
+    area_id: Optional[int] = None
+    region_swabbed: Optional[str] = None
 
 
 # ─── Muestreo ────────────────────────────────────────────────
@@ -219,6 +281,7 @@ class MuestraResponse(MuestraBase):
 class MuestreoConMuestrasCreate(BaseModel):
     session: MuestreoCreate
     muestras: List[MuestraCreate]
+    envios: Optional[List[EnvioMuestraCreate]] = None
 
 
 # ─── EnvioMuestra ────────────────────────────────────────────
@@ -227,7 +290,9 @@ class EnvioMuestraBase(BaseModel):
     muestra_id: int
     fecha: datetime
     operario_id: int
-    destino: str
+    corroborado_por_id: Optional[int] = None
+    fecha_corroboracion: Optional[datetime] = None
+    laboratorio_id: Optional[int] = None
 
 class EnvioMuestraCreate(EnvioMuestraBase):
     pass
@@ -240,7 +305,9 @@ class EnvioMuestraUpdate(BaseModel):
     muestra_id: Optional[int] = None
     fecha: Optional[datetime] = None
     operario_id: Optional[int] = None
-    destino: Optional[str] = None
+    corroborado_por_id: Optional[int] = None
+    fecha_corroboracion: Optional[datetime] = None
+    laboratorio_id: Optional[int] = None
 
 
 # ─── Recepcion ───────────────────────────────────────────────
@@ -248,8 +315,10 @@ class EnvioMuestraUpdate(BaseModel):
 class RecepcionBase(BaseModel):
     envio_muestra_id: int
     operario_id: int
-    recibido_en: str
+    recibido_en: Optional[str] = None # Legacy
+    laboratorio_id: Optional[int] = None
     decision: str
+    justificacion: Optional[str] = None
     observacion: Optional[str] = None
 
 class RecepcionCreate(RecepcionBase):
@@ -264,7 +333,9 @@ class RecepcionUpdate(BaseModel):
     envio_muestra_id: Optional[int] = None
     operario_id: Optional[int] = None
     recibido_en: Optional[str] = None
+    laboratorio_id: Optional[int] = None
     decision: Optional[str] = None
+    justificacion: Optional[str] = None
     observacion: Optional[str] = None
 
 
@@ -294,6 +365,13 @@ class AnalisisBase(BaseModel):
 
 class AnalisisCreate(AnalisisBase):
     pass
+
+class AnalisisBulkCreate(BaseModel):
+    muestra_id: int
+    recepcion_id: int
+    metodos_versions_ids: List[int]
+    operario_id: int
+    estado_analisis_id: int = 1 # Por defecto Programado
 
 class AnalisisResponse(AnalisisBase):
     analisis_id: int
@@ -331,8 +409,11 @@ class IncubacionResponse(IncubacionBase):
     incubacion_id: int
     model_config = ConfigDict(from_attributes=True)
 
-
-# ─── Resultado ───────────────────────────────────────────────
+class IncubacionUpdate(BaseModel):
+    entrada: Optional[datetime] = None
+    salida: Optional[datetime] = None
+    temp_registrada: Optional[float] = None
+    unidad_temp: Optional[str] = None
 
 class ResultadoBase(BaseModel):
     analisis_id: int = Field(..., description="ID del análisis asociado")

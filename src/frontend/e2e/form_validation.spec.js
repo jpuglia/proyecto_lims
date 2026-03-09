@@ -43,10 +43,12 @@ test.describe('Form Hardening & Validation — GAMP-5 Compliance', () => {
         await expect(page.getByText(/nueva orden de manufactura/i)).toBeVisible({ timeout: 5000 });
 
         // Intentar submit vacío
-        await page.getByRole('button', { name: /crear/i }).click();
-        
+        await page.locator('input[name="cantidad"]').focus();
+        await page.keyboard.press('Enter');
+
         // Zod debería disparar errores para cantidad, producto_id, operario_id
         await expect(page.getByText(/la cantidad debe ser un número positivo/i)).toBeVisible();
+
         await expect(page.getByText(/el ID de producto debe ser positivo/i)).toBeVisible();
     });
 

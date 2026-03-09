@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, RefreshCcw, Factory, ClipboardList, Settings, GitBranch,
-    X, Check, Edit2, Trash2, Loader2, ArrowRightLeft, ChevronDown, ChevronRight, Clock, Play, Download as DownloadIcon
+    X, Check, Edit2, Trash2, Loader2, ArrowRightLeft, ChevronDown, ChevronRight, Clock, Play, Download as DownloadIcon,
+    FlaskConical, Database, Beaker
 } from 'lucide-react';
 import { manufacturingService } from '../api/manufacturingService';
 import { productService } from '../api/productService';
 import { operatorService } from '../api/operatorService';
+import { inventoryService } from '../api/inventoryService';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import AnimatedPage from '../components/AnimatedPage';
@@ -15,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ordenManufacturaSchema, procesoManufacturaSchema, cambioEstadoSchema } from '../validation/schemas';
 import FormField, { inputCls } from '../components/FormField';
+import { useNavigate } from 'react-router-dom';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -79,11 +82,6 @@ const OrdenesTab = ({ estados, onIniciarProceso }) => {
             setItems(orders);
             setProductos(prods);
             setOperarios(ops);
-            
-            if (orders.length === 0 && prods.length === 0 && ops.length === 0) {
-                // If all are empty, maybe something is wrong with connectivity
-                // but only show if it was an error
-            }
         } catch (err) {
             console.error('Error fetching data:', err);
             setErrorMsg('Error al cargar datos de manufactura');
@@ -316,52 +314,59 @@ const OrdenesTab = ({ estados, onIniciarProceso }) => {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="glass-card p-6 w-full max-w-lg space-y-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between">
+                    <div className="glass-card w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Header - Fixed */}
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between flex-shrink-0 bg-white/5">
                             <h3 className="text-lg font-semibold">{editId ? 'Editar Orden' : 'Nueva Orden de Manufactura'}</h3>
                             <button onClick={() => setShowModal(false)} className="p-1 rounded-lg hover:bg-white/10"><X size={18} /></button>
                         </div>
-                        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Código" error={form.formState.errors.codigo}>
-                                    <input {...form.register('codigo')} placeholder="OM-2026-001" className={inputCls(form.formState.errors.codigo)} />
-                                </FormField>
-                                <FormField label="Lote" error={form.formState.errors.lote}>
-                                    <input {...form.register('lote')} placeholder="L26001" className={inputCls(form.formState.errors.lote)} />
-                                </FormField>
+                        
+                        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                            {/* Scrollable Content */}
+                            <div className="p-6 space-y-4 overflow-y-auto pr-2">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Código" error={form.formState.errors.codigo}>
+                                        <input {...form.register('codigo')} placeholder="OM-2026-001" className={inputCls(form.formState.errors.codigo)} />
+                                    </FormField>
+                                    <FormField label="Lote" error={form.formState.errors.lote}>
+                                        <input {...form.register('lote')} placeholder="L26001" className={inputCls(form.formState.errors.lote)} />
+                                    </FormField>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Fecha" error={form.formState.errors.fecha}>
+                                        <input type="date" {...form.register('fecha')} className={inputCls(form.formState.errors.fecha)} />
+                                    </FormField>
+                                    <FormField label="Producto" error={form.formState.errors.producto_id}>
+                                        <select {...form.register('producto_id')} className={inputCls(form.formState.errors.producto_id) + ' appearance-none'}>
+                                            <option value="">Seleccionar producto…</option>
+                                            {productos.map(p => (
+                                                <option key={p.producto_id} value={p.producto_id} className="bg-bg-dark">{p.nombre} ({p.codigo})</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <FormField label="Cantidad" error={form.formState.errors.cantidad}>
+                                        <input type="number" step="0.01" min="0" {...form.register('cantidad')} placeholder="1000" className={inputCls(form.formState.errors.cantidad)} />
+                                    </FormField>
+                                    <FormField label="Unidad" error={form.formState.errors.unidad}>
+                                        <input {...form.register('unidad')} placeholder="kg" className={inputCls(form.formState.errors.unidad)} />
+                                    </FormField>
+                                    <FormField label="Operario Asignado" error={form.formState.errors.operario_id}>
+                                        <select {...form.register('operario_id')} className={inputCls(form.formState.errors.operario_id) + ' appearance-none'}>
+                                            <option value="">Seleccionar…</option>
+                                            {operarios.map(o => (
+                                                <option key={o.operario_id} value={o.operario_id} className="bg-bg-dark">{o.nombre} {o.apellido}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Fecha" error={form.formState.errors.fecha}>
-                                    <input type="date" {...form.register('fecha')} className={inputCls(form.formState.errors.fecha)} />
-                                </FormField>
-                                <FormField label="Producto" error={form.formState.errors.producto_id}>
-                                    <select {...form.register('producto_id')} className={inputCls(form.formState.errors.producto_id) + ' appearance-none'}>
-                                        <option value="">Seleccionar producto…</option>
-                                        {productos.map(p => (
-                                            <option key={p.producto_id} value={p.producto_id} className="bg-bg-dark">{p.nombre} ({p.codigo})</option>
-                                        ))}
-                                    </select>
-                                </FormField>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3">
-                                <FormField label="Cantidad" error={form.formState.errors.cantidad}>
-                                    <input type="number" step="0.01" min="0" {...form.register('cantidad')} placeholder="1000" className={inputCls(form.formState.errors.cantidad)} />
-                                </FormField>
-                                <FormField label="Unidad" error={form.formState.errors.unidad}>
-                                    <input {...form.register('unidad')} placeholder="kg" className={inputCls(form.formState.errors.unidad)} />
-                                </FormField>
-                                <FormField label="Operario Asignado" error={form.formState.errors.operario_id}>
-                                    <select {...form.register('operario_id')} className={inputCls(form.formState.errors.operario_id) + ' appearance-none'}>
-                                        <option value="">Seleccionar…</option>
-                                        {operarios.map(o => (
-                                            <option key={o.operario_id} value={o.operario_id} className="bg-bg-dark">{o.nombre} {o.apellido}</option>
-                                        ))}
-                                    </select>
-                                </FormField>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-colors">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-grad-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+
+                            {/* Footer - Fixed */}
+                            <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-white/5 flex-shrink-0">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-colors font-medium">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="flex items-center gap-2 px-6 py-2 rounded-lg bg-grad-primary text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg shadow-accent-primary/20">
                                     {submitting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                                     {editId ? 'Actualizar' : 'Crear'}
                                 </button>
@@ -370,6 +375,7 @@ const OrdenesTab = ({ estados, onIniciarProceso }) => {
                     </div>
                 </div>
             )}
+
         </div>
     );
 };
@@ -378,6 +384,7 @@ const OrdenesTab = ({ estados, onIniciarProceso }) => {
 
 const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -394,6 +401,13 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
     const [historial, setHistorial] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
 
+    // Materiales modal
+    const [showMaterialModal, setShowMaterialModal] = useState(false);
+    const [materialTarget, setMaterialTarget] = useState(null);
+    const [stockItems, setStockItems] = useState([]);
+    const [processMaterials, setProcessMaterials] = useState([]);
+    const [loadingMaterials, setLoadingMaterials] = useState(false);
+
     const createForm = useForm({
         resolver: zodResolver(procesoManufacturaSchema),
         defaultValues: { orden_manufactura_id: '', estado_manufactura_id: '', observacion: '' },
@@ -404,6 +418,10 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
         defaultValues: { nuevo_estado_id: '', usuario_id: 1 },
     });
 
+    const materialForm = useForm({
+        defaultValues: { stock_polvo_suplemento_id: '', cantidad: '', unidad: 'kg' }
+    });
+
     useEffect(() => {
         if (prefill) {
             createForm.reset({
@@ -412,7 +430,6 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
                 observacion: `Proceso iniciado para orden ${prefill.codigo}`
             });
             setShowModal(true);
-            // Delay calling onPrefillUsed to ensure modal stays open during state transition
             const timer = setTimeout(() => {
                 onPrefillUsed && onPrefillUsed();
             }, 500);
@@ -483,6 +500,39 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
         setLoadingHistorial(false);
     };
 
+    const openMaterialModal = async (item) => {
+        setMaterialTarget(item);
+        setShowMaterialModal(true);
+        setLoadingMaterials(true);
+        try {
+            const [stock, materials] = await Promise.all([
+                inventoryService.getStock(),
+                manufacturingService.getMateriales(item.manufactura_id)
+            ]);
+            setStockItems(stock);
+            setProcessMaterials(materials);
+        } catch { toast.error('Error al cargar datos de materiales'); }
+        setLoadingMaterials(false);
+    };
+
+    const handleRegisterMaterial = async (data) => {
+        setSubmitting(true);
+        try {
+            await manufacturingService.registerMaterial(materialTarget.manufactura_id, {
+                manufactura_id: materialTarget.manufactura_id,
+                stock_polvo_suplemento_id: Number(data.stock_polvo_suplemento_id),
+                cantidad: Number(data.cantidad),
+                unidad: data.unidad
+            });
+            toast.success('Material registrado');
+            materialForm.reset({ stock_polvo_suplemento_id: '', cantidad: '', unidad: 'kg' });
+            // Refresh list
+            const materials = await manufacturingService.getMateriales(materialTarget.manufactura_id);
+            setProcessMaterials(materials);
+        } catch { toast.error('Error al registrar material'); }
+        setSubmitting(false);
+    };
+
     return (
         <div className="space-y-4">
             {/* Toolbar */}
@@ -513,8 +563,6 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
                                 <th className="px-4 py-3 font-medium">Orden ID</th>
                                 <th className="px-4 py-3 font-medium">Estado</th>
                                 <th className="px-4 py-3 font-medium">Inicio</th>
-                                <th className="px-4 py-3 font-medium">Fin</th>
-                                <th className="px-4 py-3 font-medium">Observación</th>
                                 <th className="px-4 py-3 font-medium text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -525,12 +573,26 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
                                     <td className="px-4 py-3">{item.orden_manufactura_id}</td>
                                     <td className="px-4 py-3">{estadoBadge(item.estado_nombre)}</td>
                                     <td className="px-4 py-3 text-text-muted">{fmtDate(item.fecha_inicio)}</td>
-                                    <td className="px-4 py-3 text-text-muted">{fmtDate(item.fecha_fin)}</td>
-                                    <td className="px-4 py-3 text-text-muted truncate max-w-[160px]">{item.observacion || '—'}</td>
                                     <td className="px-4 py-3 text-right space-x-1">
                                         <button onClick={() => openHistorial(item)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-muted" title="Ver historial">
                                             <Clock size={14} />
                                         </button>
+                                        <RoleGuard roles={['administrador', 'supervisor', 'operador', 'analista']}>
+                                            <button 
+                                                onClick={() => openMaterialModal(item)}
+                                                className="p-1.5 rounded-lg hover:bg-accent-primary/20 transition-colors text-accent-primary" 
+                                                title="Gestionar Materiales"
+                                            >
+                                                <Beaker size={14} />
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/dashboard/inspector', { state: { process_id: item.manufactura_id, order_id: item.orden_manufactura_id } })} 
+                                                className="p-1.5 rounded-lg hover:bg-primary/20 transition-colors text-primary" 
+                                                title="Solicitar Muestreo"
+                                            >
+                                                <FlaskConical size={14} />
+                                            </button>
+                                        </RoleGuard>
                                         <RoleGuard roles={['administrador', 'supervisor']}>
                                             <button onClick={() => openEstadoModal(item)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-accent-secondary" title="Cambiar estado">
                                                 <ArrowRightLeft size={14} />
@@ -627,6 +689,73 @@ const ProcesosTab = ({ estados, prefill, onPrefillUsed }) => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Materiales Modal */}
+            {showMaterialModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card p-6 w-full max-w-2xl space-y-6 flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-gradient">Consumo de Materias Primas</h3>
+                                <p className="text-xs text-text-muted mt-1">Proceso <span className="text-white font-mono">#{materialTarget?.manufactura_id}</span></p>
+                            </div>
+                            <button onClick={() => setShowMaterialModal(false)} className="p-1 rounded-lg hover:bg-white/10"><X size={18} /></button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+                            {/* Form */}
+                            <form onSubmit={materialForm.handleSubmit(handleRegisterMaterial)} className="space-y-4">
+                                <FormField label="Materia Prima (Stock)">
+                                    <select {...materialForm.register('stock_polvo_suplemento_id', { required: true })} className={inputCls() + ' appearance-none'}>
+                                        <option value="">Seleccionar material…</option>
+                                        {stockItems.map(s => (
+                                            <option key={s.stock_polvo_suplemento_id} value={s.stock_polvo_suplemento_id} className="bg-bg-dark">
+                                                {s.recepcion?.polvo_suplemento?.nombre} (Lote: {s.recepcion?.lote_proveedor}) - Disp: {s.cantidad} {s.recepcion?.polvo_suplemento?.unidad}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </FormField>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Cantidad">
+                                        <input type="number" step="0.001" {...materialForm.register('cantidad', { required: true })} className={inputCls()} placeholder="0.000" />
+                                    </FormField>
+                                    <FormField label="Unidad">
+                                        <input {...materialForm.register('unidad', { required: true })} className={inputCls()} />
+                                    </FormField>
+                                </div>
+                                <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-grad-primary text-white font-bold hover:opacity-90 disabled:opacity-50">
+                                    {submitting ? <Loader2 size={16} className="animate-spin" /> : <Database size={16} />} Registrar Consumo
+                                </button>
+                            </form>
+
+                            {/* List */}
+                            <div className="flex flex-col space-y-3 overflow-hidden">
+                                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Consumos Registrados</h4>
+                                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                                    {loadingMaterials ? (
+                                        <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-accent-primary" /></div>
+                                    ) : processMaterials.length === 0 ? (
+                                        <p className="text-xs text-text-muted italic py-4">No hay materiales registrados para este proceso.</p>
+                                    ) : (
+                                        processMaterials.map(m => (
+                                            <div key={m.uso_material_manufactura_id} className="glass-card p-3 space-y-1">
+                                                <div className="flex justify-between items-start">
+                                                    <span className="text-xs font-bold text-white">{m.material_nombre}</span>
+                                                    <span className="text-[10px] font-bold text-accent-primary">{m.cantidad} {m.unidad}</span>
+                                                </div>
+                                                <div className="flex justify-between text-[10px] text-text-muted">
+                                                    <span>Lote: {m.lote_proveedor}</span>
+                                                    <span>{fmtDate(m.fecha_uso)}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

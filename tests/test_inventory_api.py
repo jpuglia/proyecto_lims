@@ -26,6 +26,8 @@ def _medio_payload(n=1):
     }
 
 
+from src.backend.models.audit import AuditLog
+
 # ─── Polvos / Suplementos ────────────────────────────────────────────────────
 
 def test_list_polvos_empty(auth_client):
@@ -35,17 +37,22 @@ def test_list_polvos_empty(auth_client):
     assert isinstance(response.json(), list)
 
 
-def test_create_polvo(auth_client):
-    """POST /api/inventario/polvos crea un polvo/suplemento correctamente."""
+def test_create_polvo(auth_client, db_session):
+    """POST /api/inventario/polvos crea un polvo/suplemento y audita."""
     response = auth_client.post("/api/inventario/polvos", json=_polvo_payload(10))
     assert response.status_code == 201
     data = response.json()
+    polvo_id = data["polvo_suplemento_id"]
     assert data["nombre"] == "Agar Test 10"
-    assert "polvo_suplemento_id" in data
+
+    # Verificar Auditoría
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="polvo_suplemento", registro_id=polvo_id).first()
+    assert audit is not None
+    assert audit.operacion == "INSERT"
 
 
-def test_update_polvo(auth_client):
-    """PUT /api/inventario/polvos/{id} actualiza los campos correctamente."""
+def test_update_polvo(auth_client, db_session):
+    """PUT /api/inventario/polvos/{id} actualiza y audita."""
     create_resp = auth_client.post("/api/inventario/polvos", json=_polvo_payload(20))
     assert create_resp.status_code == 201
     polvo_id = create_resp.json()["polvo_suplemento_id"]
@@ -57,6 +64,11 @@ def test_update_polvo(auth_client):
     assert update_resp.status_code == 200
     assert update_resp.json()["nombre"] == "Polvo Actualizado por Test"
 
+    # Verificar Auditoría
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="polvo_suplemento", registro_id=polvo_id, operacion="UPDATE").first()
+    assert audit is not None
+    assert audit.valor_nuevo["nombre"] == "Polvo Actualizado por Test"
+
 
 def test_update_polvo_not_found(auth_client):
     """PUT /api/inventario/polvos/{id} retorna 404 si no existe."""
@@ -67,14 +79,18 @@ def test_update_polvo_not_found(auth_client):
     assert response.status_code == 404
 
 
-def test_delete_polvo(auth_client):
-    """DELETE /api/inventario/polvos/{id} elimina correctamente."""
+def test_delete_polvo(auth_client, db_session):
+    """DELETE /api/inventario/polvos/{id} elimina y audita."""
     create_resp = auth_client.post("/api/inventario/polvos", json=_polvo_payload(30))
     assert create_resp.status_code == 201
     polvo_id = create_resp.json()["polvo_suplemento_id"]
 
     delete_resp = auth_client.delete(f"/api/inventario/polvos/{polvo_id}")
     assert delete_resp.status_code == 204
+
+    # Verificar Auditoría (SOFT delete)
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="polvo_suplemento", registro_id=polvo_id, operacion="DELETE (SOFT)").first()
+    assert audit is not None
 
 
 def test_delete_polvo_not_found(auth_client):

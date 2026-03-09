@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, HardDrive, RefreshCcw, X, Check, Tag, MapPin, Loader2, Download as DownloadIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, HardDrive, RefreshCcw, X, Check, Tag, MapPin, Loader2, Download as DownloadIcon, History, Settings } from 'lucide-react';
 import EquipmentService from '../api/equipmentService';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import AnimatedPage from '../components/AnimatedPage';
 import RoleGuard from '../components/RoleGuard';
+import FileUploader from '../components/FileUploader';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { equipoSchema } from '../validation/schemas';
-import FormField, { inputCls } from '../components/FormField';
-import FileUploader from '../components/FileUploader';
+import FormField from '../components/FormField';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
+import { cn } from '../lib/utils';
 
 const EquipmentsPage = () => {
     const [equipments, setEquipments] = useState([]);
@@ -115,194 +120,182 @@ const EquipmentsPage = () => {
     );
 
     return (
-        <AnimatedPage className="space-y-8">
+        <AnimatedPage className="space-y-8 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestión de Equipos</h1>
-                    <p className="text-secondary font-medium mt-2">Administre el inventario de instrumentación y equipos del laboratorio.</p>
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-text-main tracking-tight">Equipos e Instrumentos</h1>
+                    <p className="text-text-muted font-medium italic">Gestión de activos críticos y control de estado operacional.</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleExportCSV}
-                        className="bg-white border border-slate-200 hover:bg-slate-50 active:scale-95 text-slate-700 px-5 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-sm"
-                        title="Exportar a CSV"
-                    >
-                        <DownloadIcon size={20} className="text-primary" />
-                        <span className="hidden sm:inline">Exportar CSV</span>
-                    </button>
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={handleExportCSV} className="rounded-xl border-border-light">
+                        <DownloadIcon size={18} className="mr-2 text-primary" />
+                        Exportar CSV
+                    </Button>
                     <RoleGuard roles={['administrador', 'supervisor']}>
-                        <button
-                            data-testid="btn-nuevo-equipo"
-                            onClick={() => handleOpenModal()}
-                            className="bg-primary hover:bg-primary/90 active:scale-95 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-xl shadow-primary/20"
-                        >
-                            <Plus size={20} />
-                            Nuevo Equipo
-                        </button>
+                        <Button data-testid="btn-nuevo-equipo" onClick={() => handleOpenModal()} className="rounded-xl px-6">
+                            <Plus size={18} className="mr-2" /> Nuevo Equipo
+                        </Button>
                     </RoleGuard>
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-                <div className="relative flex-1 w-full">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o código..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <button
-                    onClick={fetchEquipments}
-                    className="p-3.5 text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                    title="Actualizar lista"
-                >
-                    <RefreshCcw size={20} className={loading ? 'animate-spin' : ''} />
-                </button>
-            </div>
+            <Card className="bg-white/50 border-none shadow-none">
+                <CardContent className="p-0 flex flex-col md:flex-row gap-6 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                        <Input
+                            placeholder="Buscar por código, nombre o marca..."
+                            className="pl-12 h-12 bg-white shadow-sm border-border-light"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <Button variant="ghost" onClick={fetchEquipments} disabled={loading} className="h-12 w-12 rounded-xl">
+                        <RefreshCcw size={20} className={cn(loading && "animate-spin")} />
+                    </Button>
+                </CardContent>
+            </Card>
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                    <Loader2 className="animate-spin text-primary" size={48} />
-                    <p className="text-secondary font-bold animate-pulse">Cargando equipos...</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredEquipments.map((eq) => (
-                        <div key={eq.equipo_instrumento_id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all group overflow-hidden flex flex-col">
-                            <div className="p-6 flex-1">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-slate-50 rounded-xl group-hover:bg-primary/10 transition-colors">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {loading && equipments.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 space-y-4">
+                        <div className="animate-spin rounded-xl h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+                        <p className="text-xs font-black text-text-muted uppercase tracking-[0.2em]">Cargando Inventario Técnico...</p>
+                    </div>
+                ) : filteredEquipments.length === 0 ? (
+                    <div className="col-span-full py-24 text-center space-y-4 bg-white/50 border-2 border-dashed border-border-light rounded-3xl">
+                        <div className="w-20 h-20 rounded-full bg-bg-surface flex items-center justify-center text-text-muted mx-auto">
+                            <HardDrive size={40} />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-black text-text-main">No se encontraron equipos</h3>
+                            <p className="text-sm text-text-muted">Ajuste los criterios de búsqueda o registre un nuevo activo.</p>
+                        </div>
+                    </div>
+                ) : (
+                    filteredEquipments.map((eq) => (
+                        <Card key={eq.equipo_instrumento_id} className="group hover:border-primary/50 transition-all duration-300">
+                            <CardHeader className="pb-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="p-3 bg-bg-surface rounded-xl group-hover:bg-primary/10 transition-colors">
                                         <HardDrive className="text-primary" size={24} />
                                     </div>
-                                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                        eq.estado_equipo_id === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                    }`}>
-                                        {eq.estado_equipo_id === 1 ? 'Activo' : 'Mantenimiento'}
-                                    </span>
+                                    <Badge variant={eq.estado_equipo_id === 1 ? "success" : "warning"}>
+                                        {eq.estado_equipo_id === 1 ? 'Operativo' : 'Mantenimiento'}
+                                    </Badge>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1">{eq.nombre}</h3>
-                                <p className="text-xs font-black text-secondary mt-1 uppercase tracking-wider">{eq.codigo}</p>
-                                
-                                <div className="mt-6 space-y-3">
-                                    <div className="flex items-center gap-3 text-slate-600">
-                                        <MapPin size={16} className="text-slate-400" />
-                                        <span className="text-sm font-semibold truncate">Planta: {eq.area_id}</span>
+                                <div className="mt-4">
+                                    <span className="text-[10px] font-black text-text-muted font-mono uppercase tracking-widest">{eq.codigo}</span>
+                                    <CardTitle className="text-lg font-black group-hover:text-primary transition-colors line-clamp-1">{eq.nombre}</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="mt-2 space-y-3">
+                                    <div className="flex items-center gap-3 text-text-main">
+                                        <MapPin size={16} className="text-text-muted" />
+                                        <span className="text-sm font-semibold truncate">Ubicación: Planta {eq.area_id}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-slate-600">
-                                        <Tag size={16} className="text-slate-400" />
+                                    <div className="flex items-center gap-3 text-text-main">
+                                        <Tag size={16} className="text-text-muted" />
                                         <span className="text-sm font-semibold">Tipo: Instrumento</span>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-                                <RoleGuard roles={['administrador', 'supervisor']}>
-                                    <button
-                                        onClick={() => handleOpenModal(eq)}
-                                        className="p-2.5 text-secondary hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
-                                        title="Editar"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(eq.equipo_instrumento_id)}
-                                        className="p-2.5 text-secondary hover:text-red-600 hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-200"
-                                        title="Eliminar"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </RoleGuard>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                            </CardContent>
+                            <CardFooter className="border-t border-border-light pt-4 justify-between gap-4">
+                                <div className="flex gap-2">
+                                    <RoleGuard roles={['administrador', 'supervisor']}>
+                                        <Button variant="outline" size="icon" onClick={() => handleOpenModal(eq)} className="h-9 w-9 border-border-light">
+                                            <Edit2 size={16} />
+                                        </Button>
+                                        <Button variant="outline" size="icon" onClick={() => handleDelete(eq.equipo_instrumento_id)} className="h-9 w-9 text-error border-error/20 hover:bg-error/5">
+                                            <Trash2 size={16} />
+                                        </Button>
+                                    </RoleGuard>
+                                </div>
+                                <Button variant="secondary" size="sm" className="h-9 text-[10px] font-black uppercase">
+                                    <History size={14} className="mr-2" /> Historial
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ))
+                )}
+            </div>
 
-            {/* Modal para Crear/Editar */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl relative animate-in fade-in zoom-in duration-300 overflow-hidden">
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h2 className="text-2xl font-black text-slate-900">
-                                {currentEquip ? 'Editar Equipo' : 'Nuevo Equipo'}
-                            </h2>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                                <X size={24} className="text-slate-500" />
-                            </button>
-                        </div>
-                        
-                        <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField label="Código" error={errors.codigo?.message} required>
-                                    <input
-                                        {...register('codigo')}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                                        placeholder="EQ-001"
-                                    />
-                                </FormField>
-                                <FormField label="Nombre" error={errors.nombre?.message} required>
-                                    <input
-                                        {...register('nombre')}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                                        placeholder="Microscopio Óptico"
-                                    />
-                                </FormField>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-text-main/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <Card className="w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col max-h-[90vh]">
+                        <CardHeader className="bg-bg-surface border-b border-border-light pb-6">
+                            <div className="flex justify-between items-center">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-2xl font-black">{currentEquip ? 'Editar Equipo' : 'Nuevo Registro de Equipo'}</CardTitle>
+                                    <CardDescription>Ingrese los datos técnicos del activo en el sistema LIMS.</CardDescription>
+                                </div>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 text-text-muted hover:text-text-main transition-colors">
+                                    <X size={24} />
+                                </button>
                             </div>
+                        </CardHeader>
+                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                            <CardContent className="pt-8 space-y-6 overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField label="Código SAP/ERP" error={errors.codigo} required>
+                                        <Input {...register('codigo')} placeholder="EQ-001" />
+                                    </FormField>
+                                    <FormField label="Nombre del Equipo" error={errors.nombre} required>
+                                        <Input data-testid="equipo-nombre" {...register('nombre')} placeholder="Incubadora" />
+                                    </FormField>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <FormField label="Tipo">
+                                        <select
+                                            {...register('tipo_equipo_id', { valueAsNumber: true })}
+                                            className="flex h-11 w-full rounded-xl border border-border-light bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                                        >
+                                            <option value={1}>Instrumento</option>
+                                            <option value={2}>Equipo Crítico</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Estado">
+                                        <select
+                                            {...register('estado_equipo_id', { valueAsNumber: true })}
+                                            className="flex h-11 w-full rounded-xl border border-border-light bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                                        >
+                                            <option value={1}>Activo</option>
+                                            <option value={2}>Mantenimiento</option>
+                                            <option value={3}>Fuera de Servicio</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Área/Planta">
+                                        <select
+                                            {...register('area_id', { valueAsNumber: true })}
+                                            className="flex h-11 w-full rounded-xl border border-border-light bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                                        >
+                                            <option value={1}>Planta Montevideo</option>
+                                            <option value={2}>Planta Canelones</option>
+                                        </select>
+                                    </FormField>
+                                </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <FormField label="Tipo">
-                                    <select
-                                        {...register('tipo_equipo_id', { valueAsNumber: true })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
-                                    >
-                                        <option value={1}>Instrumento</option>
-                                        <option value={2}>Equipo Crítico</option>
-                                    </select>
-                                </FormField>
-                                <FormField label="Estado">
-                                    <select
-                                        {...register('estado_equipo_id', { valueAsNumber: true })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
-                                    >
-                                        <option value={1}>Activo</option>
-                                        <option value={2}>Mantenimiento</option>
-                                        <option value={3}>Fuera de Servicio</option>
-                                    </select>
-                                </FormField>
-                                <FormField label="Área/Planta">
-                                    <select
-                                        {...register('area_id', { valueAsNumber: true })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 font-semibold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all appearance-none"
-                                    >
-                                        <option value={1}>Planta Montevideo</option>
-                                        <option value={2}>Planta Canelones</option>
-                                    </select>
-                                </FormField>
-                            </div>
-
-                            <div className="pt-4 border-t border-slate-100 flex justify-end gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-6 py-3 rounded-xl font-bold text-secondary hover:bg-slate-100 transition-all"
-                                >
+                                {currentEquip && (
+                                    <div className="mt-4 pt-6 border-t border-border-light">
+                                        <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-4">Gestión Documental</h4>
+                                        <FileUploader
+                                            entidadTipo="equipo"
+                                            entidadId={currentEquip.equipo_instrumento_id}
+                                        />
+                                    </div>
+                                )}
+                            </CardContent>
+                            <CardFooter className="bg-bg-surface border-t border-border-light p-6 justify-end gap-3 flex-shrink-0">
+                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl border-border-light">
                                     Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-                                    {currentEquip ? 'Actualizar' : 'Guardar Equipo'}
-                                </button>
-                            </div>
+                                </Button>
+                                <Button type="submit" disabled={submitting} className="rounded-xl px-8 shadow-lg shadow-primary/30">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : (currentEquip ? 'Actualizar' : 'Guardar Equipo')}
+                                </Button>
+                            </CardFooter>
                         </form>
-                    </div>
+                    </Card>
                 </div>
             )}
         </AnimatedPage>

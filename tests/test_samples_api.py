@@ -32,14 +32,30 @@ def test_list_solicitudes_empty(auth_client):
     assert isinstance(response.json(), list)
 
 
-def test_create_solicitud(auth_client):
-    """POST /api/muestreo/solicitudes crea una solicitud correctamente."""
-    uid = _create_user(auth_client, "op_create_sol")
-    response = auth_client.post("/api/muestreo/solicitudes", json=_solicitud_payload(uid))
+def test_create_solicitud_with_deadline(auth_client):
+    """POST /api/muestreo/solicitudes con fecha_limite."""
+    uid = _create_user(auth_client, "op_deadline")
+    deadline = "2026-12-31T23:59:59"
+    payload = _solicitud_payload(uid)
+    payload["fecha_limite"] = deadline
+    
+    response = auth_client.post("/api/muestreo/solicitudes", json=payload)
     assert response.status_code == 201
-    data = response.json()
-    assert data["tipo"] == "Ambiental"
-    assert "solicitud_muestreo_id" in data
+    assert response.json()["fecha_limite"].startswith("2026-12-31")
+
+def test_update_solicitud_deadline(auth_client):
+    """PUT /api/muestreo/solicitudes/{id} actualiza la fecha_limite."""
+    uid = _create_user(auth_client, "op_upd_deadline")
+    create_resp = auth_client.post("/api/muestreo/solicitudes", json=_solicitud_payload(uid))
+    solicitud_id = create_resp.json()["solicitud_muestreo_id"]
+
+    new_deadline = "2027-01-01T10:00:00"
+    update_resp = auth_client.put(
+        f"/api/muestreo/solicitudes/{solicitud_id}",
+        json={"fecha_limite": new_deadline},
+    )
+    assert update_resp.status_code == 200
+    assert update_resp.json()["fecha_limite"].startswith("2027-01-01")
 
 
 def test_list_solicitudes_after_create(auth_client):

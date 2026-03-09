@@ -26,6 +26,11 @@ const PlantService = {
     delete: async (id) => {
         const response = await api.delete(`${BASE_URL}/${id}`);
         return response.data;
+    },
+
+    getPuntosMuestreo: async () => {
+        const response = await api.get('ubicaciones/puntos-muestreo');
+        return response.data;
     }
 };
 

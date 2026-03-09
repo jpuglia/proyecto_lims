@@ -1,0 +1,155 @@
+"""Inventory router – powders, media preparation, stock, approvals."""
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from src.backend.api.dependencies import get_db, get_inventory_service
+from src.backend.api.schemas.inventory import (
+    PolvoSuplementoCreate, PolvoSuplementoResponse, PolvoSuplementoUpdate,
+    RecepcionPolvoCreate, RecepcionPolvoResponse, RecepcionPolvoUpdate,
+    MedioPreparadoCreate, MedioPreparadoResponse, MedioPreparadoUpdate,
+    OrdenPreparacionCreate, OrdenPreparacionResponse,
+    StockMediosResponse,
+    AprobacionMediosCreate, AprobacionMediosResponse, AprobacionMediosUpdate,
+)
+from src.backend.repositories.inventory import (
+    PolvoSuplementoRepository, RecepcionPolvoSuplementoRepository,
+    MedioPreparadoRepository, StockMediosRepository, AprobacionMediosRepository,
+)
+from src.backend.services.inventory_service import InventoryService
+from src.backend.api.security import get_current_user, require_role
+from src.backend.models.auth import Usuario
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
+
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_ESCRITURA  = ["administrador", "supervisor"]
+
+
+# ─── Polvos / Suplementos ────────────────────────────────────
+
+@router.post("/polvos", response_model=PolvoSuplementoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
+def create_polvo(body: PolvoSuplementoCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = PolvoSuplementoRepository()
+    return repo.create(db, body.model_dump(), usuario_id=current_user.usuario_id)
+
+
+@router.get("/polvos", response_model=List[PolvoSuplementoResponse])
+def list_polvos(db: Session = Depends(get_db)):
+    repo = PolvoSuplementoRepository()
+    return repo.get_all(db)
+
+
+@router.put("/polvos/{polvo_id}", response_model=PolvoSuplementoResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
+def update_polvo(polvo_id: int, body: PolvoSuplementoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = PolvoSuplementoRepository()
+    obj = repo.get(db, polvo_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Polvo/Suplemento no encontrado")
+    return repo.update(db, obj, body.model_dump(exclude_unset=True), usuario_id=current_user.usuario_id)
+
+
+@router.delete("/polvos/{polvo_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("administrador"))])
+def delete_polvo(polvo_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = PolvoSuplementoRepository()
+    obj = repo.get(db, polvo_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Polvo/Suplemento no encontrado")
+    repo.delete(db, polvo_id, usuario_id=current_user.usuario_id)
+    return None
+
+
+# ─── Recepción de Polvos ─────────────────────────────────────
+
+@router.post("/polvos/recepciones", response_model=RecepcionPolvoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def receive_polvo(
+    body: RecepcionPolvoCreate,
+    db: Session = Depends(get_db),
+    service: InventoryService = Depends(get_inventory_service),
+    current_user: Usuario = Depends(get_current_user)
+):
+    return service.register_powder_reception(db, body.model_dump(), usuario_id=current_user.usuario_id)
+
+
+@router.put("/polvos/recepciones/{recep_id}", response_model=RecepcionPolvoResponse,
+            dependencies=[Depends(require_role(*_OPERATIVOS))])
+def update_recepcion_polvo(recep_id: int, body: RecepcionPolvoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = RecepcionPolvoSuplementoRepository()
+    obj = repo.get(db, recep_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Recepción no encontrada")
+    return repo.update(db, obj, body.model_dump(exclude_unset=True), usuario_id=current_user.usuario_id)
+
+
+# ─── Medios Preparados ───────────────────────────────────────
+
+@router.post("/medios", response_model=MedioPreparadoResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
+def create_medio(body: MedioPreparadoCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = MedioPreparadoRepository()
+    return repo.create(db, body.model_dump(), usuario_id=current_user.usuario_id)
+
+
+@router.get("/medios", response_model=List[MedioPreparadoResponse])
+def list_medios(db: Session = Depends(get_db)):
+    repo = MedioPreparadoRepository()
+    return repo.get_all(db)
+
+
+@router.put("/medios/{medio_id}", response_model=MedioPreparadoResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
+def update_medio(medio_id: int, body: MedioPreparadoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = MedioPreparadoRepository()
+    obj = repo.get(db, medio_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Medio preparado no encontrado")
+    return repo.update(db, obj, body.model_dump(exclude_unset=True), usuario_id=current_user.usuario_id)
+
+
+# ─── Preparación de Medios ───────────────────────────────────
+
+@router.post("/medios/preparacion", response_model=OrdenPreparacionResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def prepare_media(
+    body: OrdenPreparacionCreate,
+    db: Session = Depends(get_db),
+    service: InventoryService = Depends(get_inventory_service),
+    current_user: Usuario = Depends(get_current_user)
+):
+    try:
+        consumos = [c.model_dump() for c in body.consumos]
+        return service.prepare_culture_media(db, body.orden.model_dump(), consumos, usuario_id=current_user.usuario_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ─── Stock de Medios ──────────────────────────────────────────
+
+@router.get("/stock", response_model=List[StockMediosResponse])
+def list_stock(db: Session = Depends(get_db)):
+    repo = StockMediosRepository()
+    return repo.get_all(db)
+
+
+# ─── Aprobaciones ────────────────────────────────────────────
+
+@router.post("/aprobaciones", response_model=AprobacionMediosResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
+def approve_media(body: AprobacionMediosCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = AprobacionMediosRepository()
+    return repo.create(db, body.model_dump(), usuario_id=current_user.usuario_id)
+
+
+@router.put("/aprobaciones/{aprob_id}", response_model=AprobacionMediosResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
+def update_aprobacion(aprob_id: int, body: AprobacionMediosUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    repo = AprobacionMediosRepository()
+    obj = repo.get(db, aprob_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Aprobación no encontrada")
+    return repo.update(db, obj, body.model_dump(exclude_unset=True), usuario_id=current_user.usuario_id)

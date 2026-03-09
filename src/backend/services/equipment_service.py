@@ -46,7 +46,8 @@ class EquipmentService:
             joinedload(EquipoInstrumento.tipo_equipo),
             joinedload(EquipoInstrumento.estado),
             joinedload(EquipoInstrumento.area),
-            joinedload(EquipoInstrumento.calibraciones)
+            joinedload(EquipoInstrumento.calibraciones),
+            joinedload(EquipoInstrumento.zonas)
         )
         
         if area_id:

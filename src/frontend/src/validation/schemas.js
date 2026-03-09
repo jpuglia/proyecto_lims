@@ -12,17 +12,36 @@ import { z } from 'zod';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const requiredStr = (msg = 'Campo requerido', min = 1, max = 255) => 
+const requiredStr = (msg = 'Campo requerido', min = 1, max = 255) =>
     z.string().trim().min(min, min > 1 ? `Debe tener al menos ${min} caracteres` : msg).max(max, `Máximo ${max} caracteres`);
 
 const positiveInt = (msg = 'Debe ser un número entero positivo') =>
     z.coerce.number({ invalid_type_error: msg }).int().min(1, msg);
+
+const optionalInt = () =>
+    z.preprocess((val) => (val === '' || val === null || val === undefined) ? null : val,
+        z.coerce.number().int().positive().nullable().optional());
 
 const positiveNum = (msg = 'Debe ser un número positivo') =>
     z.coerce.number({ invalid_type_error: msg }).positive(msg);
 
 const nonNegativeNum = (msg = 'No puede ser un número negativo') =>
     z.coerce.number({ invalid_type_error: msg }).min(0, msg);
+
+// ─── Usuarios ──────────────────────────────────────────────────────────────────
+
+export const usuarioSchema = z.object({
+    nombre: requiredStr('El nombre de usuario es obligatorio', 3, 50),
+    password: requiredStr('La contraseña es obligatoria', 8, 255),
+    firma: z.string().trim().max(10, 'Máximo 10 caracteres').optional().or(z.literal('')),
+    activo: z.boolean().default(true),
+});
+
+export const usuarioEditSchema = z.object({
+    nombre: requiredStr('El nombre de usuario es obligatorio', 3, 50),
+    firma: z.string().trim().max(10, 'Máximo 10 caracteres').optional().or(z.literal('')),
+    activo: z.boolean().default(true),
+});
 
 // ─── Equipos ──────────────────────────────────────────────────────────────────
 
@@ -49,8 +68,7 @@ export const solicitudMuestreoSchema = z.object({
     tipo: z.enum(['Ambiental', 'Producto', 'Proceso', 'Personal', 'Agua'], {
         errorMap: () => ({ message: 'Seleccioná un tipo de muestreo válido' }),
     }),
-    equipo_instrumento_id: z.coerce.number().int().positive().nullable().optional()
-        .transform(v => (v === 0 || isNaN(v)) ? null : v),
+    equipo_instrumento_id: optionalInt(),
     observacion: z.string().trim().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
     estado_solicitud_id: z.coerce.number().int().default(1),
 });
@@ -65,8 +83,7 @@ export const analisisSchema = z.object({
     tipo_analisis: z.enum(['microbiologico', 'fisicoquimico', 'ambiental', 'producto'], {
         errorMap: () => ({ message: 'Seleccioná un tipo de análisis válido' }),
     }),
-    operario_id: z.coerce.number().int().positive().nullable().optional()
-        .transform(v => (v === 0 || isNaN(v)) ? null : v),
+    operario_id: optionalInt(),
     descripcion: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().or(z.literal('')),
 });
 
@@ -119,4 +136,13 @@ export const procesoManufacturaSchema = z.object({
 export const cambioEstadoSchema = z.object({
     nuevo_estado_id: positiveInt('El ID de estado debe ser positivo'),
     usuario_id: positiveInt('El ID de usuario debe ser positivo'),
+});
+
+// ─── Catálogos ──────────────────────────────────────────────────────────────
+
+export const tipoSolicitudMuestreoSchema = z.object({
+    codigo: requiredStr('El código es obligatorio', 1, 50),
+    descripcion: requiredStr('La descripción es obligatoria', 3, 100),
+    categoria: z.string().trim().max(100, 'Máximo 100 caracteres').optional().or(z.literal('')),
+    activo: z.boolean().default(true),
 });

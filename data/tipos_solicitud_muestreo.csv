@@ -1,0 +1,10 @@
+codigo;descripcion;categoria
+AIRE_AREA;Aire área;Ambiental
+AIRE_EQUIPO;Aire equipo;Equipo
+HISOPADO_PERSONAL;Hisopado personal;Personal
+HISOPADO_EQUIPO;Hisopado equipo;Equipo
+HISOPADO_SUPERFICIE;Hisopado superficie;Superficie
+PRODUCTO;Producto;Producto
+AGUA;Agua;Servicio
+NITROGENO;Nitrógeno;Servicio
+AIRE_COMPRIMIDO;Aire comprimido;Servicio

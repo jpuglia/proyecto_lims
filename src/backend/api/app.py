@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard, documents, exports, products, master
+from src.backend.api.routers import auth, equipment, locations, manufacturing, samples, analysis, inventory, dashboard, documents, exports, products, master, inspection
 from src.backend.core.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
 
     # Routers
     app.include_router(auth.router, prefix="/api/auth", tags=["Seguridad & Autenticación"])
-    app.include_router(master.router, prefix="/api/maestros", tags=["Maestros - Catálogos Generales"])
+    app.include_router(master.router, prefix="/api/master", tags=["Maestros - Catálogos Generales"])
     app.include_router(equipment.router, prefix="/api/equipos", tags=["Maestros - Equipos"])
     app.include_router(locations.router, prefix="/api/ubicaciones", tags=["Maestros - Infraestructura (Sistemas/Plantas/Áreas)"])
     app.include_router(manufacturing.router, prefix="/api/manufactura", tags=["Procesos - Manufactura"])
@@ -47,12 +47,23 @@ def create_app() -> FastAPI:
     app.include_router(products.router, prefix="/api/productos", tags=["Maestros - Productos"])
     app.include_router(documents.router, prefix="/api/documentos", tags=["Documentos y Adjuntos"])
     app.include_router(exports.router, prefix="/api/exports", tags=["Exportaciones CSV"])
+    app.include_router(inspection.router, prefix="/api/inspection", tags=["Inspección y Muestreo (Módulo Inspector)"])
 
     # Global Exception Handlers
+    from fastapi.exceptions import RequestValidationError
     from fastapi import Request
     from fastapi.responses import JSONResponse
     from fastapi import HTTPException as FastAPIHTTPException
     from src.backend.core.exceptions import LIMSException
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        # Concatenar mensajes de error para una respuesta más clara
+        messages = [f"{'.'.join(str(l) for l in err['loc'])}: {err['msg']}" for err in exc.errors()]
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Petición Incorrecta (Validación)", "message": "; ".join(messages)},
+        )
 
     @app.exception_handler(LIMSException)
     async def lims_exception_handler(request: Request, exc: LIMSException):

@@ -221,6 +221,41 @@ erDiagram
         int operario_id FK "Responsable del muestreo"
     }
 
+    %% Tabla específica para el workflow de Inspección
+    SAMPLING {
+        string id PK
+        int inspector_id FK
+        int request_id FK
+        datetime start_datetime
+        datetime end_datetime
+        int product_id FK
+        int lot_id FK
+        string lot_number
+        int sampling_point_id FK
+        float extracted_quantity
+        string destination
+        string sample_type
+        int equipo_id FK
+        int operario_muestreado_id FK
+        int area_id FK
+        string region_swabbed
+        string status
+        int reviewer_id FK
+        datetime review_timestamp
+        string submission_id
+        datetime submission_timestamp
+    }
+
+    USUARIO ||--o{ SAMPLING : realiza_inspeccion
+    USUARIO ||--o{ SAMPLING : revisa_inspeccion
+    SOLICITUD_MUESTREO ||--o{ SAMPLING : atiende
+    PRODUCTO ||--o{ SAMPLING : muestrea
+    ORDEN_MANUFACTURA ||--o{ SAMPLING : del_lote
+    PUNTO_MUESTREO ||--o{ SAMPLING : en_punto
+    EQUIPO_INSTRUMENTO ||--o{ SAMPLING : del_equipo
+    OPERARIO ||--o{ SAMPLING : del_operario
+    AREA ||--o{ SAMPLING : del_area
+
     %% Tabla que representa cada unidad física tomada (Hisopo, frasco, etc.)
     MUESTRA {
         int muestra_id PK
@@ -424,6 +459,7 @@ erDiagram
     USUARIO {
         int usuario_id PK
         string nombre
+        string password_hash
         string firma
         boolean activo
     }
@@ -443,7 +479,7 @@ erDiagram
     }
     %% Tabla que representa el rastro de auditoría
     AUDIT_TRAIL {
-        bigint audit_trail_id PK
+        int audit_trail_id PK
         string tabla
         bigint registro_id
         string columna
@@ -452,6 +488,18 @@ erDiagram
         string accion
         datetime timestamp
         int usuario_id FK
+    }
+    %% Tabla que representa documentos adjuntos (Polimórfica)
+    DOCUMENTO {
+        int documento_id PK
+        string nombre
+        string tipo_mime
+        int tamano_bytes
+        string ruta_archivo
+        string entidad_tipo
+        int entidad_id
+        int usuario_id FK
+        datetime fecha_subida
     }
     %% Tabla que representa la revisión
     REVISION {

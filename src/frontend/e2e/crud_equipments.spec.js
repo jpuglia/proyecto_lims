@@ -8,13 +8,13 @@ test.describe('CRUD Equipos — autenticado como admin', () => {
         await page.goto('/equipments');
         await expect(page.getByRole('heading', { name: /equipos/i })).toBeVisible({ timeout: 10_000 });
 
-        // Wait for loading to finish (spinner disappears or table renders)
+        // Wait for loading to finish (spinner disappears or results render)
         await page.waitForTimeout(1500);
 
-        // Either the empty message or a table row is visible
-        const emptyMsg = page.locator('tbody td').filter({ hasText: /no se encontraron/i });
-        const firstRow = page.locator('tbody tr').filter({ hasNotText: /no se encontraron/i }).first();
-        await expect(emptyMsg.or(firstRow)).toBeVisible({ timeout: 10_000 });
+        // Either the empty message or a card is visible
+        const emptyMsg = page.getByText(/no se encontraron/i);
+        const firstCard = page.locator('.border').first();
+        await expect(emptyMsg.or(firstCard)).toBeVisible({ timeout: 10_000 });
     });
 
     test('botón "Nuevo Equipo" es visible para el admin', async ({ page }) => {
@@ -37,10 +37,10 @@ test.describe('CRUD Equipos — autenticado como admin', () => {
         await expect(page.getByTestId('btn-nuevo-equipo')).toBeVisible({ timeout: 10_000 });
         await page.getByTestId('btn-nuevo-equipo').click();
 
-        // Modal is open — clear nombre and try to submit
+        // Modal is open — clear nombre and try to submit via keyboard
         await expect(page.getByTestId('equipo-nombre')).toBeVisible({ timeout: 5_000 });
         await page.getByTestId('equipo-nombre').fill('');
-        await page.getByTestId('equipo-submit').click();
+        await page.keyboard.press('Enter');
 
         // Zod error message should appear (inline, in Spanish)
         await expect(page.locator('p', { hasText: /obligatorio|requerido|mínimo/i }).first()).toBeVisible({ timeout: 5_000 });

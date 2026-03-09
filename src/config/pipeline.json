@@ -2,6 +2,18 @@
   "data_dir": "./data",
   "pipelines": [
     {
+      "name": "tipos_solicitud_muestreo",
+      "repo": "TipoSolicitudMuestreoRepository",
+      "csv": "tipos_solicitud_muestreo.csv",
+      "delimiter": ";",
+      "encoding": "utf-8",
+      "mappings": {
+        "codigo": "codigo",
+        "descripcion": "descripcion",
+        "categoria": "categoria"
+      }
+    },
+    {
       "name": "sistemas",
       "repo": "SistemaRepository",
       "csv": "sistema_nitrogenos.csv",

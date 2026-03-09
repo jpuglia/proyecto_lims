@@ -1,7 +1,7 @@
 from src.backend.repositories.auth import UsuarioRepository, OperarioRepository
 from src.backend.repositories.dim import (SistemaRepository, PlantaRepository, AreaRepository,
                                            EstadoEquipoRepository, EquipoInstrumentoRepository,
-                                           PuntoMuestreoRepository)
+                                           PuntoMuestreoRepository, TipoSolicitudMuestreoRepository)
 from src.backend.repositories.master import (ProductoRepository, EspecificacionRepository,
                                               MetodoVersionRepository, CepaReferenciaRepository)
 from src.backend.repositories.inventory import (EstadoQCRepository, MedioPreparadoRepository, PolvoSuplementoRepository)
@@ -26,5 +26,6 @@ REPOSITORY_REGISTRY = {
     "MedioPreparadoRepository": MedioPreparadoRepository,
     "PolvoSuplementoRepository": PolvoSuplementoRepository,
     "OrdenManufacturaRepository": OrdenManufacturaRepository,
-    "ManufacturaRepository": ManufacturaRepository
+    "ManufacturaRepository": ManufacturaRepository,
+    "TipoSolicitudMuestreoRepository": TipoSolicitudMuestreoRepository
 }

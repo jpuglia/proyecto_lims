@@ -14,6 +14,7 @@ class Usuario(Base):
     activo = Column(Boolean, default=True, nullable=False)
 
     roles = relationship("UsuarioRol", back_populates="usuario", cascade="all, delete-orphan")
+    laboratorios = relationship("UsuarioLaboratorio", back_populates="usuario", cascade="all, delete-orphan")
     audit_trails = relationship("AuditTrail", back_populates="usuario")
     revisiones = relationship("Revision", back_populates="usuario")
     operario = relationship("Operario", back_populates="usuario", uselist=False)
@@ -37,6 +38,24 @@ class UsuarioRol(Base):
 
     usuario = relationship("Usuario", back_populates="roles")
     rol = relationship("Rol", back_populates="usuarios")
+
+class Laboratorio(Base):
+    __tablename__ = "laboratorio"
+
+    laboratorio_id = Column(Integer, primary_key=True)
+    nombre = Column(String, unique=True, nullable=False) # e.g. Microbiología, Fisicoquímico
+
+    usuarios = relationship("UsuarioLaboratorio", back_populates="laboratorio")
+
+class UsuarioLaboratorio(Base):
+    __tablename__ = "usuario_laboratorio"
+
+    usuario_laboratorio_id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuario.usuario_id"), nullable=False)
+    laboratorio_id = Column(Integer, ForeignKey("laboratorio.laboratorio_id"), nullable=False)
+
+    usuario = relationship("Usuario", back_populates="laboratorios")
+    laboratorio = relationship("Laboratorio", back_populates="usuarios")
 
 class AuditTrail(Base):
     __tablename__ = "audit_trail"

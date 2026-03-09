@@ -5,16 +5,16 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from src.backend.models.base import Base
-# Import all models to ensure they are registered with Base.metadata
 import src.backend.models as models
 from src.backend.api.app import app
 from src.backend.api.dependencies import get_db
 from src.backend.api.security import hash_password
 from src.backend.models.auth import Usuario, Rol, UsuarioRol
+from src.backend.models.fact import EstadoSolicitud, EstadoAnalisis, EstadoManufactura
+from src.backend.models.dim import Sistema, Planta, Area, TipoSolicitudMuestreo
 
 @pytest.fixture(scope="session")
 def engine():
-    # Use SQLite in-memory for tests
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -31,29 +31,18 @@ def db_session(engine):
     session.close()
 
 @pytest.fixture(scope="function")
-def repository_context(db_session):
-    """Fixture to provide a context for all repositories (if needed)"""
-    return db_session
-
-
-@pytest.fixture(scope="function")
 def client(db_session):
-    """TestClient with DB override (no auth)."""
     def override_get_db():
         try:
             yield db_session
         finally:
             pass
-
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
 
-
 def _create_test_user_with_role(db_session, rol_nombre: str) -> Usuario:
-    """Helper: inserta un usuario de test con el rol indicado en la BD de test."""
-    # Asegurar que el rol exista
     rol = db_session.query(Rol).filter(Rol.nombre == rol_nombre).first()
     if not rol:
         rol = Rol(nombre=rol_nombre)
@@ -78,77 +67,89 @@ def _create_test_user_with_role(db_session, rol_nombre: str) -> Usuario:
         db_session.refresh(user)
     return user
 
-
 @pytest.fixture(scope="function")
 def auth_client(db_session):
-    """TestClient autenticado con rol 'administrador' — acceso total."""
     from src.backend.api.security import get_current_user
-
     def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-
+        yield db_session
     test_user = _create_test_user_with_role(db_session, "administrador")
-
-    def override_get_current_user():
-        return test_user
-
     app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[get_current_user] = override_get_current_user
-
+    app.dependency_overrides[get_current_user] = lambda: test_user
     with TestClient(app) as c:
         yield c
-
     app.dependency_overrides.clear()
-
 
 @pytest.fixture(scope="function")
 def supervisor_client(db_session):
-    """TestClient autenticado con rol 'supervisor'."""
     from src.backend.api.security import get_current_user
-
     def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-
+        yield db_session
     test_user = _create_test_user_with_role(db_session, "supervisor")
-
-    def override_get_current_user():
-        return test_user
-
     app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[get_current_user] = override_get_current_user
-
+    app.dependency_overrides[get_current_user] = lambda: test_user
     with TestClient(app) as c:
         yield c
-
     app.dependency_overrides.clear()
-
 
 @pytest.fixture(scope="function")
 def operador_client(db_session):
-    """TestClient autenticado con rol 'operador' — acceso limitado."""
     from src.backend.api.security import get_current_user
-
     def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-
+        yield db_session
     test_user = _create_test_user_with_role(db_session, "operador")
-
-    def override_get_current_user():
-        return test_user
-
     app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[get_current_user] = override_get_current_user
-
+    app.dependency_overrides[get_current_user] = lambda: test_user
     with TestClient(app) as c:
         yield c
-
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function")
+def seed_data(db_session):
+    # Tipos Solicitud
+    tipos = [
+        ("AIRE_AREA", "Aire área", "Ambiental"),
+        ("AIRE_EQUIPO", "Aire equipo", "Equipo"),
+        ("HISOPADO_PERSONAL", "Hisopado personal", "Personal"),
+        ("HISOPADO_EQUIPO", "Hisopado equipo", "Equipo"),
+        ("HISOPADO_SUPERFICIE", "Hisopado superficie", "Superficie"),
+        ("PRODUCTO", "Producto", "Producto"),
+        ("AGUA", "Agua", "Servicio"),
+        ("NITROGENO", "Nitrógeno", "Servicio"),
+        ("AIRE_COMPRIMIDO", "Aire comprimido", "Servicio"),
+    ]
+    for cod, desc, cat in tipos:
+        if not db_session.query(TipoSolicitudMuestreo).filter_by(codigo=cod).first():
+            db_session.add(TipoSolicitudMuestreo(codigo=cod, descripcion=desc, categoria=cat, activo=True))
+
+    # Estados Solicitud
+    if not db_session.query(EstadoSolicitud).filter_by(estado_solicitud_id=1).first():
+        db_session.add(EstadoSolicitud(estado_solicitud_id=1, nombre="Pendiente"))
+    if not db_session.query(EstadoSolicitud).filter_by(estado_solicitud_id=2).first():
+        db_session.add(EstadoSolicitud(estado_solicitud_id=2, nombre="En Muestreo"))
+    if not db_session.query(EstadoSolicitud).filter_by(estado_solicitud_id=3).first():
+        db_session.add(EstadoSolicitud(estado_solicitud_id=3, nombre="Completado"))
+    
+    # Estados Analisis
+    if not db_session.query(EstadoAnalisis).filter_by(estado_analisis_id=1).first():
+        db_session.add(EstadoAnalisis(estado_analisis_id=1, nombre="Pendiente"))
+    if not db_session.query(EstadoAnalisis).filter_by(estado_analisis_id=2).first():
+        db_session.add(EstadoAnalisis(estado_analisis_id=2, nombre="En Curso"))
+    if not db_session.query(EstadoAnalisis).filter_by(estado_analisis_id=3).first():
+        db_session.add(EstadoAnalisis(estado_analisis_id=3, nombre="Finalizado"))
+
+    # Locations
+    if not db_session.query(Sistema).filter_by(sistema_id=1).first():
+        db_session.add(Sistema(sistema_id=1, codigo="SIS-001", nombre="Sistema General"))
+    
+    db_session.flush() # Ensure sistema_id=1 is available
+
+    if not db_session.query(Planta).filter_by(planta_id=1).first():
+        db_session.add(Planta(planta_id=1, codigo="PLT-001", nombre="Planta Central", sistema_id=1))
+    
+    db_session.flush()
+
+    if not db_session.query(Area).filter_by(area_id=1).first():
+        db_session.add(Area(area_id=1, nombre="Laboratorio", planta_id=1))
+
+    db_session.commit()
+    return True

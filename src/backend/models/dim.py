@@ -35,6 +35,7 @@ class Area(Base):
     __tablename__ = "area"
 
     area_id = Column(Integer, primary_key=True)
+    codigo = Column(String, unique=True, nullable=True) # Set nullable=True initially to avoid migration issues with existing data
     nombre = Column(String, nullable=False)
     planta_id = Column(Integer, ForeignKey("planta.planta_id"), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
@@ -42,6 +43,7 @@ class Area(Base):
     planta = relationship("Planta", back_populates="areas")
     equipos = relationship("EquipoInstrumento", back_populates="area", cascade="all, delete-orphan")
     puntos_muestreo = relationship("PuntoMuestreo", back_populates="area", cascade="all, delete-orphan")
+    zonas = relationship("ZonaArea", back_populates="area", cascade="all, delete-orphan")
 
 class TipoEquipo(Base):
     __tablename__ = "tipo_equipo"
@@ -87,6 +89,16 @@ class ZonaEquipo(Base):
 
     equipo = relationship("EquipoInstrumento", back_populates="zonas")
 
+class ZonaArea(Base):
+    __tablename__ = "zona_area"
+
+    zona_area_id = Column(Integer, primary_key=True)
+    area_id = Column(Integer, ForeignKey("area.area_id"), nullable=False)
+    nombre = Column(String, nullable=False)
+    activo = Column(Boolean, default=True, nullable=False)
+
+    area = relationship("Area", back_populates="zonas")
+
 class CalibracionCalificacionEquipo(Base):
     __tablename__ = "calibracion_calificacion_equipo"
 
@@ -125,3 +137,12 @@ class PuntoMuestreo(Base):
 
     sistema = relationship("Sistema", back_populates="puntos_muestreo")
     area = relationship("Area", back_populates="puntos_muestreo")
+
+class TipoSolicitudMuestreo(Base):
+    __tablename__ = "tipo_solicitud_muestreo"
+
+    tipo_solicitud_id = Column(Integer, primary_key=True)
+    codigo = Column(String, unique=True, nullable=False)
+    descripcion = Column(String, nullable=False)
+    categoria = Column(String, nullable=True)
+    activo = Column(Boolean, default=True, nullable=False)

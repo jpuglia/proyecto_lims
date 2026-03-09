@@ -24,27 +24,27 @@ Se adoptará una metodología **Ágil (Scrum/Kanban)** para permitir entregas in
 *   **Diseño de Interfaz:** Creación de mockups en Figma/Adobe XD para interfaces intuitivas (registro de datos, dashboards).
 *   **Definición de Seguridad:** Implementación de roles (RBAC) y protocolos de auditoría (Audit Trail).
 
-### Fase 3: Desarrollo del Núcleo (Backend & Database) (Mes 3-5)
-*   **Módulo 1 (Sistemas y Recursos):** Gestión de Plantas, Áreas y Equipos.
-*   **Módulo 2 (Usuarios y Seguridad):** Autenticación, Roles y Trail de Auditoría.
-*   **Módulo 3 (Configuración Técnica):** Productos, Especificaciones y Métodos de Análisis.
-*   **Módulo 4 (Operaciones y Manufactura):** Órdenes de Manufactura y Muestreo.
+### Fase 3: Desarrollo del Núcleo (Backend & Database) (Completado - Release Candidate 1)
+*   **Módulo 1 (Sistemas y Recursos):** Gestión de Plantas, Áreas y Equipos (✅ OK).
+*   **Módulo 2 (Usuarios y Seguridad):** Autenticación, Roles y Trail de Auditoría (✅ OK).
+*   **Módulo 3 (Configuración Técnica):** Productos, Especificaciones y Métodos (✅ OK).
+*   **Módulo 4 (Operaciones y Manufactura):** Backend completado, integrando con Frontend.
 
-### Fase 4: Desarrollo del Frontend e Integración (Mes 6-8)
-*   **Componentes React:** Desarrollo de formularios dinámicos y paneles de control.
-*   **Gestión de Estados:** Sincronización en tiempo real entre el Frontend y Backend.
-*   **Módulo de Análisis y Resultados:** Recepción de muestras, incubación y reporte de resultados con validación automática de límites.
-*   **Módulo de Materiales:** Gestión de stock de medios de cultivo y reactivos.
+### Fase 4: Desarrollo del Frontend e Integración (Avanzado)
+*   **Componentes React:** Dashboard, CRUDs y Formularios base completados.
+*   **UX/UI:** Diseño Premium con Glassmorphism y Animaciones Framer Motion (✅ OK).
+*   **Módulo de Análisis y Resultados:** Backend 100%, Frontend en integración final.
+*   **Módulo de Materiales:** CRUDs de Inventario funcionales.
 
-### Fase 5: Pruebas y Aseguramiento de Calidad (Mes 9)
-*   **Carga de Datos:** Pruebas de rendimiento con grandes volúmenes de información.
-*   **Validaciones de Integridad:** Verificación de que el `Audit Trail` capture todos los cambios.
-*   **Pruebas QA:** Identificación y corrección de bugs críticos.
+### Fase 5: Pruebas y Aseguramiento de Calidad (Activo)
+*   **Backend Testing:** 48/48 tests pasando con Pytest (✅ OK).
+*   **Frontend Testing:** Automatización con Playwright en progreso (Setup OK, tests críticos en desarrollo).
+*   **Validaciones:** Verificación de Audit Trail funcional en todas las capas.
 
-### Fase 6: Implementación y Puesta en Marcha (Mes 10)
-*   **Capacitación:** Talleres para operadores y supervisores.
-*   **Migración de Datos:** Carga de datos maestros (Equipos, Productos, Usuarios).
-*   **Despliegue Productivo:** Paso de SQLite a PostgreSQL y configuración de servidores de alta disponibilidad.
+### Fase 6: Implementación y Puesta en Marcha (Preparación)
+*   **Infraestructura:** `docker-compose.yml` base listo para orquestación.
+*   **Base de Datos:** Plan de migración de SQLite a PostgreSQL definido.
+
 
 ---
 

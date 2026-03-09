@@ -8,8 +8,13 @@ import RoleGuard from '../components/RoleGuard';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { plantaSchema } from '../validation/schemas';
-import FormField, { inputCls } from '../components/FormField';
+import FormField from '../components/FormField';
 import FileUploader from '../components/FileUploader';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
+import { cn } from '../lib/utils';
 
 const PlantsPage = () => {
     const [plants, setPlants] = useState([]);
@@ -47,10 +52,9 @@ const PlantsPage = () => {
             toast.loading('Generando CSV...', { id: 'exportMsg' });
             const response = await api.get('/exports/plantas.csv', { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
+            const link = document.body.appendChild(document.createElement('a'));
             link.href = url;
             link.setAttribute('download', 'plantas.csv');
-            document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
             window.URL.revokeObjectURL(url);
@@ -110,175 +114,166 @@ const PlantsPage = () => {
     );
 
     return (
-        <AnimatedPage className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gradient">Gestión de Plantas</h1>
-                    <p className="text-text-muted mt-1">Administre las ubicaciones y plantas físicas del sistema.</p>
+        <AnimatedPage className="space-y-8 pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-text-main tracking-tight">Gestión de Plantas</h1>
+                    <p className="text-text-muted font-medium italic">Administre las ubicaciones y plantas físicas del ecosistema productivo.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExportCSV}
-                        className="bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"
-                        title="Exportar a CSV"
-                    >
-                        <DownloadIcon size={20} />
-                        <span className="hidden sm:inline">Exportar CSV</span>
-                    </button>
+                    <Button variant="outline" onClick={handleExportCSV} className="rounded-xl border-border-light">
+                        <DownloadIcon size={18} className="mr-2 text-primary" />
+                        Exportar CSV
+                    </Button>
                     <RoleGuard roles={['administrador', 'supervisor']}>
-                        <button
-                            data-testid="btn-nueva-planta"
-                            onClick={() => handleOpenModal()}
-                            className="bg-grad-primary hover:brightness-110 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-accent-primary/20"
-                        >
-                            <Plus size={20} />
-                            Nueva Planta
-                        </button>
+                        <Button data-testid="btn-nueva-planta" onClick={() => handleOpenModal()} className="rounded-xl px-6 shadow-xl shadow-primary/20">
+                            <Plus size={18} className="mr-2" /> Nueva Planta
+                        </Button>
                     </RoleGuard>
                 </div>
             </div>
 
-            <div className="glass-card p-4 flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative flex-1 w-full">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o código..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-12 pr-4 text-white focus:outline-none focus:border-accent-primary transition-all"
-                    />
-                </div>
-                <button
-                    onClick={fetchPlants}
-                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
-                >
-                    <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
-                </button>
-            </div>
+            <Card className="bg-white/50 border-none shadow-none">
+                <CardContent className="p-0 flex flex-col md:flex-row gap-6 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                        <Input
+                            placeholder="Buscar por nombre o código..."
+                            className="pl-12 h-12 bg-white shadow-sm border-border-light"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <Button variant="ghost" onClick={fetchPlants} disabled={loading} className="h-12 w-12 rounded-xl">
+                        <RefreshCcw size={20} className={cn(loading && "animate-spin")} />
+                    </Button>
+                </CardContent>
+            </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {loading ? (
-                    <div className="col-span-full py-12 text-center text-text-muted">
-                        <Loader2 className="animate-spin text-accent-primary mx-auto mb-2" size={32} />
-                        <span>Cargando plantas...</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {loading && plants.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 space-y-4">
+                        <div className="animate-spin rounded-xl h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+                        <p className="text-xs font-black text-text-muted uppercase tracking-[0.2em]">Cargando Arquitectura de Planta...</p>
                     </div>
                 ) : filteredPlants.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-text-muted glass-card">
-                        No se encontraron plantas registradas.
+                    <div className="col-span-full py-24 text-center space-y-4 bg-white/50 border-2 border-dashed border-border-light rounded-3xl">
+                        <div className="w-20 h-20 rounded-full bg-bg-surface flex items-center justify-center text-text-muted mx-auto">
+                            <Layers size={40} />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-black text-text-main">No se encontraron plantas</h3>
+                            <p className="text-sm text-text-muted">Ajuste los criterios de búsqueda o registre un nuevo centro operativo.</p>
+                        </div>
                     </div>
                 ) : (
                     filteredPlants.map((plant) => (
-                        <div key={plant.planta_id} className="glass-card p-6 group hover:border-accent-primary/50 transition-all">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 rounded-2xl bg-accent-secondary/10 text-accent-secondary group-hover:bg-accent-secondary/20 transition-all">
-                                        <MapPin size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white">{plant.nombre}</h3>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{plant.codigo}</span>
-                                            <span className="w-1 h-1 rounded-full bg-white/20"></span>
-                                            <span className="text-[10px] text-text-muted uppercase">Sistema ID: {plant.sistema_id}</span>
+                        <Card key={plant.planta_id} className="group hover:border-primary/50 transition-all duration-300">
+                            <CardHeader className="pb-4">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 rounded-2xl bg-bg-surface text-primary group-hover:bg-primary/10 transition-all">
+                                            <MapPin size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-text-main group-hover:text-primary transition-colors">{plant.nombre}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs font-mono text-text-muted uppercase tracking-widest font-bold">#{plant.codigo}</span>
+                                                <span className="w-1 h-1 rounded-full bg-border-light"></span>
+                                                <span className="text-[10px] text-text-muted font-black uppercase">Sistema ID: {plant.sistema_id}</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="flex gap-1">
+                                        <RoleGuard roles={['administrador', 'supervisor']}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenModal(plant)} className="h-8 w-8 text-text-muted hover:text-primary">
+                                                <Edit2 size={16} />
+                                            </Button>
+                                        </RoleGuard>
+                                        <RoleGuard roles={['administrador']}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(plant.planta_id)} className="h-8 w-8 text-text-muted hover:text-error">
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </RoleGuard>
+                                    </div>
                                 </div>
-                                <div className="flex gap-1">
-                                    <RoleGuard roles={['administrador', 'supervisor']}>
-                                        <button
-                                            onClick={() => handleOpenModal(plant)}
-                                            className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-all"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                    </RoleGuard>
-                                    <RoleGuard roles={['administrador']}>
-                                        <button
-                                            onClick={() => handleDelete(plant.planta_id)}
-                                            className="p-2 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-all"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </RoleGuard>
-                                </div>
-                            </div>
-                            <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
-                                <span className={`text-[10px] uppercase tracking-widest font-bold ${plant.activo ? 'text-success' : 'text-error'}`}>
-                                    {plant.activo ? 'Activa' : 'Inactiva'}
-                                </span>
-                                <button className="text-xs font-semibold text-accent-primary hover:underline">Ver detalles</button>
-                            </div>
-                        </div>
+                            </CardHeader>
+                            <CardFooter className="mt-2 pt-6 border-t border-border-light flex items-center justify-between">
+                                <Badge variant={plant.activo ? "success" : "destructive"}>
+                                    {plant.activo ? 'Operativa' : 'Inactiva'}
+                                </Badge>
+                                <Button variant="link" size="sm" className="text-[10px] font-black uppercase tracking-widest h-auto p-0">
+                                    Ver Áreas Relacionadas
+                                </Button>
+                            </CardFooter>
+                        </Card>
                     ))
                 )}
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="glass-card w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute top-6 right-6 text-text-muted hover:text-white transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-text-main/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col max-h-[90vh]">
+                        <CardHeader className="bg-bg-surface border-b border-border-light pb-6">
+                            <div className="flex justify-between items-center">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-2xl font-black">{currentPlant ? 'Editar Planta' : 'Nuevo Registro de Planta'}</CardTitle>
+                                    <CardDescription>Configure las propiedades físicas del centro operativo en el LIMS.</CardDescription>
+                                </div>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 text-text-muted hover:text-text-main transition-colors">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </CardHeader>
+                        
+                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                            <CardContent className="pt-8 space-y-6 overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField label="Código" error={errors.codigo} required>
+                                        <Input data-testid="planta-codigo" {...register('codigo')} placeholder="PLT-01" />
+                                    </FormField>
+                                    <FormField label="Nombre" error={errors.nombre} required>
+                                        <Input data-testid="planta-nombre" {...register('nombre')} placeholder="Planta Principal" />
+                                    </FormField>
+                                </div>
 
-                        <h2 className="text-2xl font-bold text-gradient mb-6">
-                            {currentPlant ? 'Editar Planta' : 'Nueva Planta'}
-                        </h2>
-
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField label="Código" error={errors.codigo}>
-                                <input data-testid="planta-codigo" type="text" placeholder="Ej: PLT-01" {...register('codigo')} className={inputCls(errors.codigo)} />
-                            </FormField>
-
-                            <FormField label="Nombre" error={errors.nombre}>
-                                <input data-testid="planta-nombre" type="text" placeholder="Ej: Planta Principal" {...register('nombre')} className={inputCls(errors.nombre)} />
-                            </FormField>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField label="Sistema ID" error={errors.sistema_id}>
-                                    <input type="number" {...register('sistema_id')} className={inputCls(errors.sistema_id)} />
-                                </FormField>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-text-muted uppercase tracking-wider block">Estado</label>
-                                    <div className="flex items-center gap-4 mt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setValue('activo', !activoValue)}
-                                            className={`relative w-12 h-6 rounded-full transition-colors ${activoValue ? 'bg-success' : 'bg-white/10'}`}
-                                        >
-                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${activoValue ? 'left-7' : 'left-1'}`}></div>
-                                        </button>
-                                        <span className="text-sm text-text-muted">{activoValue ? 'Activa' : 'Inactiva'}</span>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <FormField label="ID de Sistema" error={errors.sistema_id} required>
+                                        <Input type="number" {...register('sistema_id', { valueAsNumber: true })} />
+                                    </FormField>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Estado Operativo</label>
+                                        <div className="p-3.5 rounded-xl bg-bg-surface border border-border-light flex items-center justify-between">
+                                            <span className="text-xs font-bold text-text-main">{activoValue ? 'Activa' : 'Inactiva'}</span>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" {...register('activo')} className="sr-only peer" />
+                                                <div className="w-11 h-6 bg-border-light peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-light after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success"></div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/5 transition-all">
+                                {currentPlant && (
+                                    <div className="mt-4 pt-6 border-t border-border-light">
+                                        <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-4">Gestión Documental</h4>
+                                        <FileUploader
+                                            entidadTipo="planta"
+                                            entidadId={currentPlant.planta_id}
+                                        />
+                                    </div>
+                                )}
+                            </CardContent>
+
+                            <CardFooter className="bg-bg-surface border-t border-border-light p-6 justify-end gap-3 flex-shrink-0">
+                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl border-border-light">
                                     Cancelar
-                                </button>
-                                <button data-testid="planta-submit" type="submit" disabled={submitting}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-grad-primary text-white font-semibold shadow-lg shadow-accent-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                                    {currentPlant ? 'Guardar Cambios' : 'Crear Planta'}
-                                </button>
-                            </div>
+                                </Button>
+                                <Button data-testid="planta-submit" type="submit" disabled={submitting} className="rounded-xl px-8 shadow-lg shadow-primary/30">
+                                    {submitting ? <Loader2 className="animate-spin" size={18} /> : (currentPlant ? 'Actualizar' : 'Guardar Planta')}
+                                </Button>
+                            </CardFooter>
                         </form>
-
-                        {/* Area de Subida de Documentos (solo si estamos editando una existente) */}
-                        {currentPlant && (
-                            <div className="mt-8 pt-6 border-t border-white/10">
-                                <FileUploader
-                                    entidadTipo="planta"
-                                    entidadId={currentPlant.planta_id}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    </Card>
                 </div>
             )}
         </AnimatedPage>

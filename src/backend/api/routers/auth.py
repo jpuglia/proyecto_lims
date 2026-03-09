@@ -9,21 +9,26 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.backend.api.dependencies import get_db, get_auth_service
 from src.backend.api.security import (
     hash_password, verify_password, create_access_token, 
-    get_current_user, get_current_user_optional, get_user_roles
+    get_current_user, get_current_user_optional, get_user_roles,
+    get_user_laboratorios
 )
 from src.backend.api.schemas.auth import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse,
     RolCreate, RolResponse,
     UsuarioRolCreate, UsuarioRolResponse,
+    LaboratorioCreate, LaboratorioResponse,
+    UsuarioLaboratorioCreate, UsuarioLaboratorioResponse,
     OperarioCreate, OperarioUpdate, OperarioResponse,
-    AuditTrailResponse,
-    LoginRequest, TokenResponse, SignatureRequest
+    AuditLogResponse,
+    LoginRequest, TokenResponse, SignatureRequest,
+    UserRolesSync, UserLaboratoriosSync
 )
-from src.backend.models.auth import Usuario, UsuarioRol, Rol
+from src.backend.models.auth import Usuario, UsuarioRol, Rol, Laboratorio, UsuarioLaboratorio
 from src.backend.repositories.auth import (
     UsuarioRepository, RolRepository, UsuarioRolRepository, OperarioRepository,
-    AuditTrailRepository,
+    LaboratorioRepository, UsuarioLaboratorioRepository
 )
+from src.backend.repositories.audit import AuditLogRepository
 from src.backend.services.auth_service import AuthService
 
 router = APIRouter()
@@ -41,19 +46,24 @@ def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not verify_password(body.password, usuario.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
 
-    # Cargar roles del usuario para incluirlos en el token
-    usuario_con_roles = (
+    # Cargar roles y laboratorios del usuario para incluirlos en el token
+    usuario_full = (
         db.query(Usuario)
-        .options(joinedload(Usuario.roles).joinedload(UsuarioRol.rol))
+        .options(
+            joinedload(Usuario.roles).joinedload(UsuarioRol.rol),
+            joinedload(Usuario.laboratorios).joinedload(UsuarioLaboratorio.laboratorio)
+        )
         .filter(Usuario.usuario_id == usuario.usuario_id)
         .first()
     )
-    roles = get_user_roles(usuario_con_roles) if usuario_con_roles else []
+    roles = get_user_roles(usuario_full) if usuario_full else []
+    laboratorios = get_user_laboratorios(usuario_full) if usuario_full else []
 
     token = create_access_token(data={
         "sub": str(usuario.usuario_id),
         "username": usuario.nombre,
         "roles": roles,
+        "laboratorios": laboratorios
     })
     return TokenResponse(access_token=token)
 
@@ -120,6 +130,28 @@ def update_usuario(usuario_id: int, body: UsuarioUpdate, db: Session = Depends(g
     return updated
 
 
+@router.put("/usuarios/{usuario_id}/roles", response_model=dict)
+def sync_usuario_roles(usuario_id: int, body: UserRolesSync, db: Session = Depends(get_db)):
+    repo = UsuarioRepository()
+    usuario = repo.get(db, usuario_id)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    repo.sync_roles(db, usuario_id, body.roles_ids)
+    return {"message": "Roles actualizados exitosamente"}
+
+
+@router.put("/usuarios/{usuario_id}/laboratorios", response_model=dict)
+def sync_usuario_laboratorios(usuario_id: int, body: UserLaboratoriosSync, db: Session = Depends(get_db)):
+    repo = UsuarioRepository()
+    usuario = repo.get(db, usuario_id)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    repo.sync_laboratorios(db, usuario_id, body.laboratorios_ids)
+    return {"message": "Laboratorios actualizados exitosamente"}
+
+
 # ─── Roles ────────────────────────────────────────────────────
 
 @router.post("/roles", response_model=RolResponse, status_code=status.HTTP_201_CREATED)
@@ -167,12 +199,18 @@ def get_operario(operario_id: int, db: Session = Depends(get_db)):
 
 # ─── Audit Trail ─────────────────────────────────────────────
 
-@router.get("/audit-trail", response_model=List[AuditTrailResponse])
+@router.get("/audit-trail", response_model=List[AuditLogResponse])
 def list_audit_trail(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    repo = AuditTrailRepository()
+    repo = AuditLogRepository()
     return repo.get_all(db, skip=skip, limit=limit)
 
 
 @router.get("/me", response_model=UsuarioResponse)
 def get_me(current_user: Usuario = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/laboratorios", response_model=List[LaboratorioResponse])
+def get_laboratorios(db: Session = Depends(get_db)):
+    repo = LaboratorioRepository()
+    return repo.get_all(db)

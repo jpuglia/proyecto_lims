@@ -14,8 +14,9 @@ from src.backend.database.db_manager import db_manager
 # ─── Repositories ───────────────────────────────────────────────
 from src.backend.repositories.auth import (
     UsuarioRepository, RolRepository, UsuarioRolRepository,
-    AuditTrailRepository, RevisionRepository, OperarioRepository,
+    RevisionRepository, OperarioRepository,
 )
+from src.backend.repositories.audit import AuditLogRepository
 from src.backend.repositories.dim import (
     SistemaRepository, PlantaRepository, AreaRepository,
     TipoEquipoRepository, EstadoEquipoRepository, EquipoInstrumentoRepository,
@@ -64,7 +65,7 @@ def get_db() -> Generator[Session, None, None]:
 def get_auth_service() -> AuthService:
     return AuthService(
         usuario_repo=UsuarioRepository(),
-        audit_repo=AuditTrailRepository(),
+        audit_repo=AuditLogRepository(),
     )
 
 

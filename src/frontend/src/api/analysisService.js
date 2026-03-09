@@ -12,6 +12,9 @@ export const analysisService = {
     create: (data) =>
         api.post(BASE + '/', data).then((r) => r.data),
 
+    createBulk: (data) =>
+        api.post(BASE + '/bulk', data).then((r) => r.data),
+
     update: (id, data) =>
         api.put(`${BASE}/${id}`, data).then((r) => r.data),
 
@@ -21,6 +24,9 @@ export const analysisService = {
     registerIncubation: (data) =>
         api.post(`${BASE}/incubaciones`, data).then((r) => r.data),
 
+    updateIncubation: (id, data) =>
+        api.put(`${BASE}/incubaciones/${id}`, data).then((r) => r.data),
+
     registerResult: (data) =>
         api.post(`${BASE}/resultados`, data).then((r) => r.data),
 
@@ -29,6 +35,9 @@ export const analysisService = {
 
     registerUsageStrain: (data) =>
         api.post(`${BASE}/uso-cepas`, data).then((r) => r.data),
+
+    changeStatus: (id, nuevo_estado_id, operario_id) =>
+        api.post(`${BASE}/${id}/estado`, { nuevo_estado_id, operario_id }).then((r) => r.data),
 
     getReport: (solicitudId) =>
         api.get(`${BASE}/report/${solicitudId}`).then((r) => r.data),

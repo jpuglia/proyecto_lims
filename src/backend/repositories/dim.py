@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from src.backend.repositories.base import BaseRepository
 from src.backend.models.dim import (Sistema, Planta, Area, TipoEquipo, EstadoEquipo, 
-                                     EquipoInstrumento, ZonaEquipo, CalibracionCalificacionEquipo, 
-                                     HistoricoEstadoEquipo, PuntoMuestreo)
+                                     EquipoInstrumento, ZonaEquipo, ZonaArea, CalibracionCalificacionEquipo, 
+                                     HistoricoEstadoEquipo, PuntoMuestreo, TipoSolicitudMuestreo)
 
 class SistemaRepository(BaseRepository[Sistema]):
     def __init__(self):
@@ -18,8 +18,14 @@ class AreaRepository(BaseRepository[Area]):
     def __init__(self):
         super().__init__(Area)
 
+    def get_all(self, db: Session, skip: int = 0, limit: int = 100, only_active: bool = True) -> List[Area]:
+        query = db.query(self.model).options(joinedload(self.model.zonas))
+        if only_active:
+            query = query.filter(self.model.activo == True)
+        return query.offset(skip).limit(limit).all()
+
     def get_by_planta(self, db: Session, planta_id: int) -> List[Area]:
-        return db.query(self.model).filter(self.model.planta_id == planta_id).all()
+        return db.query(self.model).options(joinedload(self.model.zonas)).filter(self.model.planta_id == planta_id).all()
 
 class TipoEquipoRepository(BaseRepository[TipoEquipo]):
     def __init__(self):
@@ -44,6 +50,10 @@ class ZonaEquipoRepository(BaseRepository[ZonaEquipo]):
     def __init__(self):
         super().__init__(ZonaEquipo)
 
+class ZonaAreaRepository(BaseRepository[ZonaArea]):
+    def __init__(self):
+        super().__init__(ZonaArea)
+
 class CalibracionCalificacionEquipoRepository(BaseRepository[CalibracionCalificacionEquipo]):
     def __init__(self):
         super().__init__(CalibracionCalificacionEquipo)
@@ -55,3 +65,7 @@ class HistoricoEstadoEquipoRepository(BaseRepository[HistoricoEstadoEquipo]):
 class PuntoMuestreoRepository(BaseRepository[PuntoMuestreo]):
     def __init__(self):
         super().__init__(PuntoMuestreo)
+
+class TipoSolicitudMuestreoRepository(BaseRepository[TipoSolicitudMuestreo]):
+    def __init__(self):
+        super().__init__(TipoSolicitudMuestreo)

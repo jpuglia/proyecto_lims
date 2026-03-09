@@ -46,4 +46,11 @@ export const manufacturingService = {
             nuevo_estado_id: nuevoEstadoId,
             usuario_id: usuarioId,
         }).then((r) => r.data),
+
+    // ─── Materiales de Manufactura ───────────────────────────────────────
+    getMateriales: (manufacturaId) =>
+        api.get(`${PROCESOS}/${manufacturaId}/materiales`).then((r) => r.data),
+
+    registerMaterial: (manufacturaId, data) =>
+        api.post(`${PROCESOS}/${manufacturaId}/materiales`, data).then((r) => r.data),
 };

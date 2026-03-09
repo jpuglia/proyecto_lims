@@ -30,7 +30,10 @@ test.describe('Manufacturing Workflow — Step-by-Step Traceability', () => {
         await expect(operatorSelect.locator('option').nth(1)).toBeAttached({ timeout: 10_000 });
         await operatorSelect.selectOption({ value: '1' });
         
-        await page.getByRole('button', { name: /crear/i }).click();
+        // Submit via keyboard to avoid viewport issues
+        await page.locator('input[name="cantidad"]').focus();
+        await page.keyboard.press('Enter');
+        
         await expect(page.getByText(/orden creada/i)).toBeVisible();
 
         // 2. Iniciar Proceso (Click en 'Play' de la primera fila)

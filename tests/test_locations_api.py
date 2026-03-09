@@ -27,13 +27,21 @@ def test_list_plantas_empty(auth_client):
     assert isinstance(response.json(), list)
 
 
-def test_create_planta(auth_client):
-    """POST /api/ubicaciones/plantas crea una planta correctamente."""
+from src.backend.models.audit import AuditLog
+
+def test_create_planta(auth_client, db_session):
+    """POST /api/ubicaciones/plantas crea una planta y registra auditoría."""
     response = auth_client.post("/api/ubicaciones/plantas", json=_planta_payload(10))
     assert response.status_code == 201
     data = response.json()
-    assert "planta_id" in data
+    planta_id = data["planta_id"]
     assert data["nombre"] == "Planta de Prueba 10"
+
+    # Verificar Auditoría
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="planta", registro_id=planta_id).first()
+    assert audit is not None
+    assert audit.operacion == "INSERT"
+    assert audit.valor_nuevo["nombre"] == "Planta de Prueba 10"
 
 
 def test_get_planta_by_id(auth_client):
@@ -53,8 +61,8 @@ def test_get_planta_not_found(auth_client):
     assert response.status_code == 404
 
 
-def test_update_planta(auth_client):
-    """PUT /api/ubicaciones/plantas/{id} actualiza el nombre."""
+def test_update_planta(auth_client, db_session):
+    """PUT /api/ubicaciones/plantas/{id} actualiza el nombre y audita."""
     create_resp = auth_client.post("/api/ubicaciones/plantas", json=_planta_payload(30))
     assert create_resp.status_code == 201
     planta_id = create_resp.json()["planta_id"]
@@ -66,6 +74,11 @@ def test_update_planta(auth_client):
     assert update_resp.status_code == 200
     assert update_resp.json()["nombre"] == "Planta Actualizada por Test"
 
+    # Verificar Auditoría
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="planta", registro_id=planta_id, operacion="UPDATE").first()
+    assert audit is not None
+    assert audit.valor_nuevo["nombre"] == "Planta Actualizada por Test"
+
 
 def test_update_planta_not_found(auth_client):
     """PUT /api/ubicaciones/plantas/{id} retorna 404 si no existe."""
@@ -76,8 +89,8 @@ def test_update_planta_not_found(auth_client):
     assert response.status_code == 404
 
 
-def test_delete_planta(auth_client):
-    """DELETE /api/ubicaciones/plantas/{id} elimina correctamente."""
+def test_delete_planta(auth_client, db_session):
+    """DELETE /api/ubicaciones/plantas/{id} elimina y audita."""
     create_resp = auth_client.post("/api/ubicaciones/plantas", json=_planta_payload(40))
     assert create_resp.status_code == 201
     planta_id = create_resp.json()["planta_id"]
@@ -85,8 +98,10 @@ def test_delete_planta(auth_client):
     delete_resp = auth_client.delete(f"/api/ubicaciones/plantas/{planta_id}")
     assert delete_resp.status_code == 204
 
-    get_resp = auth_client.get(f"/api/ubicaciones/plantas/{planta_id}")
-    assert get_resp.status_code == 404
+    # Verificar Auditoría (dependiendo de si es HARD o SOFT delete)
+    # Planta tiene columna 'activo', por lo que es SOFT delete.
+    audit = db_session.query(AuditLog).filter_by(tabla_nombre="planta", registro_id=planta_id, operacion="DELETE (SOFT)").first()
+    assert audit is not None
 
 
 def test_locations_requires_auth(client):

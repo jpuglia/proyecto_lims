@@ -9,14 +9,16 @@ class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T]):
         self.model = model
 
-    def get(self, db: Session, id: int, options: Optional[List] = None) -> Optional[T]:
+    def get(self, db: Session, id: int, options: Optional[List] = None, only_active: bool = True) -> Optional[T]:
         primary_key = self.model.__mapper__.primary_key[0].name
         query = db.query(self.model)
+        if only_active and hasattr(self.model, "activo"):
+            query = query.filter(self.model.activo == True)
         if options:
             query = query.options(*options)
         return query.filter(getattr(self.model, primary_key) == id).first()
 
-    def get_all(self, db: Session, skip: int = 0, limit: int = 100, options: Optional[List] = None, only_active: bool = False) -> List[T]:
+    def get_all(self, db: Session, skip: int = 0, limit: int = 100, options: Optional[List] = None, only_active: bool = True) -> List[T]:
         query = db.query(self.model)
         if only_active and hasattr(self.model, "activo"):
             query = query.filter(self.model.activo == True)

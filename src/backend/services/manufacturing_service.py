@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from src.backend.repositories.fact import (OrdenManufacturaRepository, ManufacturaRepository, 
                                            HistoricoEstadoManufacturaRepository, EstadoManufacturaRepository,
                                            ManufacturaOperarioRepository)
-from src.backend.models.fact import Manufactura, OrdenManufactura, HistoricoEstadoManufactura, ManufacturaOperario
+from src.backend.models.fact import Manufactura, OrdenManufactura, HistoricoEstadoManufactura, ManufacturaOperario, UsoMaterialManufactura
 
 class ManufacturingService:
     def __init__(self,
@@ -76,12 +76,35 @@ class ManufacturingService:
             data["entrada"] = datetime.now(timezone.utc)
         return self.operario_repo.create(db, data)
 
+    def register_material_usage(self, db: Session, data: dict) -> UsoMaterialManufactura:
+        """Registra el uso de materia prima en un proceso de manufactura."""
+        uso = UsoMaterialManufactura(
+            manufactura_id=data["manufactura_id"],
+            stock_polvo_suplemento_id=data["stock_polvo_suplemento_id"],
+            cantidad=data["cantidad"],
+            unidad=data["unidad"],
+            fecha_uso=datetime.now(timezone.utc)
+        )
+        db.add(uso)
+        db.commit()
+        db.refresh(uso)
+        return uso
+
     def get_operators_by_process(self, db: Session, manufactura_id: int) -> List[ManufacturaOperario]:
         """Retorna todos los operarios asignados a un proceso."""
         return (
             db.query(ManufacturaOperario)
             .options(joinedload(ManufacturaOperario.operario))
             .filter(ManufacturaOperario.manufactura_id == manufactura_id)
+            .all()
+        )
+
+    def get_materials_by_process(self, db: Session, manufactura_id: int) -> List[UsoMaterialManufactura]:
+        """Retorna todos los materiales registrados en un proceso."""
+        return (
+            db.query(UsoMaterialManufactura)
+            .options(joinedload(UsoMaterialManufactura.stock_polvo))
+            .filter(UsoMaterialManufactura.manufactura_id == manufactura_id)
             .all()
         )
 

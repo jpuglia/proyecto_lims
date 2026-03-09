@@ -29,6 +29,7 @@ ROLES_BASE = [
     "analista",
     "operador",
     "auditor",
+    "inspector",
 ]
 
 def seed_roles():

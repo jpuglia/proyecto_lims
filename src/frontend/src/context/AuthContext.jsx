@@ -7,6 +7,11 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const logout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -14,12 +19,12 @@ export const AuthProvider = ({ children }) => {
                 const decoded = jwtDecode(token);
                 // Check if token is expired
                 if (decoded.exp * 1000 < Date.now()) {
-                    logout();
+                    setTimeout(() => logout(), 0);
                 } else {
                     setUser(decoded);
                 }
-            } catch (error) {
-                logout();
+            } catch {
+                setTimeout(() => logout(), 0);
             }
         }
         setLoading(false);
@@ -29,11 +34,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token);
         const decoded = jwtDecode(token);
         setUser(decoded);
-    };
-
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
     };
 
     /**

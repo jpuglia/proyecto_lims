@@ -1,12 +1,13 @@
 # Export all models for easy importing and for SQLAlchemy metadata detection
 from src.backend.models.base import Base
 
-from src.backend.models.auth import Usuario, Rol, UsuarioRol, AuditTrail, Revision, Operario
+from src.backend.models.auth import Usuario, Rol, UsuarioRol, AuditTrail, Revision, Operario, Laboratorio, UsuarioLaboratorio
 from src.backend.models.dim import Sistema, Planta, Area, TipoEquipo, EstadoEquipo, EquipoInstrumento, ZonaEquipo, CalibracionCalificacionEquipo, HistoricoEstadoEquipo, PuntoMuestreo
 from src.backend.models.master import Producto, Especificacion, MetodoVersion, CepaReferencia
-from src.backend.models.fact import EstadoManufactura, OrdenManufactura, Manufactura, ManufacturaOperario, HistoricoEstadoManufactura, EstadoSolicitud, SolicitudMuestreo, HistoricoSolicitudMuestreo, Muestreo, Muestra, EnvioMuestra, Recepcion, EstadoAnalisis, Analisis, HistorialEstadoAnalisis, Incubacion, Resultado
+from src.backend.models.fact import EstadoManufactura, OrdenManufactura, Manufactura, ManufacturaOperario, HistoricoEstadoManufactura, EstadoSolicitud, SolicitudMuestreo, SolicitudMuestreoEquipo, HistoricoSolicitudMuestreo, Muestreo, Muestra, EnvioMuestra, Recepcion, EstadoAnalisis, Analisis, UsoEquipoAnalisis, HistorialEstadoAnalisis, Incubacion, Resultado
 from src.backend.models.inventory import PolvoSuplemento, RecepcionPolvoSuplemento, StockPolvoSuplemento, UsoPolvoSuplemento, MedioPreparado, OrdenPreparacionMedio, EstadoQC, StockMedios, AprobacionMedios, UsoMedios, UsoCepa
 from src.backend.models.documents import Documento
+from src.backend.models.inspection import Sampling
 
 __all__ = [
     "Base",
@@ -14,5 +15,6 @@ __all__ = [
     "Sistema", "Planta", "Area", "TipoEquipo", "EstadoEquipo", "EquipoInstrumento", "ZonaEquipo", "CalibracionCalificacionEquipo", "HistoricoEstadoEquipo", "PuntoMuestreo",
     "Producto", "Especificacion", "MetodoVersion", "CepaReferencia",
     "EstadoManufactura", "OrdenManufactura", "Manufactura", "ManufacturaOperario", "HistoricoEstadoManufactura", "EstadoSolicitud", "SolicitudMuestreo", "HistoricoSolicitudMuestreo", "Muestreo", "Muestra", "EnvioMuestra", "Recepcion", "EstadoAnalisis", "Analisis", "HistorialEstadoAnalisis", "Incubacion", "Resultado",
-    "PolvoSuplemento", "RecepcionPolvoSuplemento", "StockPolvoSuplemento", "UsoPolvoSuplemento", "MedioPreparado", "OrdenPreparacionMedio", "EstadoQC", "StockMedios", "AprobacionMedios", "UsoMedios", "UsoCepa"
+    "PolvoSuplemento", "RecepcionPolvoSuplemento", "StockPolvoSuplemento", "UsoPolvoSuplemento", "MedioPreparado", "OrdenPreparacionMedio", "EstadoQC", "StockMedios", "AprobacionMedios", "UsoMedios", "UsoCepa",
+    "Sampling"
 ]

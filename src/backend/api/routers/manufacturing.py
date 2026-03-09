@@ -12,6 +12,7 @@ from src.backend.api.schemas.fact import (
     CambioEstadoManufacturaRequest,
     EstadoManufacturaResponse, HistoricoEstadoManufacturaResponse,
     ManufacturaOperarioCreate, ManufacturaOperarioResponse, ManufacturaOperarioDetalleResponse,
+    UsoMaterialManufacturaCreate, UsoMaterialManufacturaResponse, UsoMaterialManufacturaDetalleResponse,
 )
 from src.backend.repositories.fact import (
     OrdenManufacturaRepository, ManufacturaRepository, EstadoManufacturaRepository,
@@ -184,4 +185,31 @@ def list_operators(
     """Lista los operarios asignados a un proceso específico."""
     operarios = service.get_operators_by_process(db, manufactura_id)
     return [ManufacturaOperarioDetalleResponse.from_orm_extended(o) for o in operarios]
+
+
+# ─── Materiales de Manufactura ──────────────────────────────────────────────
+
+@router.post("/procesos/{manufactura_id}/materiales", response_model=UsoMaterialManufacturaResponse,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def register_material(
+    manufactura_id: int,
+    body: UsoMaterialManufacturaCreate,
+    db: Session = Depends(get_db),
+    service: ManufacturingService = Depends(get_manufacturing_service),
+):
+    """Registra el uso de un material en un proceso de manufactura."""
+    if body.manufactura_id != manufactura_id:
+        raise HTTPException(status_code=400, detail="ID de manufactura no coincide")
+    return service.register_material_usage(db, body.model_dump())
+
+
+@router.get("/procesos/{manufactura_id}/materiales", response_model=List[UsoMaterialManufacturaDetalleResponse])
+def list_materials(
+    manufactura_id: int,
+    db: Session = Depends(get_db),
+    service: ManufacturingService = Depends(get_manufacturing_service),
+):
+    """Lista los materiales utilizados en un proceso específico."""
+    materiales = service.get_materials_by_process(db, manufactura_id)
+    return [UsoMaterialManufacturaDetalleResponse.from_orm_extended(m) for m in materiales]
 

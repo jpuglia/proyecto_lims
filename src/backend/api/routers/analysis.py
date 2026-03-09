@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from src.backend.api.dependencies import get_db, get_analysis_service
 from src.backend.api.schemas.fact import (
-    AnalisisCreate, AnalisisResponse, AnalisisUpdate,
+    AnalisisCreate, AnalisisBulkCreate, AnalisisResponse, AnalisisUpdate,
     CambioEstadoAnalisisRequest,
-    IncubacionCreate, IncubacionResponse,
+    IncubacionCreate, IncubacionResponse, IncubacionUpdate,
     ResultadoCreate, ResultadoResponse,
     UsoMediosCreate, UsoCepaCreate, ReporteConsolidadoResponse
 )
@@ -19,7 +19,7 @@ from src.backend.models.auth import Usuario
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
-_OPERATIVOS = ["administrador", "supervisor", "analista", "operador"]
+_OPERATIVOS = ["administrador", "supervisor", "analista", "operador", "inspector"]
 _ESCRITURA  = ["administrador", "supervisor"]
 
 
@@ -34,6 +34,16 @@ def create_analisis(
     current_user: Usuario = Depends(get_current_user),
 ):
     return service.create_analisis(db, body.model_dump(), body.operario_id)
+
+
+@router.post("/bulk", response_model=List[AnalisisResponse], status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def create_bulk_analisis(
+    body: AnalisisBulkCreate,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    return service.create_bulk_analisis(db, body.model_dump())
 
 
 @router.get("/", response_model=List[AnalisisResponse])
@@ -102,19 +112,41 @@ def create_incubacion(
     return service.start_incubation(db, body.model_dump())
 
 
+@router.put("/incubaciones/{incubacion_id}", response_model=IncubacionResponse,
+            dependencies=[Depends(require_role(*_OPERATIVOS))])
+def update_incubacion(
+    incubacion_id: int,
+    body: IncubacionUpdate,
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    return service.finish_incubation(db, incubacion_id=incubacion_id, update_data=body.model_dump(exclude_unset=True))
+
+
 # ─── Resultados ──────────────────────────────────────────────
 
 @router.post("/resultados", response_model=ResultadoResponse, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role(*_OPERATIVOS))])
 def register_resultado(
     body: ResultadoCreate,
+    is_final: bool = False,
     db: Session = Depends(get_db),
     service: AnalysisService = Depends(get_analysis_service),
 ):
-    return service.register_resultado(db, body.model_dump())
+    return service.register_resultado(db, body.model_dump(), is_final=is_final)
 
 
 # ─── Recursos ────────────────────────────────────────────────
+
+@router.post("/uso-equipos", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_OPERATIVOS))])
+def register_uso_equipos(
+    body: dict, # Solicitud simple para demo
+    db: Session = Depends(get_db),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    return service.register_usage_equipment(db, body)
+
 
 @router.post("/uso-medios", status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role(*_OPERATIVOS))])

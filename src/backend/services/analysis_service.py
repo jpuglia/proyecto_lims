@@ -9,7 +9,7 @@ from src.backend.repositories.fact import (AnalisisRepository, EstadoAnalisisRep
                                            RecepcionRepository)
 from src.backend.repositories.inventory import UsoMediosRepository, UsoCepaRepository
 from src.backend.repositories.master import EspecificacionRepository
-from src.backend.models.fact import Analisis, Incubacion, Resultado
+from src.backend.models.fact import Analisis, Incubacion, Resultado, UsoEquipoAnalisis
 
 class AnalysisService:
     def __init__(self,
@@ -24,7 +24,7 @@ class AnalysisService:
         self.analisis_repo = analisis_repo
         self.estado_analisis_repo = estado_analisis_repo
         self.historial_repo = historial_repo
-        self.incubacion_repo = incubacion_repo
+        self.incubacion_repo = incubator_repo = incubacion_repo
         self.resultado_repo = resultado_repo
         self.especificacion_repo = especificacion_repo
         self.uso_medios_repo = uso_medios_repo
@@ -37,7 +37,7 @@ class AnalysisService:
 
         update_data = {"estado_analisis_id": nuevo_estado_id, "ultimo_cambio": datetime.now(timezone.utc)}
         
-        # 'En proceso' (2) trigger
+        # 'En ejecución' (2) trigger
         if nuevo_estado_id == 2 and not analisis.fecha_inicio:
             update_data["fecha_inicio"] = datetime.now(timezone.utc)
 
@@ -64,10 +64,46 @@ class AnalysisService:
         })
         return analisis
 
+    def create_bulk_analisis(self, db: Session, bulk_data: dict) -> List[Analisis]:
+        results = []
+        for metodo_id in bulk_data["metodos_versions_ids"]:
+            analisis_data = {
+                "muestra_id": bulk_data["muestra_id"],
+                "recepcion_id": bulk_data["recepcion_id"],
+                "metodo_version_id": metodo_id,
+                "estado_analisis_id": bulk_data.get("estado_analisis_id", 1),
+                "operario_id": bulk_data["operario_id"]
+            }
+            res = self.create_analisis(db, analisis_data, bulk_data["operario_id"])
+            results.append(res)
+        return results
+
     def start_incubation(self, db: Session, incubacion_data: dict) -> Incubacion:
+        # Link analysis to incubation
         return self.incubacion_repo.create(db, incubacion_data)
 
-    def register_resultado(self, db: Session, resultado_data: dict) -> Resultado:
+    def finish_incubation(self, db: Session, incubacion_id: int, update_data: dict) -> Incubacion:
+        inc = self.incubacion_repo.get(db, incubacion_id)
+        if not inc:
+            raise ValueError("Incubación no encontrada.")
+        return self.incubacion_repo.update(db, inc, update_data)
+
+    def register_usage_equipment(self, db: Session, usage_data: dict) -> UsoEquipoAnalisis:
+        from src.backend.repositories.dim import EquipoInstrumentoRepository
+        eq_repo = EquipoInstrumentoRepository()
+        eq = eq_repo.get(db, usage_data["equipo_instrumento_id"])
+        if not eq:
+            raise ValueError("El equipo no existe.")
+        
+        # In a real scenario, check if active/calibrated
+        
+        usage = UsoEquipoAnalisis(**usage_data)
+        db.add(usage)
+        db.commit()
+        db.refresh(usage)
+        return usage
+
+    def register_resultado(self, db: Session, resultado_data: dict, is_final: bool = False) -> Resultado:
         # Evaluate specification if provided numerically
         analisis = self.analisis_repo.get(db, resultado_data["analisis_id"])
         
@@ -85,7 +121,18 @@ class AnalysisService:
                     
         resultado_data["conforme"] = conforme
         
-        return self.resultado_repo.create(db, resultado_data)
+        # Check if already has a result (for overwriting in final)
+        existing_res = db.query(Resultado).filter_by(analisis_id=resultado_data["analisis_id"]).first()
+        if existing_res:
+            res = self.resultado_repo.update(db, existing_res, resultado_data)
+        else:
+            res = self.resultado_repo.create(db, resultado_data)
+        
+        # Update Analysis Status
+        new_state = 4 if is_final else 3 # 3: Preliminar, 4: Final
+        self.change_analysis_state(db, res.analisis_id, new_state, res.operario_id)
+        
+        return res
 
     def register_usage_media(self, db: Session, usage_data: dict):
         # Validate media is approved (ID 2)

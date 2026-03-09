@@ -113,6 +113,11 @@ def get_user_roles(usuario: Usuario) -> list:
     return [ur.rol.nombre for ur in (usuario.roles or []) if ur.rol]
 
 
+def get_user_laboratorios(usuario: Usuario) -> list:
+    """Return list of laboratory names for a given Usuario."""
+    return [ul.laboratorio.nombre for ul in (usuario.laboratorios or []) if ul.laboratorio]
+
+
 # ─── RBAC Dependency Factory ─────────────────────────────────
 
 def require_role(*roles: str):

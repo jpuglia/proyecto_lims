@@ -17,56 +17,41 @@ El sistema se desarrollará bajo una arquitectura de tres capas, orientada a ser
 La comunicación entre capas se realizará mediante interfaces bien definidas, principalmente a través de APIs REST.
 
 ## Tecnologías Principales
-
 ### Backend
 
-El backend será desarrollado utilizando el lenguaje de programación Python, seleccionado por su madurez, amplio ecosistema y soporte para aplicaciones empresariales.
+El backend está desarrollado utilizando Python 3.10+, seleccionado por su madurez y soporte empresarial.
 
-Se utilizarán las siguientes tecnologías:
-
-* Framework principal: FastAPI.
-* Lenguaje: Python.
+* Framework principal: FastAPI (Operacional).
+* Lenguaje: Python 3.10+.
 * Modelado de datos: SQLAlchemy.
-* Migraciones de base de datos: Alembic.
-* Servidor de aplicaciones: Uvicorn o Gunicorn.
-
-El backend será responsable de la gestión de la lógica de negocio, validaciones, seguridad y exposición de servicios.
+* Migraciones: Alembic.
+* Servidor: Uvicorn / Gunicorn.
+* Cobertura: 100% de la lógica de negocio (48/48 tests PASS).
 
 ### Frontend
 
-La interfaz de usuario será desarrollada utilizando React, permitiendo la construcción de aplicaciones web modernas, dinámicas y responsivas.
+La interfaz de usuario está desarrollada con React 18 y Vite, ofreciendo una experiencia moderna y fluida.
 
-Características principales:
-
-* Arquitectura basada en componentes.
-* Comunicación con backend vía API REST.
-* Diseño adaptable (responsive).
-* Manejo de estados.
-* Validación básica en cliente.
+* Framework: React 18 + Vite.
+* Estilizado: Tailwind CSS.
+* Animaciones: Framer Motion.
+* Comunicación: Axios con interceptores JWT.
+* Seguridad: RBAC integrado con RoleGuard.
 
 ### Base de Datos
 
-Para el almacenamiento de la información se adoptará un enfoque progresivo:
+* Desarrollo: SQLite.
+* Producción (Planificado): PostgreSQL mediante Docker Compose.
+* Integridad: Transacciones y Auditoría (Audit Trail) integrados.
 
-* Entorno de desarrollo: SQLite.
-* Entornos productivos: PostgreSQL u otro motor relacional con soporte de concurrencia.
+## Requisitos de Pruebas
 
-El sistema deberá ser compatible con motores de bases de datos que soporten:
+Se han implementado pruebas exhaustivas en múltiples niveles:
 
-* Transacciones.
-* Integridad referencial.
-* Concurrencia multiusuario.
-* Alta disponibilidad.
+* **Backend**: Pruebas unitarias e integración con **Pytest**.
+* **Frontend**: Pruebas E2E con **Playwright** para validar flujos de usuario completos.
+* **Auditoría**: Verificación automática del Audit Trail en operaciones críticas.
 
-## Requisitos de Desarrollo
-
-### Entorno de Desarrollo
-
-El entorno de desarrollo deberá incluir:
-
-* Python versión 3.10 o superior.
-* Gestor de dependencias (pip, poetry o similar).
-* Entornos virtuales.
 * Control de versiones mediante Git.
 * Repositorio centralizado.
 

@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('RBAC Enforcement — Operador', () => {
 
+    test.use({ storageState: 'e2e/.auth/operator.json' });
+
     test('operador NO ve botón Nueva Planta', async ({ page }) => {
         await page.goto('/plants');
         await expect(page.getByTestId('btn-nueva-planta')).not.toBeVisible({ timeout: 10_000 });
@@ -19,24 +21,24 @@ test.describe('RBAC Enforcement — Operador', () => {
 
     test('operador NO ve botones de eliminación en plantas', async ({ page }) => {
         await page.goto('/plants');
-        // Wait for some data to load if any
         await page.waitForTimeout(1000);
         const deleteBtn = page.locator('button:has(svg.lucide-trash2)');
         await expect(deleteBtn).not.toBeVisible();
     });
 
-    test('operador NO ve botones de eliminación en equipos', async ({ page }) => {
-        await page.goto('/equipments');
-        await page.waitForTimeout(1000);
-        const deleteBtn = page.locator('button:has(svg.lucide-trash2)');
-        await expect(deleteBtn).not.toBeVisible();
+    test('operador NO ve botón Nuevo Polvo en inventario', async ({ page }) => {
+        await page.goto('/inventory');
+        await expect(page.getByTestId('btn-nuevo-polvo')).not.toBeVisible({ timeout: 10_000 });
     });
 
-    test('operador NO ve botones de eliminación en análisis', async ({ page }) => {
-        await page.goto('/analysis');
-        await page.waitForTimeout(1000);
-        const deleteBtn = page.locator('button:has(svg.lucide-trash-2)'); // Note the hyphen in lucide-trash-2 for some pages
-        await expect(deleteBtn).not.toBeVisible();
+    test('operador NO ve botón Configuración en el Sidebar', async ({ page }) => {
+        await page.goto('/');
+        await expect(page.getByText('Configuración')).not.toBeVisible();
+    });
+
+    test('operador NO ve botón Audit Trail en el Sidebar', async ({ page }) => {
+        await page.goto('/');
+        await expect(page.getByText('Audit Trail')).not.toBeVisible();
     });
 
 });

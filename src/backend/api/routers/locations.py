@@ -7,9 +7,11 @@ from src.backend.api.schemas.dim import (
     SistemaCreate, SistemaUpdate, SistemaResponse,
     PlantaCreate, PlantaUpdate, PlantaResponse,
     AreaCreate, AreaUpdate, AreaResponse,
-    PuntoMuestreoCreate, PuntoMuestreoUpdate, PuntoMuestreoResponse
+    PuntoMuestreoCreate, PuntoMuestreoUpdate, PuntoMuestreoResponse,
+    ZonaAreaCreate, ZonaAreaUpdate, ZonaAreaResponse
 )
-from src.backend.repositories.dim import SistemaRepository, PlantaRepository, AreaRepository, PuntoMuestreoRepository
+from src.backend.repositories.dim import (SistemaRepository, PlantaRepository, AreaRepository, 
+                                          PuntoMuestreoRepository, ZonaAreaRepository)
 from src.backend.api.security import get_current_user, require_role
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -103,9 +105,15 @@ def create_area(body: AreaCreate, db: Session = Depends(get_db)):
     return repo.create(db, body.model_dump())
 
 @router.get("/areas", response_model=List[AreaResponse])
-def list_areas(skip: int = 0, limit: int = 100, only_active: bool = True, db: Session = Depends(get_db)):
+def list_areas(skip: int = 0, limit: int = 5000, only_active: bool = True, db: Session = Depends(get_db)):
     repo = AreaRepository()
     return repo.get_all(db, skip=skip, limit=limit, only_active=only_active)
+
+@router.get("/debug-areas")
+def debug_areas(db: Session = Depends(get_db)):
+    repo = AreaRepository()
+    areas = repo.get_all(db, limit=5)
+    return [{"id": a.area_id, "nombre": a.nombre, "codigo": getattr(a, "codigo", "N/A"), "dir": dir(a)} for a in areas]
 
 @router.get("/areas/{area_id}", response_model=AreaResponse)
 def get_area(area_id: int, db: Session = Depends(get_db)):
@@ -174,4 +182,37 @@ def delete_punto_muestreo(punto_id: int, db: Session = Depends(get_db)):
     repo = PuntoMuestreoRepository()
     if not repo.delete(db, punto_id):
         raise HTTPException(status_code=404, detail="Punto de muestreo no encontrado")
+    return None
+
+
+# ─── Zonas de Área ──────────────────────────────────────────
+
+@router.post("/zonas-area", response_model=ZonaAreaResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role(*_ESCRITURA))])
+def create_zona_area(body: ZonaAreaCreate, db: Session = Depends(get_db)):
+    repo = ZonaAreaRepository()
+    return repo.create(db, body.model_dump())
+
+@router.get("/zonas-area", response_model=List[ZonaAreaResponse])
+def list_zonas_area(area_id: Optional[int] = None, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    repo = ZonaAreaRepository()
+    if area_id:
+        return db.query(repo.model).filter(repo.model.area_id == area_id).offset(skip).limit(limit).all()
+    return repo.get_all(db, skip=skip, limit=limit)
+
+@router.put("/zonas-area/{zona_area_id}", response_model=ZonaAreaResponse,
+            dependencies=[Depends(require_role(*_ESCRITURA))])
+def update_zona_area(zona_area_id: int, body: ZonaAreaUpdate, db: Session = Depends(get_db)):
+    repo = ZonaAreaRepository()
+    obj = repo.get(db, zona_area_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Zona no encontrada")
+    return repo.update(db, obj, body.model_dump(exclude_unset=True))
+
+@router.delete("/zonas-area/{zona_area_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("administrador"))])
+def delete_zona_area(zona_area_id: int, db: Session = Depends(get_db)):
+    repo = ZonaAreaRepository()
+    if not repo.delete(db, zona_area_id):
+        raise HTTPException(status_code=404, detail="Zona no encontrada")
     return None

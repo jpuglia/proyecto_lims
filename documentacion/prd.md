@@ -204,36 +204,30 @@ El sistema LIMS permitirá a la organización:
 
 ## 13. Roadmap Inicial
 
-### Fase 1 – Análisis
+### Fase 1 – Análisis (Completado)
+* Relevamiento y definición de requerimientos.
 
-* Relevamiento.
-* Definición de requerimientos.
+### Fase 2 – Diseño (Completado)
+* Arquitectura técnica y diseño UX/UI.
 
-### Fase 2 – Diseño
+### Fase 3 – Desarrollo Backend & Core (Completado)
+* API REST con FastAPI.
+* RBAC y Auditoría.
+* Lógica de servicios.
 
-* Arquitectura.
-* UX/UI.
+### Fase 4 – Desarrollo Frontend & UX (En curso / Avanzado)
+* Interfaces React.
+* Animaciones Framer Motion.
+* Integración con Backend y Dashboard.
 
-### Fase 3 – Desarrollo
+### Fase 5 – Pruebas y Validación (En curso)
+* QA con Pytest (Backend) y Playwright (Frontend).
+* Validaciones de flujo E2E.
 
-* Backend.
-* Frontend.
-* Integraciones.
+### Fase 6 – Despliegue y Producción (Planificado)
+* Dockerización.
+* Migración a PostgreSQL.
 
-### Fase 4 – Pruebas
-
-* QA.
-* Validaciones.
-
-### Fase 5 – Implementación
-
-* Capacitación.
-* Puesta en producción.
-
-### Fase 6 – Evolución
-
-* Mejoras.
-* Nuevas funciones.
 
 ## 14. Criterios de Aceptación
 

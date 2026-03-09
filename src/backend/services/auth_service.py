@@ -3,11 +3,12 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 
-from src.backend.repositories.auth import UsuarioRepository, AuditTrailRepository
+from src.backend.repositories.auth import UsuarioRepository
+from src.backend.repositories.audit import AuditLogRepository
 from src.backend.models.auth import Usuario
 
 class AuthService:
-    def __init__(self, usuario_repo: UsuarioRepository, audit_repo: AuditTrailRepository):
+    def __init__(self, usuario_repo: UsuarioRepository, audit_repo: AuditLogRepository):
         self.usuario_repo = usuario_repo
         self.audit_repo = audit_repo
 
@@ -19,14 +20,12 @@ class AuthService:
         audit_uid = current_user_id if current_user_id else nuevo_usuario.usuario_id
 
         self.audit_repo.create(db, {
-            "tabla": "usuario",
+            "tabla_nombre": "usuario",
             "registro_id": nuevo_usuario.usuario_id,
-            "columna": None,
-            "old_val": None,
-            "new_val": f"Created user {nuevo_usuario.nombre}",
-            "accion": "CREATE",
-            "usuario_id": audit_uid,
-            "timestamp": datetime.now(timezone.utc)
+            "operacion": "INSERT",
+            "valor_anterior": None,
+            "valor_nuevo": {"nombre": nuevo_usuario.nombre, "activo": nuevo_usuario.activo},
+            "usuario_id": audit_uid
         })
         
         return nuevo_usuario

@@ -1,6 +1,6 @@
 """Pydantic schemas for dim module (systems, plants, areas, equipment)."""
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -49,6 +49,7 @@ class PlantaUpdate(BaseModel):
 # ─── Area ─────────────────────────────────────────────────────
 
 class AreaBase(BaseModel):
+    codigo: str = Field(..., description="Código de identificación del área", json_schema_extra={"example": "PA036"})
     nombre: str = Field(..., description="Nombre del área funcional", json_schema_extra={"example": "Laboratorio de Microbiología"})
     planta_id: int = Field(..., description="ID de la planta donde se ubica el área")
     activo: bool = Field(True, description="Estado de activación del área")
@@ -58,9 +59,11 @@ class AreaCreate(AreaBase):
 
 class AreaResponse(AreaBase):
     area_id: int
+    zonas: List[ZonaAreaResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 class AreaUpdate(BaseModel):
+    codigo: Optional[str] = None
     nombre: Optional[str] = None
     planta_id: Optional[int] = None
     activo: Optional[bool] = None
@@ -116,6 +119,7 @@ class EquipoDetalleResponse(EquipoInstrumentoResponse):
     tipo_nombre: Optional[str] = None
     estado_nombre: Optional[str] = None
     area_nombre: Optional[str] = None
+    zonas: List[ZonaEquipoResponse] = []
     is_compliant: bool = True
 
     @classmethod
@@ -128,6 +132,9 @@ class EquipoDetalleResponse(EquipoInstrumentoResponse):
         if hasattr(obj, "area") and obj.area:
             data.area_nombre = obj.area.nombre
         
+        if hasattr(obj, "zonas") and obj.zonas:
+            data.zonas = [ZonaEquipoResponse.model_validate(z) for z in obj.zonas]
+
         # Check compliance based on last calibration
         if hasattr(obj, "calibraciones") and obj.calibraciones:
             from datetime import date
@@ -162,6 +169,25 @@ class ZonaEquipoResponse(ZonaEquipoBase):
 
 class ZonaEquipoUpdate(BaseModel):
     equipo_instrumento_id: Optional[int] = None
+    nombre: Optional[str] = None
+    activo: Optional[bool] = None
+
+
+# ─── ZonaArea ──────────────────────────────────────────────────
+
+class ZonaAreaBase(BaseModel):
+    area_id: int = Field(..., description="ID del área a la que pertenece la zona")
+    nombre: str = Field(..., description="Nombre de la zona de muestreo", json_schema_extra={"example": "Pared"})
+    activo: bool = Field(True, description="Estado de activación de la zona")
+
+class ZonaAreaCreate(ZonaAreaBase):
+    pass
+
+class ZonaAreaResponse(ZonaAreaBase):
+    zona_area_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class ZonaAreaUpdate(BaseModel):
     nombre: Optional[str] = None
     activo: Optional[bool] = None
 
@@ -204,4 +230,25 @@ class PuntoMuestreoUpdate(BaseModel):
     nombre: Optional[str] = None
     sistema_id: Optional[int] = None
     area_id: Optional[int] = None
+    activo: Optional[bool] = None
+
+# ─── TipoSolicitudMuestreo ───────────────────────────────────
+
+class TipoSolicitudMuestreoBase(BaseModel):
+    codigo: str = Field(..., description="Código único del tipo de solicitud", json_schema_extra={"example": "AIRE_AREA"})
+    descripcion: str = Field(..., description="Descripción legible del tipo", json_schema_extra={"example": "Aire área"})
+    categoria: Optional[str] = Field(None, description="Categoría de agrupación", json_schema_extra={"example": "Ambiental"})
+    activo: bool = Field(True, description="Estado de activación")
+
+class TipoSolicitudMuestreoCreate(TipoSolicitudMuestreoBase):
+    pass
+
+class TipoSolicitudMuestreoResponse(TipoSolicitudMuestreoBase):
+    tipo_solicitud_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class TipoSolicitudMuestreoUpdate(BaseModel):
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    categoria: Optional[str] = None
     activo: Optional[bool] = None

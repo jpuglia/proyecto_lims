@@ -25,6 +25,7 @@ class OrdenManufactura(Base):
     producto = relationship("Producto", primaryjoin="OrdenManufactura.producto_id==Producto.producto_id")
     operario = relationship("Operario", primaryjoin="OrdenManufactura.operario_id==Operario.operario_id")
     manufacturas = relationship("Manufactura", back_populates="orden", cascade="all, delete-orphan")
+    solicitudes = relationship("SolicitudMuestreo", back_populates="orden_manufactura", cascade="all, delete-orphan")
 
 class Manufactura(Base):
     __tablename__ = "manufactura"
@@ -52,6 +53,19 @@ class ManufacturaOperario(Base):
     manufactura = relationship("Manufactura", primaryjoin="ManufacturaOperario.manufactura_id==Manufactura.manufactura_id")
     operario = relationship("Operario", primaryjoin="ManufacturaOperario.operario_id==Operario.operario_id")
 
+class UsoMaterialManufactura(Base):
+    __tablename__ = "uso_material_manufactura"
+
+    uso_material_manufactura_id = Column(Integer, primary_key=True)
+    manufactura_id = Column(Integer, ForeignKey("manufactura.manufactura_id"), nullable=False)
+    stock_polvo_suplemento_id = Column(Integer, ForeignKey("stock_polvo_suplemento.stock_polvo_suplemento_id"), nullable=False)
+    cantidad = Column(Float, nullable=False)
+    unidad = Column(String, nullable=False)
+    fecha_uso = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    manufactura = relationship("Manufactura", primaryjoin="UsoMaterialManufactura.manufactura_id==Manufactura.manufactura_id")
+    stock_polvo = relationship("StockPolvoSuplemento", primaryjoin="UsoMaterialManufactura.stock_polvo_suplemento_id==StockPolvoSuplemento.stock_polvo_suplemento_id")
+
 class HistoricoEstadoManufactura(Base):
     __tablename__ = "historico_estado_manufactura"
 
@@ -77,20 +91,42 @@ class SolicitudMuestreo(Base):
     solicitud_muestreo_id = Column(Integer, primary_key=True)
     usuario_id = Column(Integer, ForeignKey("usuario.usuario_id"), nullable=False)
     fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    fecha_limite = Column(DateTime, nullable=True)
     tipo = Column(String, nullable=False)
     orden_manufactura_id = Column(Integer, ForeignKey("orden_manufactura.orden_manufactura_id"), nullable=True)
-    equipo_instrumento_id = Column(Integer, ForeignKey("equipo_instrumento.equipo_instrumento_id"), nullable=True)
+    equipo_instrumento_id = Column(Integer, ForeignKey("equipo_instrumento.equipo_instrumento_id"), nullable=True) # Deprecated in favor of equipamiento
     punto_muestreo_id = Column(Integer, ForeignKey("punto_muestreo.punto_muestreo_id"), nullable=True)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=True)
     estado_solicitud_id = Column(Integer, ForeignKey("estado_solicitud.estado_solicitud_id"), nullable=False)
     observacion = Column(Text, nullable=True)
 
+    # Added for Ad-hoc Rework
+    destino = Column(String(50), nullable=True)
+    producto_id = Column(Integer, ForeignKey("producto.producto_id"), nullable=True)
+    lote_number = Column(String(100), nullable=True)
+    cantidad_extraida = Column(Float, nullable=True)
+    area_id = Column(Integer, ForeignKey("area.area_id"), nullable=True)
+    region_swabbed = Column(String(255), nullable=True)
+
     usuario = relationship("Usuario", primaryjoin="SolicitudMuestreo.usuario_id==Usuario.usuario_id")
-    orden_manufactura = relationship("OrdenManufactura", primaryjoin="SolicitudMuestreo.orden_manufactura_id==OrdenManufactura.orden_manufactura_id")
+    orden_manufactura = relationship("OrdenManufactura", back_populates="solicitudes")
     equipo_instrumento = relationship("EquipoInstrumento", primaryjoin="SolicitudMuestreo.equipo_instrumento_id==EquipoInstrumento.equipo_instrumento_id")
     punto_muestreo = relationship("PuntoMuestreo", primaryjoin="SolicitudMuestreo.punto_muestreo_id==PuntoMuestreo.punto_muestreo_id")
     operario = relationship("Operario", primaryjoin="SolicitudMuestreo.operario_id==Operario.operario_id")
     estado_solicitud = relationship("EstadoSolicitud", primaryjoin="SolicitudMuestreo.estado_solicitud_id==EstadoSolicitud.estado_solicitud_id")
+    equipamiento = relationship("SolicitudMuestreoEquipo", back_populates="solicitud_muestreo")
+    producto = relationship("Producto", primaryjoin="SolicitudMuestreo.producto_id==Producto.producto_id")
+    area = relationship("Area", primaryjoin="SolicitudMuestreo.area_id==Area.area_id")
+
+class SolicitudMuestreoEquipo(Base):
+    __tablename__ = "solicitud_muestreo_equipo"
+
+    solicitud_muestreo_equipo_id = Column(Integer, primary_key=True)
+    solicitud_muestreo_id = Column(Integer, ForeignKey("solicitud_muestreo.solicitud_muestreo_id"), nullable=False)
+    equipo_instrumento_id = Column(Integer, ForeignKey("equipo_instrumento.equipo_instrumento_id"), nullable=False)
+
+    solicitud_muestreo = relationship("SolicitudMuestreo", back_populates="equipamiento")
+    equipo_instrumento = relationship("EquipoInstrumento")
 
 class HistoricoSolicitudMuestreo(Base):
     __tablename__ = "historico_solicitud_muestreo"
@@ -138,9 +174,12 @@ class EnvioMuestra(Base):
     muestra_id = Column(Integer, ForeignKey("muestra.muestra_id"), nullable=False)
     fecha = Column(DateTime, nullable=False)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
-    destino = Column(String, nullable=False)
+    corroborado_por_id = Column(Integer, ForeignKey("usuario.usuario_id"), nullable=True)
+    fecha_corroboracion = Column(DateTime, nullable=True)
+    laboratorio_id = Column(Integer, ForeignKey("laboratorio.laboratorio_id"), nullable=True)
 
     muestra = relationship("Muestra", primaryjoin="EnvioMuestra.muestra_id==Muestra.muestra_id")
+    laboratorio = relationship("Laboratorio")
 
 class Recepcion(Base):
     __tablename__ = "recepcion"
@@ -149,12 +188,15 @@ class Recepcion(Base):
     envio_muestra_id = Column(Integer, ForeignKey("envio_muestra.envio_muestra_id"), nullable=False)
     fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     operario_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=False)
-    recibido_en = Column(String, nullable=False)
+    recibido_en = Column(String, nullable=True)
+    laboratorio_id = Column(Integer, ForeignKey("laboratorio.laboratorio_id"), nullable=True)
     decision = Column(String, nullable=False)
+    justificacion = Column(Text, nullable=True) # Mandatory if decision is not 'Aceptar'
     observacion = Column(Text, nullable=True)
 
     envio_muestra = relationship("EnvioMuestra", primaryjoin="Recepcion.envio_muestra_id==EnvioMuestra.envio_muestra_id")
     operario = relationship("Operario", primaryjoin="Recepcion.operario_id==Operario.operario_id")
+    laboratorio = relationship("Laboratorio")
 
 class EstadoAnalisis(Base):
     __tablename__ = "estado_analisis"
@@ -181,6 +223,18 @@ class Analisis(Base):
     especificacion = relationship("Especificacion", primaryjoin="Analisis.especificacion_id==Especificacion.especificacion_id")
     estado_analisis = relationship("EstadoAnalisis", primaryjoin="Analisis.estado_analisis_id==EstadoAnalisis.estado_analisis_id")
     operario = relationship("Operario", primaryjoin="Analisis.operario_id==Operario.operario_id")
+    equipos = relationship("UsoEquipoAnalisis", back_populates="analisis")
+
+class UsoEquipoAnalisis(Base):
+    __tablename__ = "uso_equipo_analisis"
+
+    uso_equipo_analisis_id = Column(Integer, primary_key=True)
+    analisis_id = Column(Integer, ForeignKey("analisis.analisis_id"), nullable=False)
+    equipo_instrumento_id = Column(Integer, ForeignKey("equipo_instrumento.equipo_instrumento_id"), nullable=False)
+    fecha_uso = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    analisis = relationship("Analisis", back_populates="equipos")
+    equipo_instrumento = relationship("EquipoInstrumento")
 
 class HistorialEstadoAnalisis(Base):
     __tablename__ = "historial_estado_analisis"

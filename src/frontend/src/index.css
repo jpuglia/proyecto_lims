@@ -1,109 +1,75 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  /* Color Palette - Urufarma Clean Light */
-  --bg-main: #FFFFFF;
-  --bg-surface: #F8FAFC;
-  --bg-card: #FFFFFF;
-  --border-light: #E2E8F0;
+@theme {
+  /* Color Palette - Modern Lab Manager */
+  --color-primary: #00A0DF;
+  --color-primary-dark: #0087BD;
+  --color-secondary: #64748B;
   
-  --primary: #00A0DF;
-  --secondary: #616265;
+  --color-bg-main: #FFFFFF;
+  --color-bg-surface: #F8FAFC;
+  --color-bg-card: #FFFFFF;
   
-  --accent-primary: #00A0DF;
-  --accent-secondary: #616265;
+  --color-border-light: #E2E8F0;
   
-  --text-main: #1E293B;
-  --text-muted: #64748B;
-  --error: #EF4444;
-  --success: #10B981;
-
-  /* Gradientes */
-  --grad-primary: linear-gradient(135deg, #00A0DF, #0087BD);
+  --color-text-main: #1E293B;
+  --color-text-muted: #64748B;
+  
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-premium: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  background-color: var(--bg-main);
-  color: var(--text-main);
+  /* Border Radius */
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  :root {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+  }
+
+  body {
+    @apply min-h-screen flex flex-col;
+  }
+
+  #root {
+    @apply w-full min-h-screen flex flex-col;
+  }
 }
 
-body {
-  min-height: 100vh;
-  background-color: var(--bg-surface);
-  display: flex;
-  flex-direction: column;
+@layer components {
+  .glass-card {
+    @apply bg-white border border-border-light rounded-2xl shadow-card transition-all duration-200;
+  }
+
+  .glass-card:hover {
+    @apply shadow-premium translate-y-[-2px] border-primary/50;
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-semibold transition-all active:scale-95 shadow-lg shadow-primary/20;
+  }
+
+  .text-gradient {
+    @apply bg-linear-to-r from-primary to-primary-dark bg-clip-text text-transparent;
+  }
 }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
+/* Recharts Customization */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #F1F5F9;
 }
 
-/* Updated Glass (Clean Card) utility */
-.glass {
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-}
-
-.glass-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 16px;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-premium);
-  border-color: var(--accent-primary);
-}
-
-/* Buttons */
-.btn-primary {
-  background: var(--primary);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  padding: 10px 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-  filter: brightness(0.95);
-  box-shadow: 0 4px 12px rgba(0, 160, 223, 0.2);
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* Typography */
-h1, h2, h3 {
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-main);
-}
-
-.text-gradient {
-  color: var(--primary);
+.recharts-tooltip-cursor {
+  fill: #F8FAFC;
 }
