@@ -6,7 +6,8 @@ import { toast } from 'react-hot-toast';
 import {
   FlaskConical, Calendar, Clock, Package,
   MapPin, Scale, Send, Loader2, X, Hash,
-  ChevronRight, ArrowLeft, Search, Check, Filter
+  ChevronRight, ArrowLeft, Search, Check, Filter,
+  CheckSquare, Square
 } from 'lucide-react';
 
 import { inspectionService } from '../../api/inspectionService';
@@ -46,7 +47,8 @@ const samplingSchema = z.object({
   equipo_ids: z.array(z.string()).optional().default([]),
   operarios_muestreados_ids: z.array(z.string()).optional().default([]),
   areas_ids: z.array(z.string()).optional().default([]),
-  region_swabbed: z.string().optional().nullable()
+  region_swabbed: z.string().optional().nullable(),
+  tyvek_wash_number: z.string().optional().nullable()
 }).superRefine((data, ctx) => {
   if (!data.destination) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Seleccione un destino", path: ["destination"] });
@@ -89,10 +91,14 @@ const samplingSchema = z.object({
     if (!hasEquipo && !hasOperario && !hasArea) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Debe seleccionar al menos un Equipo, Operario o Área", path: ["equipo_ids"] });
     }
-    // Only require top-level region_swabbed if NOT using Equipo-based selection 
-    // (which handles it internally via state)
-    // In many cases we don't have hisopadoType here, so we might need to skip this 
-    // or handle it in onSubmit
+
+    // Personnel Swab specific validation if an operario is selected
+    if (hasOperario) {
+      // Since operarios might not be loaded yet in the schema context or we can't easily access the state here
+      // we check the fields themselves if they are present.
+      // But actually, we have 'operarios' state in the component, not in the Zod schema.
+      // For now, if we have EITHER tyvek_wash_number OR area_id/product_id, we are probably okay.
+    }
   }
 
   if (isProdMicro || isFisicoOrReten) {
@@ -156,9 +162,11 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
   const [equipmentSelections, setEquipmentSelections] = useState({});
   // areaSelections: { [id]: [{ zoneId: string, customArea: string, id: string }] }
   const [areaSelections, setAreaSelections] = useState({});
+  // operarioSelections: { [id]: { area_id, product_id, lot_number, zones: { guante_izq: true, guante_der: true, vestimenta: true }, vestimenta_sub: 'Pecho', tyvek_wash_number } }
+  const [operarioSelections, setOperarioSelections] = useState({});
 
   const {
-    register, handleSubmit, watch, control, setValue, trigger, formState: { errors }
+    register, handleSubmit, watch, getValues, control, setValue, trigger, formState: { errors }
   } = useForm({
     resolver: zodResolver(samplingSchema),
     defaultValues: {
@@ -182,8 +190,8 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
   const watchDestination = watch("destination");
   const watchSampleType = watch("sample_type");
 
-  const toggleSelection = (field, id) => {
-    const current = watch(field) || [];
+  const toggleSelection = React.useCallback((field, id) => {
+    const current = getValues(field) || [];
     const idStr = id.toString();
     if (current.includes(idStr)) {
       setValue(field, current.filter(i => i !== idStr), { shouldValidate: true });
@@ -196,6 +204,13 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
       }
       if (field === "areas_ids") {
         setAreaSelections(prev => {
+          const next = { ...prev };
+          delete next[idStr];
+          return next;
+        });
+      }
+      if (field === "operarios_muestreados_ids") {
+        setOperarioSelections(prev => {
           const next = { ...prev };
           delete next[idStr];
           return next;
@@ -215,8 +230,86 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
           [idStr]: [{ zoneId: '', customArea: '', id: crypto.randomUUID() }]
         }));
       }
+      if (field === "operarios_muestreados_ids") {
+        setOperarioSelections(prev => ({
+          ...prev,
+          [idStr]: {
+            area_id: '',
+            product_id: '',
+            lot_number: '',
+            zones: {
+              guante_izq: true,
+              guante_der: true,
+              vestimenta: true,
+              manga: true,
+              pecho: true
+            },
+            vestimenta_sub: 'Pecho',
+            tyvek_wash_number: ''
+          }
+        }));
+      }
     }
-  };
+  }, [getValues, setValue]);
+
+  const handleOperarioConfigUpdate = React.useCallback((opId, field, value) => {
+    setOperarioSelections(prev => ({
+      ...prev,
+      [opId]: { ...prev[opId], [field]: value }
+    }));
+  }, []);
+
+  const handleOperarioZoneUpdate = React.useCallback((opId, zoneKey, isActive) => {
+    setOperarioSelections(prev => ({
+      ...prev,
+      [opId]: {
+        ...prev[opId],
+        zones: { ...prev[opId]?.zones, [zoneKey]: isActive }
+      }
+    }));
+  }, []);
+
+  const handleEquipmentAddZone = React.useCallback((eid) => {
+    setEquipmentSelections(prev => ({
+      ...prev,
+      [eid]: [...(prev[eid] || []), { zoneId: '', customArea: '', id: crypto.randomUUID() }]
+    }));
+  }, []);
+
+  const handleEquipmentRemoveZone = React.useCallback((eid, index) => {
+    setEquipmentSelections(prev => ({
+      ...prev,
+      [eid]: prev[eid].filter((_, i) => i !== index)
+    }));
+  }, []);
+
+  const handleEquipmentUpdateZone = React.useCallback((eid, index, field, value) => {
+    setEquipmentSelections(prev => ({
+      ...prev,
+      [eid]: prev[eid].map((s, i) => i === index ? { ...s, [field]: value } : s)
+    }));
+  }, []);
+
+  const handleAreaAddZone = React.useCallback((aid) => {
+    setAreaSelections(prev => ({
+      ...prev,
+      [aid]: [...(prev[aid] || []), { zoneId: '', customArea: '', id: crypto.randomUUID() }]
+    }));
+  }, []);
+
+  const handleAreaRemoveZone = React.useCallback((aid, index) => {
+    setAreaSelections(prev => ({
+      ...prev,
+      [aid]: prev[aid].filter((_, i) => i !== index)
+    }));
+  }, []);
+
+  const handleAreaUpdateZone = React.useCallback((aid, index, field, value) => {
+    setAreaSelections(prev => ({
+      ...prev,
+      [aid]: prev[aid].map((s, i) => i === index ? { ...s, [field]: value } : s)
+    }));
+  }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -254,12 +347,13 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
 
   // Filtered Points para Utilities
   const filteredPoints = useMemo(() => {
-    return points.filter(p => {
+    const results = points.filter(p => {
       const matchSearch = p.nombre.toLowerCase().includes(utilSearch.toLowerCase()) || p.codigo.toLowerCase().includes(utilSearch.toLowerCase());
       const matchPlanta = utilPlanta ? p.area?.planta_id === parseInt(utilPlanta) : true;
       const matchSistema = utilSistema ? p.sistema_id === parseInt(utilSistema) : true;
       return matchSearch && matchPlanta && matchSistema;
     });
+    return results.slice(0, 100);
   }, [points, utilSearch, utilPlanta, utilSistema]);
 
   const handleNext = async () => {
@@ -273,13 +367,14 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
   };
 
   const filteredAreas = useMemo(() => {
-    return areas.filter(a => {
+    const results = areas.filter(a => {
       const matchSearch = !areaSearch ||
         a.nombre.toLowerCase().includes(areaSearch.toLowerCase()) ||
         (a.codigo && a.codigo.toLowerCase().includes(areaSearch.toLowerCase()));
       const matchPlanta = !areaPlanta || a.planta_id.toString() === areaPlanta.toString();
       return matchSearch && matchPlanta;
     });
+    return results.slice(0, 100);
   }, [areas, areaSearch, areaPlanta]);
 
   const onSubmit = async (data) => {
@@ -313,9 +408,31 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
         toast.error("Por favor configure al menos un área de hisopado válida para cada sector");
         return;
       }
-    } else if (isHisopado && !data.region_swabbed) {
-      toast.error("Especifique la región hisopada");
-      return;
+    } else if (isHisopado && hisopadoType === 'Personal') {
+      const selectedOps = data.operarios_muestreados_ids || [];
+      if (selectedOps.length === 0) {
+        toast.error("Seleccione al menos un operario o Tyvek");
+        return;
+      }
+
+      const missingFields = selectedOps.some(opId => {
+        const operario = operarios.find(o => o.operario_id.toString() === opId.toString());
+        const isTyvek = operario?.nombre?.toLowerCase().includes('tyvek') || operario?.codigo_empleado?.toLowerCase().includes('tyvek');
+        const config = operarioSelections[opId] || {};
+
+        if (isTyvek) {
+          const hasTyvekZone = config.zones?.manga !== false || config.zones?.pecho !== false;
+          return !config.area_id || !config.tyvek_wash_number || !hasTyvekZone;
+        } else {
+          const hasAnyZone = config.zones?.guante_izq || config.zones?.guante_der || config.zones?.vestimenta;
+          return !config.area_id || (!config.product_id && !config.lot_number) || !hasAnyZone;
+        }
+      });
+
+      if (missingFields) {
+        toast.error("Existen campos obligatorios sin completar para el personal seleccionado (ej. Área, Lote, Zonas, Nro. Lavado)");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -360,7 +477,51 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
           });
         });
       } else if (hisopadoType === 'Personal' && data.operarios_muestreados_ids?.length > 0) {
-        targets = data.operarios_muestreados_ids.map(id => ({ operario_muestreado_id: id }));
+        targets = [];
+        data.operarios_muestreados_ids.forEach(opId => {
+          const operario = operarios.find(o => o.operario_id.toString() === opId.toString());
+          const isTyvek = operario?.nombre?.toLowerCase().includes('tyvek') || operario?.codigo_empleado?.toLowerCase().includes('tyvek');
+          const config = operarioSelections[opId] || {};
+
+          if (isTyvek) {
+            // Tyvek: 2 zones
+            if (config.zones?.manga !== false) {
+              targets.push({
+                operario_muestreado_id: opId,
+                area_id: config.area_id,
+                region_swabbed: 'Manga',
+                tyvek_wash_number: config.tyvek_wash_number ? parseInt(config.tyvek_wash_number) : null
+              });
+            }
+            if (config.zones?.pecho !== false) {
+              targets.push({
+                operario_muestreado_id: opId,
+                area_id: config.area_id,
+                region_swabbed: 'Pecho',
+                tyvek_wash_number: config.tyvek_wash_number ? parseInt(config.tyvek_wash_number) : null
+              });
+            }
+          } else {
+            // Real Operario
+            const zonesToSwab = [];
+            if (config.zones?.guante_der) zonesToSwab.push('Guante Derecho');
+            if (config.zones?.guante_izq) zonesToSwab.push('Guante Izquierdo');
+            if (config.zones?.vestimenta) {
+              const vestimentaSub = config.vestimenta_sub || 'Pecho';
+              zonesToSwab.push(`Vestimenta (${vestimentaSub})`);
+            }
+
+            zonesToSwab.forEach(zone => {
+              targets.push({
+                operario_muestreado_id: opId,
+                region_swabbed: zone,
+                area_id: config.area_id ? parseInt(config.area_id) : null,
+                product_id: config.product_id ? parseInt(config.product_id) : null,
+                lot_number: config.lot_number || null
+              });
+            });
+          }
+        });
       }
     } else {
       // Fallback for Product/Fisico/Reten
@@ -383,7 +544,8 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
           sampling_point_id: target.sampling_point_id ? parseInt(target.sampling_point_id) : null,
           equipo_id: target.equipo_id ? parseInt(target.equipo_id) : null,
           operario_muestreado_id: target.operario_muestreado_id ? parseInt(target.operario_muestreado_id) : null,
-          area_id: target.area_id ? parseInt(target.area_id) : null,
+          area_id: target.area_id || (data.area_id ? parseInt(data.area_id) : null),
+          tyvek_wash_number: target.tyvek_wash_number || null,
         };
 
         if (mode === 'solicitud') {
@@ -593,27 +755,6 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                       if (!eq) return null;
                       const selections = equipmentSelections[eid] || [];
 
-                      const addZone = () => {
-                        setEquipmentSelections(prev => ({
-                          ...prev,
-                          [eid]: [...(prev[eid] || []), { zoneId: '', customArea: '', id: crypto.randomUUID() }]
-                        }));
-                      };
-
-                      const removeZone = (index) => {
-                        setEquipmentSelections(prev => ({
-                          ...prev,
-                          [eid]: prev[eid].filter((_, i) => i !== index)
-                        }));
-                      };
-
-                      const updateZone = (index, field, value) => {
-                        setEquipmentSelections(prev => ({
-                          ...prev,
-                          [eid]: prev[eid].map((s, i) => i === index ? { ...s, [field]: value } : s)
-                        }));
-                      };
-
                       return (
                         <div key={eid} className="p-4 bg-white border border-border-light rounded-2xl shadow-sm space-y-4">
                           <div className="flex justify-between items-center border-b border-border-light pb-2">
@@ -621,7 +762,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                             <div className="flex items-center gap-2">
                               <Button
                                 type="button" variant="ghost" size="sm"
-                                onClick={addZone}
+                                onClick={() => handleEquipmentAddZone(eid)}
                                 className="h-8 px-3 rounded-lg text-secondary hover:bg-secondary/10 font-bold text-[10px] uppercase"
                               >
                                 + Agregar Zona
@@ -645,7 +786,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                     <select
                                       className="w-full h-10 bg-white border border-border-light rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                       value={sel.zoneId}
-                                      onChange={(e) => updateZone(idx, 'zoneId', e.target.value)}
+                                      onChange={(e) => handleEquipmentUpdateZone(eid, idx, 'zoneId', e.target.value)}
                                     >
                                       <option value="">Seleccione Área...</option>
                                       {eq.zonas?.map(z => (
@@ -661,7 +802,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                       <Input
                                         placeholder="Ej. Pared lateral..."
                                         value={sel.customArea}
-                                        onChange={(e) => updateZone(idx, 'customArea', e.target.value)}
+                                        onChange={(e) => handleEquipmentUpdateZone(eid, idx, 'customArea', e.target.value)}
                                         className="h-10 text-sm bg-white"
                                       />
                                     </div>
@@ -670,7 +811,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                   {selections.length > 1 && (
                                     <button
                                       type="button"
-                                      onClick={() => removeZone(idx)}
+                                      onClick={() => handleEquipmentRemoveZone(eid, idx)}
                                       className="absolute -top-2 -right-2 h-6 w-6 bg-white border border-border-light rounded-full flex items-center justify-center text-text-muted hover:text-error hover:border-error shadow-sm transition-all"
                                     >
                                       <X size={12} />
@@ -688,25 +829,201 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
               )}
 
               {hisopadoType === 'Personal' && (
-                <FormField label="Seleccione Operarios" error={errors.operarios_muestreados_ids}>
-                  <div className="max-h-60 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2 border border-border-light p-2 rounded-xl bg-bg-surface">
-                    {operarios.map(o => {
-                      const isSelected = (watch("operarios_muestreados_ids") || []).includes(o.operario_id.toString());
-                      return (
-                        <div
-                          key={o.operario_id}
-                          onClick={() => toggleSelection("operarios_muestreados_ids", o.operario_id)}
-                          className={cn("p-3 rounded-lg border text-xs cursor-pointer flex justify-between items-center transition-all",
-                            isSelected ? "bg-primary text-white border-primary" : "bg-white hover:border-primary/50 border-border-light"
-                          )}
-                        >
-                          <span className="truncate">{o.nombre} {o.apellido}</span>
-                          {isSelected && <Check size={16} />}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </FormField>
+                <div className="space-y-6">
+                  <FormField label="Seleccione Personal / Tyvek" error={errors.operarios_muestreados_ids}>
+                    <div className="max-h-60 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2 border border-border-light p-2 rounded-xl bg-bg-surface">
+                      {operarios.map(o => {
+                        const isSelected = (watch("operarios_muestreados_ids") || []).includes(o.operario_id.toString());
+                        return (
+                          <div
+                            key={o.operario_id}
+                            onClick={() => toggleSelection("operarios_muestreados_ids", o.operario_id)}
+                            className={cn("p-3 rounded-lg border text-xs cursor-pointer flex justify-between items-center transition-all",
+                              isSelected ? "bg-primary text-white border-primary" : "bg-white hover:border-primary/50 border-border-light"
+                            )}
+                          >
+                            <span className="truncate">{o.nombre} {o.apellido}</span>
+                            {isSelected && <Check size={16} />}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </FormField>
+
+                  {/* Dynamic Fields based on selection for Personnel */}
+                  {watch("operarios_muestreados_ids")?.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-border-light/50">
+                      <p className="text-sm font-black text-text-main flex items-center gap-2">
+                        <Check size={16} className="text-success" />
+                        Configure datos para el personal seleccionado:
+                      </p>
+                      <div className="space-y-3 animate-in fade-in duration-300">
+                        {watch("operarios_muestreados_ids").map(opId => {
+                          const operario = operarios.find(o => o.operario_id.toString() === opId.toString());
+                          if (!operario) return null;
+                          const isTyvek = operario?.nombre?.toLowerCase().includes('tyvek') || operario?.codigo_empleado?.toLowerCase().includes('tyvek');
+                          const config = operarioSelections[opId] || { zones: {} };
+
+                          return (
+                            <div key={opId} className="p-4 bg-white border border-border-light rounded-2xl shadow-sm space-y-4">
+                              <div className="flex justify-between items-center border-b border-border-light pb-2">
+                                <span className="text-sm font-black uppercase text-primary tracking-tight">
+                                  {isTyvek ? 'Tyvek Limpio' : 'Operario'}: {operario.nombre} {operario.apellido}
+                                </span>
+                                <Button
+                                  type="button" variant="ghost" size="small"
+                                  onClick={() => toggleSelection("operarios_muestreados_ids", opId)}
+                                  className="h-8 w-8 p-0 rounded-full text-text-muted hover:text-error hover:bg-error/10"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              </div>
+
+                              {isTyvek ? (
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Área Física *</label>
+                                      <select
+                                        className="w-full h-10 bg-white border border-border-light rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                        value={config.area_id || ''}
+                                        onChange={(e) => handleOperarioConfigUpdate(opId, 'area_id', e.target.value)}
+                                      >
+                                        <option value="">Seleccione Área...</option>
+                                        {areas.map(a => (
+                                          <option key={a.area_id} value={a.area_id}>{a.codigo ? `${a.codigo} - ` : ''}{a.nombre}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Número de Lavado *</label>
+                                      <Input
+                                        type="number"
+                                        placeholder="Ej. 1, 2, 3..."
+                                        value={config.tyvek_wash_number || ''}
+                                        onChange={(e) => handleOperarioConfigUpdate(opId, 'tyvek_wash_number', e.target.value)}
+                                        className="bg-white h-10"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Zonas de Hisopado (Desmarque si no aplica)</label>
+                                      <div className="flex gap-2 text-sm">
+                                        <div
+                                          onClick={() => handleOperarioZoneUpdate(opId, 'manga', config.zones?.manga === false ? true : false)}
+                                          className={cn("p-2 rounded-lg border cursor-pointer flex gap-1 items-center transition-all bg-bg-surface",
+                                            config.zones?.manga !== false ? "text-primary border-border-light" : "text-text-muted border-border-light line-through opacity-70"
+                                          )}
+                                        >
+                                          {config.zones?.manga !== false ? <CheckSquare size={16} className="text-primary" /> : <Square size={16} />} Manga
+                                        </div>
+                                        <div
+                                          onClick={() => handleOperarioZoneUpdate(opId, 'pecho', config.zones?.pecho === false ? true : false)}
+                                          className={cn("p-2 rounded-lg border cursor-pointer flex gap-1 items-center transition-all bg-bg-surface",
+                                            config.zones?.pecho !== false ? "text-primary border-border-light" : "text-text-muted border-border-light line-through opacity-70"
+                                          )}
+                                        >
+                                          {config.zones?.pecho !== false ? <CheckSquare size={16} className="text-primary" /> : <Square size={16} />} Pecho
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  {/* Inputs Principales (Real Operario) */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Área Física *</label>
+                                      <select
+                                        className="w-full h-10 bg-white border border-border-light rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                        value={config.area_id || ''}
+                                        onChange={(e) => handleOperarioConfigUpdate(opId, 'area_id', e.target.value)}
+                                      >
+                                        <option value="">Seleccione Área...</option>
+                                        {areas.map(a => (
+                                          <option key={a.area_id} value={a.area_id}>{a.codigo ? `${a.codigo} - ` : ''}{a.nombre}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Producto</label>
+                                      <select
+                                        className="w-full h-10 bg-white border border-border-light rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                        value={config.product_id || ''}
+                                        onChange={(e) => handleOperarioConfigUpdate(opId, 'product_id', e.target.value)}
+                                      >
+                                        <option value="">Ninguno / Búsqueda manual</option>
+                                        {products.map(p => (
+                                          <option key={p.id} value={p.id}>{p.displayLabel}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-black uppercase text-text-muted ml-1">Lote</label>
+                                      <Input
+                                        placeholder="Núm Lote..."
+                                        value={config.lot_number || ''}
+                                        onChange={(e) => handleOperarioConfigUpdate(opId, 'lot_number', e.target.value)}
+                                        className="bg-white h-10"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Zonas de Hisopado */}
+                                  <div className="space-y-2 pt-2 border-t border-border-light/50">
+                                    <label className="text-[10px] font-black uppercase text-text-muted ml-1">Zonas de Hisopado (Desmarque si no aplica)</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                      <div
+                                        onClick={() => handleOperarioZoneUpdate(opId, 'guante_izq', !config.zones.guante_izq)}
+                                        className={cn("p-3 rounded-lg border text-sm cursor-pointer flex justify-between items-center transition-all",
+                                          config.zones.guante_izq ? "bg-primary/5 text-primary border-primary" : "bg-bg-surface text-text-muted border-border-light line-through opacity-70"
+                                        )}
+                                      >
+                                        <span>Guante Izquierdo</span>
+                                        {config.zones.guante_izq ? <CheckSquare size={16} /> : <Square size={16} />}
+                                      </div>
+                                      <div
+                                        onClick={() => handleOperarioZoneUpdate(opId, 'guante_der', !config.zones.guante_der)}
+                                        className={cn("p-3 rounded-lg border text-sm cursor-pointer flex justify-between items-center transition-all",
+                                          config.zones.guante_der ? "bg-primary/5 text-primary border-primary" : "bg-bg-surface text-text-muted border-border-light line-through opacity-70"
+                                        )}
+                                      >
+                                        <span>Guante Derecho</span>
+                                        {config.zones.guante_der ? <CheckSquare size={16} /> : <Square size={16} />}
+                                      </div>
+
+                                      <div className={cn("p-3 rounded-lg border flex flex-col gap-2 transition-all",
+                                        config.zones.vestimenta ? "bg-primary/5 border-primary" : "bg-bg-surface border-border-light opacity-70"
+                                      )}>
+                                        <div className="flex justify-between items-center cursor-pointer" onClick={() => handleOperarioZoneUpdate(opId, 'vestimenta', !config.zones.vestimenta)}>
+                                          <span className={cn("text-sm text-primary", !config.zones.vestimenta && "text-text-muted line-through")}>Vestimenta</span>
+                                          {config.zones.vestimenta ? <CheckSquare size={16} className="text-primary" /> : <Square size={16} className="text-text-muted" />}
+                                        </div>
+                                        {config.zones.vestimenta && (
+                                          <div className="pt-2 border-t border-primary/20 flex gap-2 w-full animate-in fade-in duration-200">
+                                            <select
+                                              className="w-full h-8 bg-white border border-primary/30 rounded-lg px-2 text-xs"
+                                              value={config.vestimenta_sub || 'Pecho'}
+                                              onChange={(e) => handleOperarioConfigUpdate(opId, 'vestimenta_sub', e.target.value)}
+                                            >
+                                              <option value="Pecho">Pecho</option>
+                                              <option value="Manga">Manga</option>
+                                            </select>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               {hisopadoType === 'Superficies' && (
@@ -770,27 +1087,6 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                       if (!areaObj) return null;
                       const selections = areaSelections[aid] || [];
 
-                      const addZone = () => {
-                        setAreaSelections(prev => ({
-                          ...prev,
-                          [aid]: [...(prev[aid] || []), { zoneId: '', customArea: '', id: crypto.randomUUID() }]
-                        }));
-                      };
-
-                      const removeZone = (index) => {
-                        setAreaSelections(prev => ({
-                          ...prev,
-                          [aid]: prev[aid].filter((_, i) => i !== index)
-                        }));
-                      };
-
-                      const updateZone = (index, field, value) => {
-                        setAreaSelections(prev => ({
-                          ...prev,
-                          [aid]: prev[aid].map((s, i) => i === index ? { ...s, [field]: value } : s)
-                        }));
-                      };
-
                       return (
                         <div key={aid} className="p-4 bg-white border border-border-light rounded-2xl shadow-sm space-y-4">
                           <div className="flex justify-between items-center border-b border-border-light pb-2">
@@ -803,7 +1099,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                             <div className="flex items-center gap-2">
                               <Button
                                 type="button" variant="ghost" size="sm"
-                                onClick={addZone}
+                                onClick={() => handleAreaAddZone(aid)}
                                 className="h-8 px-3 rounded-lg text-primary hover:bg-primary/10 font-bold text-[10px] uppercase"
                               >
                                 + Agregar Punto
@@ -827,7 +1123,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                     <select
                                       className="w-full h-10 bg-white border border-border-light rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                       value={sel.zoneId}
-                                      onChange={(e) => updateZone(idx, 'zoneId', e.target.value)}
+                                      onChange={(e) => handleAreaUpdateZone(aid, idx, 'zoneId', e.target.value)}
                                     >
                                       <option value="">Seleccione Zona...</option>
                                       {areaObj.zonas?.map(z => (
@@ -843,7 +1139,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                       <Input
                                         placeholder="Ej. Pestillo, Techo..."
                                         value={sel.customArea}
-                                        onChange={(e) => updateZone(idx, 'customArea', e.target.value)}
+                                        onChange={(e) => handleAreaUpdateZone(aid, idx, 'customArea', e.target.value)}
                                         className="h-10 text-sm bg-white"
                                       />
                                     </div>
@@ -852,7 +1148,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                                   {selections.length > 1 && (
                                     <button
                                       type="button"
-                                      onClick={() => removeZone(idx)}
+                                      onClick={() => handleAreaRemoveZone(aid, idx)}
                                       className="absolute -top-2 -right-2 h-6 w-6 bg-white border border-border-light rounded-full flex items-center justify-center text-text-muted hover:text-error hover:border-error shadow-sm transition-all"
                                     >
                                       <X size={12} />
@@ -869,11 +1165,7 @@ export default function InspectorSamplingForm({ requestId = null, initialData = 
                 </div>
               )}
 
-              {hisopadoType !== 'Equipo' && hisopadoType !== 'Superficies' && (
-                <FormField label="Región Hisopada (Descripción)" error={errors.region_swabbed}>
-                  <Input {...register("region_swabbed")} placeholder="Ej. Guante derecho, Pared inferior, Tolva..." className="h-11 bg-white" />
-                </FormField>
-              )}
+
             </div>
           </div>
         )}

@@ -34,6 +34,7 @@ class Sampling(Base):
     operario_muestreado_id = Column(Integer, ForeignKey("operario.operario_id"), nullable=True)
     area_id = Column(Integer, ForeignKey("area.area_id"), nullable=True)
     region_swabbed = Column(String(255), nullable=True)
+    tyvek_wash_number = Column(Integer, nullable=True) # Nro. lavado del tyvek
 
     destination = Column(String(100), nullable=False)
     

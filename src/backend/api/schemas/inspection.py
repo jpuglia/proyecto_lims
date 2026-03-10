@@ -28,6 +28,7 @@ class SamplingBase(BaseModel):
     operario_muestreado_id: Optional[int] = Field(None, description="ID del operario hisopado")
     area_id: Optional[int] = Field(None, description="ID del área hisopada")
     region_swabbed: Optional[str] = Field(None, description="Región específica hisopada")
+    tyvek_wash_number: Optional[int] = Field(None, description="Nro. lavado del tyvek (para Hisopado Personal)")
     
     destination: SamplingDestination = Field(..., description="Destino de la muestra")
     batch_id: Optional[str] = Field(None, description="ID para agrupar muestreos creados juntos")
@@ -47,6 +48,28 @@ class SamplingCreate(SamplingBase):
                 raise ValueError("Para Hisopado debe especificar Equipo, Persona o Área")
             if not self.region_swabbed:
                 raise ValueError("Para Hisopado debe especificar la región (region_swabbed)")
+            
+            # Personal: Operario vs Tyvek
+            if self.operario_muestreado_id and not self.equipo_id and not self.area_id:
+                # If area_id is missing but operario is present, it might be an invalid Operario swab
+                # (unless it's a Tyvek, which we distinguish by tyvek_wash_number)
+                if self.tyvek_wash_number is None:
+                    if not self.area_id:
+                        # Re-checking area_id here because of the complex conditional
+                        # Actually, let's be more direct:
+                        pass 
+
+            # Refined Personnel Swab Validation
+            if self.operario_muestreado_id:
+                if self.tyvek_wash_number is not None:
+                    # Tyvek logic: region is already required above
+                    pass
+                else: 
+                    # Real Operario logic
+                    if not self.area_id:
+                        raise ValueError("Para hisopado de Operario se requiere especificar el Área")
+                    if not self.product_id and not self.lot_number:
+                        raise ValueError("Para hisopado de Operario se requiere especificar Producto o Lote")
         elif is_product_sampling:
             if self.extracted_quantity is None:
                 raise ValueError("extracted_quantity es requerido cuando se selecciona un Producto/Lote")
@@ -85,5 +108,6 @@ class SamplingUpdate(BaseModel):
     operario_muestreado_id: Optional[int] = None
     area_id: Optional[int] = None
     region_swabbed: Optional[str] = None
+    tyvek_wash_number: Optional[int] = None
     destination: Optional[SamplingDestination] = None
 

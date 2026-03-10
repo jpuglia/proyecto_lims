@@ -233,3 +233,60 @@ def test_review_batch_success(inspector_client: TestClient, db_session: Session)
     assert s1.status == "PENDING_SUBMISSION"
     assert s2.status == "PENDING_SUBMISSION"
     assert s1.reviewer_id == inspector_client.inspector_id
+
+def test_create_personnel_swab_operario_success(inspector_client: TestClient, seed_data):
+    from src.backend.models.master import Producto
+    db = next(app.dependency_overrides[get_db]())
+    if not db.query(Producto).filter_by(producto_id=1).first():
+        db.add(Producto(producto_id=1, codigo="P01", nombre="Prod 01", planta_id=1))
+    db.commit()
+
+    start = datetime.now()
+    payload = {
+        "inspector_id": inspector_client.inspector_id,
+        "start_datetime": start.isoformat(),
+        "end_datetime": (start + timedelta(hours=1)).isoformat(),
+        "sample_type": "Hisopado",
+        "operario_muestreado_id": 1,
+        "area_id": 1,
+        "product_id": 1,
+        "region_swabbed": "Guante Derecho",
+        "destination": "Microbiología"
+    }
+    response = inspector_client.post("/api/inspection/samplings/", json=payload)
+    assert response.status_code == 201
+    assert response.json()["area_id"] == 1
+    assert response.json()["product_id"] == 1
+
+def test_create_personnel_swab_operario_missing_area(inspector_client: TestClient):
+    start = datetime.now()
+    payload = {
+        "inspector_id": inspector_client.inspector_id,
+        "start_datetime": start.isoformat(),
+        "end_datetime": (start + timedelta(hours=1)).isoformat(),
+        "sample_type": "Hisopado",
+        "operario_muestreado_id": 1,
+        # area_id is missing
+        "product_id": 1,
+        "region_swabbed": "Guante Derecho",
+        "destination": "Microbiología"
+    }
+    response = inspector_client.post("/api/inspection/samplings/", json=payload)
+    assert response.status_code == 400
+    assert "especificar el Área" in response.json()["message"]
+
+def test_create_personnel_swab_tyvek_success(inspector_client: TestClient):
+    start = datetime.now()
+    payload = {
+        "inspector_id": inspector_client.inspector_id,
+        "start_datetime": start.isoformat(),
+        "end_datetime": (start + timedelta(hours=1)).isoformat(),
+        "sample_type": "Hisopado",
+        "operario_muestreado_id": 99, # Special Tyvek ID
+        "tyvek_wash_number": 4,
+        "region_swabbed": "Manga",
+        "destination": "Microbiología"
+    }
+    response = inspector_client.post("/api/inspection/samplings/", json=payload)
+    assert response.status_code == 201
+    assert response.json()["tyvek_wash_number"] == 4

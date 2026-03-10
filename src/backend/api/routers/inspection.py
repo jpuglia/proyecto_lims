@@ -43,6 +43,7 @@ def create_sampling(
         operario_muestreado_id=sampling_in.operario_muestreado_id,
         area_id=sampling_in.area_id,
         region_swabbed=sampling_in.region_swabbed,
+        tyvek_wash_number=sampling_in.tyvek_wash_number,
         destination=sampling_in.destination,
         batch_id=sampling_in.batch_id,
         status="PENDING_REVIEW"
